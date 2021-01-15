@@ -1,0 +1,8 @@
+Results classifier
+Individual models
+2 epochs training
+TPR: 0.9999 - TNR: 0.9982 - FPR: 0.0018 - FNR: 0.0001
+
+Single model
+TPR: 0.9998 - TNR: 0.9975 - FPR: 0.0025 - FNR: 0.0002
+
