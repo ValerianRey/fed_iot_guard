@@ -6,6 +6,7 @@ from trainer import train_autoencoder, test_autoencoder, train_classifier, test_
 from print_util import Color, print_positives, print_rates
 from scipy.ndimage.filters import uniform_filter1d
 from data import all_devices, mirai_attacks, gafgyt_attacks, get_classifier_datasets, get_autoencoder_datasets
+import sys
 
 
 def compute_aggregated_predictions(predictions, ws):
@@ -104,8 +105,7 @@ def experiment_autoencoder(devices, epochs, normalization='0-mean 1-var', ws=1):
 
 def single_autoencoder():
     print(Color.BOLD + Color.RED + 'All devices combined' + Color.END)
-    tp, tn, fp, fn = experiment_autoencoder(all_devices, epochs=0, normalization='0-mean 1-var', ws=1)
-    print_rates(tp, tn, fp, fn)
+    experiment_autoencoder(all_devices, epochs=0, normalization='0-mean 1-var', ws=1)
 
 
 def multiple_autoencoders():
@@ -143,8 +143,15 @@ def multiple_classifiers():
     print_rates(tp, tn, fp, fn)
 
 
-def main():
-    multiple_autoencoders()
+def main(experiment='single_classifier'):
+    if experiment == 'single_autoencoder':
+        single_autoencoder()
+    elif experiment == 'multiple_autoencoders':
+        multiple_autoencoders()
+    elif experiment == 'single_classifier':
+        single_classifier()
+    elif experiment == 'multiple_classifiers':
+        multiple_classifiers()
 
 # TODO: other models (for example autoencoder + reconstruction of next sample, multi-class classifier)
 #  => the objective is to have a greater variety of results
@@ -153,4 +160,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

@@ -19,12 +19,14 @@ mirai_devices = all_devices[0:2] + all_devices[3:6] + all_devices[7:9]
 mirai_attacks = ['ack', 'scan', 'syn', 'udp', 'udpplain']
 gafgyt_attacks = ['combo', 'junk', 'scan', 'tcp', 'udp']
 
-benign_paths = {device: 'data/' + device + '/benign_traffic.csv' for device in all_devices}
+data_path = 'data/N-BaIoT/'
 
-mirai_paths = [{device: 'data/' + device + '/mirai_attacks/' + attack + '.csv' for device in mirai_devices}
+benign_paths = {device: data_path + device + '/benign_traffic.csv' for device in all_devices}
+
+mirai_paths = [{device: data_path + device + '/mirai_attacks/' + attack + '.csv' for device in mirai_devices}
                for attack in mirai_attacks]
 
-gafgyt_paths = [{device: 'data/' + device + '/gafgyt_attacks/' + attack + '.csv' for device in all_devices}
+gafgyt_paths = [{device: data_path + device + '/gafgyt_attacks/' + attack + '.csv' for device in all_devices}
                 for attack in gafgyt_attacks]
 
 
