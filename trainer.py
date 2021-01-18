@@ -41,6 +41,8 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
 
+    return model
+
 
 def test_classifier(model, test_loader):
     model.eval()

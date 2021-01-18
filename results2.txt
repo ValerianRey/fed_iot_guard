@@ -1,8 +1,427 @@
 Results classifier
-Individual models
-2 epochs training
-TPR: 0.9999 - TNR: 0.9982 - FPR: 0.0018 - FNR: 0.0001
+Individual models 2 epochs training
+[1/9] Danmini_Doorbell
+Reading data
+Constructing tensors
+Training
+[1/2] [7956/7956] Average acc: 0.999611 - LR: 1.000000
+[2/2] [7956/7956] Average acc: 0.999894 - LR: 0.500000
+TPR: 0.999928 - TNR: 0.998668 - FPR: 0.001332 - FNR: 0.000072
+
+[2/9] Ecobee_Thermostat
+Reading data
+Constructing tensors
+Training
+[1/2] [6531/6531] Average acc: 0.999732 - LR: 1.000000
+[2/2] [6531/6531] Average acc: 0.999933 - LR: 0.500000
+TPR: 0.999993 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.000007
+
+[3/9] Ennio_Doorbell
+Reading data
+Constructing tensors
+Training
+[1/2] [2778/2778] Average acc: 0.998059 - LR: 1.000000
+[2/2] [2778/2778] Average acc: 0.999527 - LR: 0.500000
+TPR: 0.999867 - TNR: 0.992941 - FPR: 0.007059 - FNR: 0.000133
+
+[4/9] Philips_B120N10_Baby_Monitor
+Reading data
+Constructing tensors
+Training
+[1/2] [8584/8584] Average acc: 0.999438 - LR: 1.000000
+[2/2] [8584/8584] Average acc: 0.999791 - LR: 0.500000
+TPR: 0.999861 - TNR: 0.998870 - FPR: 0.001130 - FNR: 0.000139
+
+[5/9] Provision_PT_737E_Security_Camera
+Reading data
+Constructing tensors
+Training
+[1/2] [6471/6471] Average acc: 0.999611 - LR: 1.000000
+[2/2] [6471/6471] Average acc: 0.999756 - LR: 0.500000
+TPR: 0.999956 - TNR: 0.996074 - FPR: 0.003926 - FNR: 0.000044
+
+[6/9] Provision_PT_838_Security_Camera
+Reading data
+Constructing tensors
+Training
+[1/2] [6539/6539] Average acc: 0.998824 - LR: 1.000000
+[2/2] [6539/6539] Average acc: 0.999766 - LR: 0.500000
+TPR: 0.999940 - TNR: 0.998173 - FPR: 0.001827 - FNR: 0.000060
+
+[7/9] Samsung_SNH_1011_N_Webcam
+Reading data
+Constructing tensors
+Training
+[1/2] [2932/2932] Average acc: 0.998172 - LR: 1.000000
+[2/2] [2932/2932] Average acc: 0.999547 - LR: 0.500000
+TPR: 0.999709 - TNR: 0.997737 - FPR: 0.002263 - FNR: 0.000291
+
+[8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+Reading data
+Constructing tensors
+Training
+[1/2] [6743/6743] Average acc: 0.999115 - LR: 1.000000
+[2/2] [6743/6743] Average acc: 0.999736 - LR: 0.500000
+TPR: 0.999846 - TNR: 0.997853 - FPR: 0.002147 - FNR: 0.000154
+
+[9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+Reading data
+Constructing tensors
+Training
+[1/2] [6648/6648] Average acc: 0.998966 - LR: 1.000000
+[2/2] [6648/6648] Average acc: 0.999922 - LR: 0.500000
+TPR: 0.999906 - TNR: 0.996927 - FPR: 0.003073 - FNR: 0.000094
+
+TPR: 0.999904 - TNR: 0.997748 - FPR: 0.002252 - FNR: 0.000096
+
+
+
+FEDERATED:
+ROUND 1: TPR: 0.999823 - TNR: 0.985620 - FPR: 0.014380 - FNR: 0.000177
+ROUND 2: TPR: 0.999825 - TNR: 0.981035 - FPR: 0.018965 - FNR: 0.000175
+ROUND 3: TPR: 0.999832 - TNR: 0.976595 - FPR: 0.023405 - FNR: 0.000168
+
+/home/valerian/venvs/venv1/bin/python3 /home/valerian/Documents/Repos/fed_iot_guard/main.py federated_classifiers
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+Reading data
+Constructing tensors
+[1/3] [1/9] Danmini_Doorbell
+[1/1] [7956/7956] Average acc: 0.999525 - LR: 1.000000
+
+[1/3] [2/9] Ecobee_Thermostat
+[1/1] [6531/6531] Average acc: 0.999550 - LR: 1.000000
+
+[1/3] [3/9] Ennio_Doorbell
+[1/1] [2778/2778] Average acc: 0.997654 - LR: 1.000000
+
+[1/3] [4/9] Philips_B120N10_Baby_Monitor
+[1/1] [8584/8584] Average acc: 0.998950 - LR: 1.000000
+
+[1/3] [5/9] Provision_PT_737E_Security_Camera
+[1/1] [6471/6471] Average acc: 0.999066 - LR: 1.000000
+
+[1/3] [6/9] Provision_PT_838_Security_Camera
+[1/1] [6539/6539] Average acc: 0.998666 - LR: 1.000000
+
+[1/3] [7/9] Samsung_SNH_1011_N_Webcam
+[1/1] [2932/2932] Average acc: 0.997292 - LR: 1.000000
+
+[1/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+[1/1] [6743/6743] Average acc: 0.998932 - LR: 1.000000
+
+[1/3] [1/9] Danmini_Doorbell
+TPR: 0.999812 - TNR: 0.978288 - FPR: 0.021712 - FNR: 0.000188
+
+[1/3] [2/9] Ecobee_Thermostat
+TPR: 0.999769 - TNR: 0.993343 - FPR: 0.006657 - FNR: 0.000231
+
+[1/3] [3/9] Ennio_Doorbell
+TPR: 0.999897 - TNR: 0.966100 - FPR: 0.033900 - FNR: 0.000103
+
+[1/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.758165 - TNR: 0.498669 - FPR: 0.501331 - FNR: 0.241835
+
+[1/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999798 - TNR: 0.984945 - FPR: 0.015055 - FNR: 0.000202
+
+[1/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999733 - TNR: 0.988734 - FPR: 0.011266 - FNR: 0.000267
+
+[1/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.742671 - TNR: 0.992421 - FPR: 0.007579 - FNR: 0.257329
+
+[1/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999815 - TNR: 0.993650 - FPR: 0.006350 - FNR: 0.000185
+
+TPR: 0.937457 - TNR: 0.924519 - FPR: 0.075481 - FNR: 0.062543
+[1/3] [1/9] Danmini_Doorbell
+TPR: 1.000000 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000000
+
+[1/3] [2/9] Ecobee_Thermostat
+TPR: 0.999990 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000010
+
+[1/3] [3/9] Ennio_Doorbell
+TPR: 1.000000 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000000
+
+[1/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 1.000000 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000000
+
+[1/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 1.000000 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000000
+
+[1/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999997 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000003
+
+[1/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.960231 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.039769
+
+[1/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 1.000000 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000000
+
+[1/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999993 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.000007
+
+TPR: 0.998023 - TNR: 0.000000 - FPR: 1.000000 - FNR: 0.001977
+[1/3] [1/9] Danmini_Doorbell
+TPR: 0.663502 - TNR: 0.995964 - FPR: 0.004036 - FNR: 0.336498
+
+[1/3] [2/9] Ecobee_Thermostat
+TPR: 0.996889 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.003111
+
+[1/3] [3/9] Ennio_Doorbell
+TPR: 0.984482 - TNR: 0.980307 - FPR: 0.019693 - FNR: 0.015518
+
+[1/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.927947 - TNR: 0.997375 - FPR: 0.002625 - FNR: 0.072053
+
+[1/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.660280 - TNR: 0.994240 - FPR: 0.005760 - FNR: 0.339720
+
+[1/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.997559 - TNR: 0.995858 - FPR: 0.004142 - FNR: 0.002441
+
+[1/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.999399 - TNR: 0.968629 - FPR: 0.031371 - FNR: 0.000600
+
+[1/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.855619 - TNR: 0.971707 - FPR: 0.028293 - FNR: 0.144381
+
+[1/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999759 - TNR: 0.993138 - FPR: 0.006862 - FNR: 0.000241
+
+TPR: 0.880073 - TNR: 0.990477 - FPR: 0.009523 - FNR: 0.119927
+[2/3] [1/9] Danmini_Doorbell
+[1/1] [7956/7956] Average acc: 0.999810 - LR: 1.000000
+
+[2/3] [2/9] Ecobee_Thermostat
+[1/1] [6531/6531] Average acc: 0.999885 - LR: 1.000000
+
+[2/3] [3/9] Ennio_Doorbell
+[1/1] [2778/2778] Average acc: 0.999437 - LR: 1.000000
+
+[2/3] [4/9] Philips_B120N10_Baby_Monitor
+[1/1] [8584/8584] Average acc: 0.999749 - LR: 1.000000
+
+[2/3] [5/9] Provision_PT_737E_Security_Camera
+[1/1] [6471/6471] Average acc: 0.999722 - LR: 1.000000
+
+[2/3] [6/9] Provision_PT_838_Security_Camera
+[1/1] [6539/6539] Average acc: 0.999725 - LR: 1.000000
+
+[2/3] [7/9] Samsung_SNH_1011_N_Webcam
+[1/1] [2932/2932] Average acc: 0.999451 - LR: 1.000000
+
+[2/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+[1/1] [6743/6743] Average acc: 0.999585 - LR: 1.000000
+
+[2/3] [1/9] Danmini_Doorbell
+TPR: 0.998585 - TNR: 0.974191 - FPR: 0.025809 - FNR: 0.001415
+
+[2/3] [2/9] Ecobee_Thermostat
+TPR: 0.999798 - TNR: 0.980541 - FPR: 0.019459 - FNR: 0.000202
+
+[2/3] [3/9] Ennio_Doorbell
+TPR: 0.999860 - TNR: 0.983921 - FPR: 0.016079 - FNR: 0.000140
+
+[2/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.758151 - TNR: 0.998054 - FPR: 0.001946 - FNR: 0.241849
+
+[2/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999743 - TNR: 0.993036 - FPR: 0.006964 - FNR: 0.000257
+
+[2/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999735 - TNR: 0.992114 - FPR: 0.007886 - FNR: 0.000265
+
+[2/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.904246 - TNR: 0.994469 - FPR: 0.005531 - FNR: 0.095754
+
+[2/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999882 - TNR: 0.993343 - FPR: 0.006657 - FNR: 0.000118
+
+TPR: 0.957500 - TNR: 0.988708 - FPR: 0.011291 - FNR: 0.042500
+[2/3] [1/9] Danmini_Doorbell
+TPR: 0.663502 - TNR: 0.995964 - FPR: 0.004036 - FNR: 0.336498
+
+[2/3] [2/9] Ecobee_Thermostat
+TPR: 0.996889 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.003111
+
+[2/3] [3/9] Ennio_Doorbell
+TPR: 0.984482 - TNR: 0.980307 - FPR: 0.019693 - FNR: 0.015518
+
+[2/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.927947 - TNR: 0.997375 - FPR: 0.002625 - FNR: 0.072053
+
+[2/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.660280 - TNR: 0.994240 - FPR: 0.005760 - FNR: 0.339720
+
+[2/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.997559 - TNR: 0.995858 - FPR: 0.004142 - FNR: 0.002441
+
+[2/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.999399 - TNR: 0.968629 - FPR: 0.031371 - FNR: 0.000600
+
+[2/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.855619 - TNR: 0.971707 - FPR: 0.028293 - FNR: 0.144381
+
+[2/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999759 - TNR: 0.993138 - FPR: 0.006862 - FNR: 0.000241
+
+TPR: 0.880073 - TNR: 0.990477 - FPR: 0.009523 - FNR: 0.119927
+[2/3] [1/9] Danmini_Doorbell
+TPR: 0.999907 - TNR: 0.996650 - FPR: 0.003350 - FNR: 0.000093
+
+[2/3] [2/9] Ecobee_Thermostat
+TPR: 0.999956 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.000044
+
+[2/3] [3/9] Ennio_Doorbell
+TPR: 0.999463 - TNR: 0.986547 - FPR: 0.013453 - FNR: 0.000537
+
+[2/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.999831 - TNR: 0.998197 - FPR: 0.001803 - FNR: 0.000169
+
+[2/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999869 - TNR: 0.996589 - FPR: 0.003411 - FNR: 0.000131
+
+[2/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999829 - TNR: 0.997361 - FPR: 0.002639 - FNR: 0.000171
+
+[2/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.999381 - TNR: 0.971505 - FPR: 0.028495 - FNR: 0.000619
+
+[2/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999704 - TNR: 0.996265 - FPR: 0.003735 - FNR: 0.000296
+
+[2/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999757 - TNR: 0.993753 - FPR: 0.006247 - FNR: 0.000243
+
+TPR: 0.999797 - TNR: 0.994114 - FPR: 0.005886 - FNR: 0.000203
+[3/3] [1/9] Danmini_Doorbell
+[1/1] [7956/7956] Average acc: 0.999884 - LR: 1.000000
+
+[3/3] [2/9] Ecobee_Thermostat
+[1/1] [6531/6531] Average acc: 0.999904 - LR: 1.000000
+
+[3/3] [3/9] Ennio_Doorbell
+[1/1] [2778/2778] Average acc: 0.999477 - LR: 1.000000
+
+[3/3] [4/9] Philips_B120N10_Baby_Monitor
+[1/1] [8584/8584] Average acc: 0.999756 - LR: 1.000000
+
+[3/3] [5/9] Provision_PT_737E_Security_Camera
+[1/1] [6471/6471] Average acc: 0.999773 - LR: 1.000000
+
+[3/3] [6/9] Provision_PT_838_Security_Camera
+[1/1] [6539/6539] Average acc: 0.999744 - LR: 1.000000
+
+[3/3] [7/9] Samsung_SNH_1011_N_Webcam
+[1/1] [2932/2932] Average acc: 0.999472 - LR: 1.000000
+
+[3/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+[1/1] [6743/6743] Average acc: 0.999664 - LR: 1.000000
+
+[3/3] [1/9] Danmini_Doorbell
+TPR: 0.999832 - TNR: 0.986788 - FPR: 0.013212 - FNR: 0.000168
+
+[3/3] [2/9] Ecobee_Thermostat
+TPR: 0.999824 - TNR: 0.987710 - FPR: 0.012290 - FNR: 0.000176
+
+[3/3] [3/9] Ennio_Doorbell
+TPR: 0.999820 - TNR: 0.984637 - FPR: 0.015363 - FNR: 0.000180
+
+[3/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.758160 - TNR: 0.996620 - FPR: 0.003380 - FNR: 0.241840
+
+[3/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999738 - TNR: 0.993855 - FPR: 0.006145 - FNR: 0.000262
+
+[3/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.758146 - TNR: 0.996927 - FPR: 0.003073 - FNR: 0.241854
+
+[3/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.951668 - TNR: 0.995903 - FPR: 0.004097 - FNR: 0.048332
+
+[3/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999897 - TNR: 0.996927 - FPR: 0.003073 - FNR: 0.000103
+
+TPR: 0.933385 - TNR: 0.992421 - FPR: 0.007579 - FNR: 0.066615
+[3/3] [1/9] Danmini_Doorbell
+TPR: 0.999907 - TNR: 0.996650 - FPR: 0.003350 - FNR: 0.000093
+
+[3/3] [2/9] Ecobee_Thermostat
+TPR: 0.999956 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.000044
+
+[3/3] [3/9] Ennio_Doorbell
+TPR: 0.999463 - TNR: 0.986547 - FPR: 0.013453 - FNR: 0.000537
+
+[3/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.999831 - TNR: 0.998197 - FPR: 0.001803 - FNR: 0.000169
+
+[3/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999869 - TNR: 0.996589 - FPR: 0.003411 - FNR: 0.000131
+
+[3/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999829 - TNR: 0.997361 - FPR: 0.002639 - FNR: 0.000171
+
+[3/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.999381 - TNR: 0.971505 - FPR: 0.028495 - FNR: 0.000619
+
+[3/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999704 - TNR: 0.996265 - FPR: 0.003735 - FNR: 0.000296
+
+[3/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999757 - TNR: 0.993753 - FPR: 0.006247 - FNR: 0.000243
+
+TPR: 0.999797 - TNR: 0.994114 - FPR: 0.005886 - FNR: 0.000203
+[3/3] [1/9] Danmini_Doorbell
+TPR: 0.999928 - TNR: 0.997941 - FPR: 0.002059 - FNR: 0.000072
+
+[3/3] [2/9] Ecobee_Thermostat
+TPR: 0.999966 - TNR: 0.999237 - FPR: 0.000763 - FNR: 0.000034
+
+[3/3] [3/9] Ennio_Doorbell
+TPR: 0.999747 - TNR: 0.987826 - FPR: 0.012174 - FNR: 0.000253
+
+[3/3] [4/9] Philips_B120N10_Baby_Monitor
+TPR: 0.999851 - TNR: 0.998425 - FPR: 0.001575 - FNR: 0.000149
+
+[3/3] [5/9] Provision_PT_737E_Security_Camera
+TPR: 0.999877 - TNR: 0.996943 - FPR: 0.003057 - FNR: 0.000123
+
+[3/3] [6/9] Provision_PT_838_Security_Camera
+TPR: 0.999843 - TNR: 0.997848 - FPR: 0.002152 - FNR: 0.000157
+
+[3/3] [7/9] Samsung_SNH_1011_N_Webcam
+TPR: 0.999393 - TNR: 0.973384 - FPR: 0.026616 - FNR: 0.000607
+
+[3/3] [8/9] SimpleHome_XCS7_1002_WHT_Security_Camera
+TPR: 0.999728 - TNR: 0.997295 - FPR: 0.002705 - FNR: 0.000272
+
+[3/3] [9/9] SimpleHome_XCS7_1003_WHT_Security_Camera
+TPR: 0.999769 - TNR: 0.994060 - FPR: 0.005940 - FNR: 0.000231
+
+TPR: 0.999825 - TNR: 0.994791 - FPR: 0.005209 - FNR: 0.000175
+
+Process finished with exit code 0
+
+
 
 Single model
 TPR: 0.9998 - TNR: 0.9975 - FPR: 0.0025 - FNR: 0.0002
 
+Single model 5 epochs training
+TPR: 0.9998 - TNR: 0.9968 - FPR: 0.0032 - FNR: 0.0002

@@ -1,5 +1,5 @@
 import torch
-import models
+import architectures
 import torch.nn as nn
 import torch.utils.data
 from trainer import train_autoencoder, test_autoencoder, train_classifier, test_classifier
@@ -7,6 +7,7 @@ from print_util import Color, print_positives, print_rates
 from scipy.ndimage.filters import uniform_filter1d
 from data import all_devices, mirai_attacks, gafgyt_attacks, get_classifier_datasets, get_autoencoder_datasets
 import sys
+from copy import deepcopy
 
 
 def compute_aggregated_predictions(predictions, ws):
@@ -17,8 +18,8 @@ def compute_aggregated_predictions(predictions, ws):
 
 
 def experiment_classifier(devices, epochs, normalization='0-mean 1-var'):
-    model = models.BinaryClassifier(activation_function=torch.nn.ELU,
-                                    hidden_layers=[40, 10, 5])
+    model = architectures.BinaryClassifier(activation_function=torch.nn.ELU,
+                                           hidden_layers=[40, 10, 5])
 
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adadelta(model.parameters(), lr=1.0, weight_decay=1e-5)
@@ -41,8 +42,8 @@ def experiment_classifier(devices, epochs, normalization='0-mean 1-var'):
 
 
 def experiment_autoencoder(devices, epochs, normalization='0-mean 1-var', ws=1):
-    model = models.SimpleAutoencoder(activation_function=torch.nn.ELU,
-                                     hidden_layers=[86, 58, 38, 29, 38, 58, 86])
+    model = architectures.SimpleAutoencoder(activation_function=torch.nn.ELU,
+                                            hidden_layers=[86, 58, 38, 29, 38, 58, 86])
 
     criterion = nn.MSELoss(reduction='none')
     optimizer = torch.optim.Adadelta(model.parameters(), lr=1.0, weight_decay=5*1e-5)
@@ -143,6 +144,85 @@ def multiple_classifiers():
     print_rates(tp, tn, fp, fn)
 
 
+def model_average(global_model, models):
+    state_dict_mean = global_model.state_dict()
+
+    for key in state_dict_mean:
+        state_dict_mean[key] = torch.stack([model.state_dict()[key] for model in models], dim=-1).mean(dim=-1)
+
+    global_model.load_state_dict(state_dict_mean)
+    return global_model
+
+
+def federated_classifiers():
+    criterion = nn.BCELoss()
+
+    global_model = architectures.BinaryClassifier(activation_function=torch.nn.ELU, hidden_layers=[40, 10, 5])
+
+    datasets = [get_classifier_datasets([device], normalization='0-mean 1-var') for device in all_devices]
+    dataloaders_train = [torch.utils.data.DataLoader(dataset_train, batch_size=64, shuffle=True)
+                         for (dataset_train, _) in datasets[:8]]
+    dataloaders_test = [torch.utils.data.DataLoader(dataset_test, batch_size=4096)
+                        for (_, dataset_test) in datasets]
+
+    federation_rounds = 3
+    for federation_round in range(federation_rounds):
+        models = [deepcopy(global_model) for _ in all_devices[:8]]
+        for i, device in enumerate(all_devices[:8]):
+            print(Color.BOLD + Color.GREEN + '[{}/{}] [{}/{}] '
+                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
+
+            # Train models[i] with dataloaders_train[i]
+            optimizer = torch.optim.Adadelta(models[i].parameters(), lr=1.0, weight_decay=1e-5)
+            scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
+            models[i] = train_classifier(models[i], 1, dataloaders_train[i], optimizer, criterion, scheduler)
+            print()
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for i, device in enumerate(all_devices[:8]):
+            print(Color.BOLD + Color.PURPLE + '[{}/{}] [{}/{}] '
+                  .format(federation_round + 1, federation_rounds, i + 1, len(all_devices)) + device + Color.END)
+            # Test all models on the new dataset (only relevant for federation round 1)
+            current_tp, current_tn, current_fp, current_fn = test_classifier(models[i], dataloaders_test[8])
+            print_rates(current_tp, current_tn, current_fp, current_fn)
+            tp += current_tp
+            tn += current_tn
+            fp += current_fp
+            fn += current_fn
+            print()
+        print_rates(tp, tn, fp, fn)
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for i, device in enumerate(all_devices):
+            print(Color.BOLD + Color.DARKCYAN + '[{}/{}] [{}/{}] '
+                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
+
+            current_tp, current_tn, current_fp, current_fn = test_classifier(global_model, dataloaders_test[i])
+            print_rates(current_tp, current_tn, current_fp, current_fn)
+            tp += current_tp
+            tn += current_tn
+            fp += current_fp
+            fn += current_fn
+            print()
+        print_rates(tp, tn, fp, fn)
+
+        global_model = model_average(global_model, models)
+
+        tp, tn, fp, fn = 0, 0, 0, 0
+        for i, device in enumerate(all_devices):
+            print(Color.BOLD + Color.CYAN + '[{}/{}] [{}/{}] '
+                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
+
+            current_tp, current_tn, current_fp, current_fn = test_classifier(global_model, dataloaders_test[i])
+            print_rates(current_tp, current_tn, current_fp, current_fn)
+            tp += current_tp
+            tn += current_tn
+            fp += current_fp
+            fn += current_fn
+            print()
+        print_rates(tp, tn, fp, fn)
+
+
 def main(experiment='single_classifier'):
     if experiment == 'single_autoencoder':
         single_autoencoder()
@@ -152,11 +232,17 @@ def main(experiment='single_classifier'):
         single_classifier()
     elif experiment == 'multiple_classifiers':
         multiple_classifiers()
+    elif experiment == 'federated_classifiers':
+        federated_classifiers()
 
 # TODO: other models (for example autoencoder + reconstruction of next sample, multi-class classifier)
 #  => the objective is to have a greater variety of results
 
-# TODO: federated learning simulation
+# TODO: change learning rate over federation rounds
+
+# TODO: clean up code
+
+# TODO: make a few interesting experiments
 
 
 if __name__ == "__main__":
