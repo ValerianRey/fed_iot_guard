@@ -18,17 +18,28 @@ def print_positives(positives, total):
           + ' ({:.4f}%)'.format(100 * positives / total))
 
 
-def print_rates(tp, tn, fp, fn):
+def print_rates(tp, tn, fp, fn, color=''):
     tpr = tp / (tp + fn)
     tnr = tn / (tn + fp)
     fpr = fp / (tn + fp)
     fnr = fn / (tp + fn)
 
-    print(Color.BOLD + 'TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f}'
-          .format(tpr, tnr, fpr, fnr) + Color.END)
+    print_bar(color)
+    print('TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f}'.format(tpr, tnr, fpr, fnr))
 
 
 def print_train_classifier(epoch, num_epochs, batch, num_batches, avg_acc, lr, persistent=False, color=''):
-    print('\r' + color + Color.BOLD + '[{}/{}] [{}/{}] Average acc: {:.6f} - LR: {:.6f}'
+    print('\r', end='')
+    print_bar(color)
+    print('[{}/{}] [{}/{}] Average acc: {:.6f} - LR: {:.6f}'
           .format(epoch+1, num_epochs, batch, num_batches, avg_acc, lr) + Color.END,
           end='\n' if persistent else '')
+
+
+def print_federation_round(federation_round, federation_rounds):
+    print(Color.BOLD + '\t\t\t\t\tFEDERATION ROUND [{}/{}]\n'.format(federation_round + 1, federation_rounds) + Color.END)
+
+
+def print_bar(color=''):
+    if color != '':
+        print(color + '| ' + Color.END, end='')

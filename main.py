@@ -2,8 +2,8 @@ import torch
 import architectures
 import torch.nn as nn
 import torch.utils.data
-from trainer import train_autoencoder, test_autoencoder, train_classifier, test_classifier
-from print_util import Color, print_positives, print_rates
+from trainer import train_autoencoder, test_autoencoder, train_classifier, test_classifier, multitest_classifiers
+from print_util import Color, print_positives, print_rates, print_bar, print_federation_round
 from scipy.ndimage.filters import uniform_filter1d
 from data import all_devices, mirai_attacks, gafgyt_attacks, get_classifier_datasets, get_autoencoder_datasets
 import sys
@@ -164,63 +164,48 @@ def federated_classifiers():
                          for (dataset_train, _) in datasets[:8]]
     dataloaders_test = [torch.utils.data.DataLoader(dataset_test, batch_size=4096)
                         for (_, dataset_test) in datasets]
+    print()
 
     federation_rounds = 3
     for federation_round in range(federation_rounds):
+        print_federation_round(federation_round, federation_rounds)
+
+        # Distribute the global model to all clients
         models = [deepcopy(global_model) for _ in all_devices[:8]]
+
+        # TODO: extract that into a method multitrain_classifiers
+        print(Color.BOLD + Color.GREEN + 'Training the different clients' + Color.END)
         for i, device in enumerate(all_devices[:8]):
-            print(Color.BOLD + Color.GREEN + '[{}/{}] [{}/{}] '
-                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
+            print_bar(Color.GREEN)
+            print('Client [{}/{}] with data from '.format(i+1, len(all_devices)) + device + Color.END)
 
             # Train models[i] with dataloaders_train[i]
             optimizer = torch.optim.Adadelta(models[i].parameters(), lr=1.0, weight_decay=1e-5)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
-            models[i] = train_classifier(models[i], 1, dataloaders_train[i], optimizer, criterion, scheduler)
+            models[i] = train_classifier(models[i], 1, dataloaders_train[i], optimizer, criterion, scheduler, Color.GREEN)
+            if i != 7:
+                print_bar(Color.GREEN)
             print()
 
-        tp, tn, fp, fn = 0, 0, 0, 0
-        for i, device in enumerate(all_devices[:8]):
-            print(Color.BOLD + Color.PURPLE + '[{}/{}] [{}/{}] '
-                  .format(federation_round + 1, federation_rounds, i + 1, len(all_devices)) + device + Color.END)
-            # Test all models on the new dataset (only relevant for federation round 1)
-            current_tp, current_tn, current_fp, current_fn = test_classifier(models[i], dataloaders_test[8])
-            print_rates(current_tp, current_tn, current_fp, current_fn)
-            tp += current_tp
-            tn += current_tn
-            fp += current_fp
-            fn += current_fn
-            print()
-        print_rates(tp, tn, fp, fn)
+        multitest_classifiers(zip(['Model trained on dataset ' + device for device in all_devices[:8]],
+                                  [dataloaders_test[8] for _ in range(8)],  # we always test on the same data
+                                  models[:8]),
+                              'Testing different models on data from device ' + all_devices[8],
+                              Color.BLUE)
 
-        tp, tn, fp, fn = 0, 0, 0, 0
-        for i, device in enumerate(all_devices):
-            print(Color.BOLD + Color.DARKCYAN + '[{}/{}] [{}/{}] '
-                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
-
-            current_tp, current_tn, current_fp, current_fn = test_classifier(global_model, dataloaders_test[i])
-            print_rates(current_tp, current_tn, current_fp, current_fn)
-            tp += current_tp
-            tn += current_tn
-            fp += current_fp
-            fn += current_fn
-            print()
-        print_rates(tp, tn, fp, fn)
+        multitest_classifiers(zip(['Testing global model before averaging on data from device ' + device for device in all_devices],
+                                  dataloaders_test,
+                                  [global_model for _ in range(9)]),
+                              'Testing global model (before averaging) on data from different clients ',
+                              Color.DARKCYAN)
 
         global_model = model_average(global_model, models)
 
-        tp, tn, fp, fn = 0, 0, 0, 0
-        for i, device in enumerate(all_devices):
-            print(Color.BOLD + Color.CYAN + '[{}/{}] [{}/{}] '
-                  .format(federation_round+1, federation_rounds, i+1, len(all_devices)) + device + Color.END)
-
-            current_tp, current_tn, current_fp, current_fn = test_classifier(global_model, dataloaders_test[i])
-            print_rates(current_tp, current_tn, current_fp, current_fn)
-            tp += current_tp
-            tn += current_tn
-            fp += current_fp
-            fn += current_fn
-            print()
-        print_rates(tp, tn, fp, fn)
+        multitest_classifiers(zip(['Testing global model after averaging on data from device ' + device for device in all_devices],
+                                  dataloaders_test,
+                                  [global_model for _ in range(9)]),
+                              'Testing global model (after averaging) on data from different clients ',
+                              Color.CYAN)
 
 
 def main(experiment='single_classifier'):
