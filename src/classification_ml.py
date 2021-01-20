@@ -1,6 +1,7 @@
-import torch
 from metrics import StatisticsMeter
-from print_util import Color, print_train_classifier, print_rates, print_bar
+import torch
+from print_util import print_train_classifier, Color, print_bar, print_rates
+import torch.nn as nn
 
 
 def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler, color=''):
@@ -40,8 +41,6 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
 
-    return model
-
 
 def test_classifier(model, test_loader):
     with torch.no_grad():
@@ -76,17 +75,17 @@ def test_classifier(model, test_loader):
         return tp, tn, fp, fn
 
 
-# experiments should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
+# tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(experiments, main_title='Multitest classifiers', color=''):
+def multitest_classifiers(tests, main_title='Multitest classifiers', color=''):
     print(Color.BOLD + color + main_title + Color.END)
-    if type(experiments) == zip:
-        experiments = list(experiments)
+    if type(tests) == zip:
+        tests = list(tests)
 
     tp, tn, fp, fn = 0, 0, 0, 0
-    for i, (title, dataloader, model) in enumerate(experiments):
+    for i, (title, dataloader, model) in enumerate(tests):
         print_bar(color)
-        print('[{}/{}] '.format(i + 1, len(experiments)) + title)
+        print('[{}/{}] '.format(i + 1, len(tests)) + title)
         current_tp, current_tn, current_fp, current_fn = test_classifier(model, dataloader)
         print_rates(current_tp, current_tn, current_fp, current_fn, color)
         tp += current_tp
@@ -99,70 +98,23 @@ def multitest_classifiers(experiments, main_title='Multitest classifiers', color
     print_bar(color)
     print('Average results')
     print_rates(tp, tn, fp, fn, color)
+    print('\n')
+
+
+def multitrain_classifiers(trains, lr, epochs, main_title='Multitrain autoencoders', color=''):
+    print(Color.BOLD + color + main_title + Color.END)
+    if type(trains) == zip:
+        trains = list(trains)
+
+    criterion = nn.BCELoss()
+    for i, (title, dataloader, model) in enumerate(trains):
+        print_bar(color)
+        print('[{}/{}] '.format(i + 1, len(trains)) + title)
+
+        optimizer = torch.optim.Adadelta(model.parameters(), lr=lr, weight_decay=1e-5)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
+        train_classifier(model, epochs, dataloader, optimizer, criterion, scheduler, color)
+        if i != len(trains)-1:
+            print_bar(color)
+        print()
     print()
-    return tp, tn, fp, fn
-
-
-def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler):
-    model.train()
-
-    num_elements = len(train_loader.dataset)
-    num_batches = len(train_loader)
-    batch_size = train_loader.batch_size
-
-    for epoch in range(num_epochs):
-        losses = torch.zeros(num_elements)
-        for i, (x,) in enumerate(train_loader):
-            output = model(x)
-            loss = criterion(output, x)
-            optimizer.zero_grad()
-            loss.mean().backward()
-            optimizer.step()
-
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            losses[start:end] = loss.mean(dim=1)
-
-        print('[{}/{}] Average loss: {:.4f}'.format(epoch + 1, num_epochs, losses.mean())
-              + ' - Min loss: {:.4f}'.format(losses.min())
-              + ' - 0.99 quantile: {:.4f}'.format(torch.quantile(losses, 0.99).item())
-              + ' - Max loss: {:.4f}'.format(losses.max())
-              + ' - STD loss: {:.4f}'.format(losses.std())
-              + ' - LR: {:.6f}'.format(optimizer.param_groups[0]['lr']))
-
-        scheduler.step(losses.mean())
-        if optimizer.param_groups[0]['lr'] <= 1e-3:
-            break
-
-
-def test_autoencoder(model, test_loader, criterion, title=''):
-    with torch.no_grad():
-        model.eval()
-        num_elements = len(test_loader.dataset)
-        num_batches = len(test_loader)
-        batch_size = test_loader.batch_size
-
-        losses = torch.zeros(num_elements)
-
-        for i, (x,) in enumerate(test_loader):
-            output = model(x)
-            loss = criterion(output, x)
-
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            losses[start:end] = loss.mean(dim=1)
-
-        print(title + ' - Min loss: {:.4f}'.format(losses.min())
-              + ' - 0.01 quantile: {:.4f}'.format(torch.quantile(losses, 0.01).item())
-              + ' Average loss: {:.4f}'.format(losses.mean())
-              + ' - 0.99 quantile: {:.4f}'.format(torch.quantile(losses, 0.99).item())
-              + ' - Max loss: {:.4f}'.format(losses.max())
-              + ' - STD loss: {:.4f}'.format(losses.std()))
-
-        return losses

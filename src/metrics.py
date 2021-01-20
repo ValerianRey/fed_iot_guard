@@ -1,9 +1,6 @@
 class StatisticsMeter(object):
     """Computes and stores the average, current, min and max values"""
     def __init__(self):
-        self.reset()
-
-    def reset(self):
         self.current_value = 0
         self.avg = 0
         self.sum = 0
