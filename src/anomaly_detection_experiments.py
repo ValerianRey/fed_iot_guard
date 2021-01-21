@@ -1,98 +1,77 @@
-import architectures
-import torch.nn as nn
-from anomaly_detection_ml import train_autoencoder, test_autoencoder
-from print_util import Color, print_positives, print_rates
-from scipy.ndimage.filters import uniform_filter1d
-from data import all_devices, mirai_attacks, gafgyt_attacks, get_autoencoder_datasets
 import torch
 import torch.utils.data
 
-
-def compute_aggregated_predictions(predictions, ws):
-    predictions_array = predictions.numpy()
-    origin = (ws - 1) // 2
-    result = uniform_filter1d(predictions_array, size=ws, origin=origin, mode='constant', cval=0.5)
-    return result
+from anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds
+from architectures import SimpleAutoencoder
+from data import all_devices, mirai_attacks, gafgyt_attacks, get_autoencoder_datasets
+from print_util import Color, ContextPrinter
 
 
-def experiment_autoencoder(devices, epochs, normalization='0-mean 1-var', ws=1):
-    model = architectures.SimpleAutoencoder(activation_function=torch.nn.ELU,
-                                            hidden_layers=[86, 58, 38, 29, 38, 58, 86])
+def single_autoencoder(args):
+    # Initialization of the model
+    model = SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
 
-    criterion = nn.MSELoss(reduction='none')
-    optimizer = torch.optim.Adadelta(model.parameters(), lr=1.0, weight_decay=5 * 1e-5)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, threshold=1e-2,
-                                                           factor=0.5, verbose=True)
+    # Loading the data and creating the dataloaders
+    dataset = get_autoencoder_datasets(all_devices, normalization=args.normalization)
+    dataloader_train = torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True)
+    dataloader_opt = torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs)
+    dataloader_benign_test = torch.utils.data.DataLoader(dataset[2], batch_size=args.test_bs)
+    if dataset[3] is not None:
+        dataloaders_mirai = [torch.utils.data.DataLoader(dataset[3][i], batch_size=args.test_bs) for i in range(len(mirai_attacks))]
+    else:
+        dataloaders_mirai = None
+    dataloaders_gafgyt = [torch.utils.data.DataLoader(dataset[4][i], batch_size=args.test_bs) for i in range(len(gafgyt_attacks))]
 
-    dataset_benign_train, dataset_benign_opt, dataset_benign_test, datasets_mirai, datasets_gafgyt = \
-        get_autoencoder_datasets(devices, normalization)
+    ctp = ContextPrinter()
+    ctp.print('\n\t\t\t\t\tSINGLE AUTOENCODER\n', bold=True)
 
-    # Training
-    dataloader_benign_train = torch.utils.data.DataLoader(dataset_benign_train, batch_size=64, shuffle=True)
-    train_autoencoder(model, epochs, dataloader_benign_train, optimizer, criterion, scheduler)
+    # Local training of each autoencoder
+    multitrain_autoencoders(trains=zip(['with train data from all devices'], [dataloader_train], [model]),
+                            lr=args.lr, epochs=args.epochs,
+                            ctp=ctp, main_title='Training the single autoencoder', color=Color.GREEN)
 
-    # Threshold computation (we use the training set but with a larger batch size to go faster)
-    dataloader_benign_opt = torch.utils.data.DataLoader(dataset_benign_opt, batch_size=4096)
-    losses = test_autoencoder(model, dataloader_benign_opt, criterion, '[Benign (opt)]')
-    avg_loss_val = losses.mean()
-    std_loss_val = losses.std()
-    threshold = avg_loss_val + std_loss_val
-    print('The threshold is {:.4f}\n'.format(threshold.item()))
+    # Computation of the thresholds
+    [threshold] = compute_thresholds(opts=zip(['with opt data from all devices'], [dataloader_opt], [model]),
+                                     ctp=ctp, main_title='Computing threshold', color=Color.RED)
 
-    tp, tn, fp, fn = 0, 0, 0, 0
-
-    # Benign validation
-    dataloader_benign_test = torch.utils.data.DataLoader(dataset_benign_test, batch_size=4096)
-    losses = test_autoencoder(model, dataloader_benign_test, criterion, '[Benign (test)]')
-    predictions = torch.gt(losses, threshold).int()
-    aggregated_predictions = torch.tensor(compute_aggregated_predictions(predictions, ws=ws))
-    final_predictions = torch.gt(aggregated_predictions, 0.5).int()
-    positive_predictions = final_predictions.sum().item()
-    print_positives(positive_predictions, len(predictions))
-    fp += positive_predictions
-    tn += len(dataset_benign_opt) - positive_predictions
-
-    # Mirai validation
-    if datasets_mirai is not None:
-        dataloaders_mirai = [torch.utils.data.DataLoader(dataset, batch_size=4096) for dataset in datasets_mirai]
-        for i, attack in enumerate(mirai_attacks):
-            losses = test_autoencoder(model, dataloaders_mirai[i], criterion, '[Mirai ' + attack + ']')
-            predictions = torch.gt(losses, threshold)
-            positive_predictions = predictions.int().sum().item()
-            print_positives(positive_predictions, len(predictions))
-            tp += positive_predictions
-            fn += len(datasets_mirai[i]) - positive_predictions
-
-    # Gafgyt validation
-    for i, attack in enumerate(gafgyt_attacks):
-        dataloaders_gafgyt = [torch.utils.data.DataLoader(dataset, batch_size=4096) for dataset in datasets_gafgyt]
-        losses = test_autoencoder(model, dataloaders_gafgyt[i], criterion, '[Gafgyt ' + attack + ']')
-        predictions = torch.gt(losses, threshold)
-        positive_predictions = predictions.int().sum().item()
-        print_positives(positive_predictions, len(predictions))
-        tp += positive_predictions
-        fn += len(datasets_gafgyt[i]) - positive_predictions
-
-    print_rates(tp, tn, fp, fn)
-
-    return tp, tn, fp, fn
+    # Local testing of each autoencoder
+    multitest_autoencoders(tests=zip(['Model trained on all devices'],
+                                     [dataloader_benign_test], [dataloaders_mirai], [dataloaders_gafgyt],
+                                     [model], [threshold]),
+                           ctp=ctp, main_title='Testing the autoencoder on test data from all devices', color=Color.BLUE)
 
 
-def single_autoencoder():
-    print(Color.BOLD + Color.RED + 'All devices combined' + Color.END)
-    experiment_autoencoder(all_devices, epochs=0, normalization='0-mean 1-var', ws=1)
+def multiple_autoencoders(args):
+    # Initialization of the models
+    models = [SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers) for _ in range(len(all_devices))]
 
+    # Loading the data and creating the dataloaders
+    dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt = [], [], [], [], []
+    for device in all_devices:
+        dataset = get_autoencoder_datasets([device], normalization=args.normalization)
+        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
+        dataloaders_opt.append(torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs))
+        dataloaders_benign_test.append(torch.utils.data.DataLoader(dataset[2], batch_size=args.test_bs))
+        if dataset[3] is not None:
+            dataloaders_mirai.append([torch.utils.data.DataLoader(dataset[3][i], batch_size=args.test_bs) for i in range(len(mirai_attacks))])
+        else:
+            dataloaders_mirai.append(None)
+        dataloaders_gafgyt.append([torch.utils.data.DataLoader(dataset[4][i], batch_size=args.test_bs) for i in range(len(gafgyt_attacks))])
 
-def multiple_autoencoders():
-    window_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1]  # window_sizes = [82, 20, 22, 65, 32, 43, 32, 23, 25]
-    tp, tn, fp, fn = 0, 0, 0, 0
-    for i, device in enumerate(all_devices):
-        print(Color.BOLD + Color.RED + '[' + repr(i + 1) + '/' + repr(len(all_devices)) + '] ' + device + Color.END)
-        current_tp, current_tn, current_fp, current_fn = \
-            experiment_autoencoder([device], epochs=0, normalization='0-mean 1-var', ws=window_sizes[i])
-        tp += current_tp
-        tn += current_tn
-        fp += current_fp
-        fn += current_fn
-        print()
-    print_rates(tp, tn, fp, fn)
+    ctp = ContextPrinter()
+    ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODERS\n', bold=True)
+
+    # Local training of each autoencoder
+    multitrain_autoencoders(trains=zip(['with train data from ' + device for device in all_devices], dataloaders_train, models),
+                            lr=args.lr, epochs=args.epochs,
+                            ctp=ctp, main_title='Training the different autoencoders', color=Color.GREEN)
+
+    # Computation of the thresholds
+    thresholds = compute_thresholds(opts=zip(['with opt data from ' + device for device in all_devices], dataloaders_opt, models),
+                                    ctp=ctp, color=Color.RED)
+
+    # Local testing of each autoencoder
+    multitest_autoencoders(tests=zip(['Model trained on dataset ' + device for device in all_devices],
+                                     dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt,
+                                     models, thresholds),
+                           ctp=ctp, main_title='Testing different clients on their own data', color=Color.BLUE)

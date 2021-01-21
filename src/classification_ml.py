@@ -1,10 +1,12 @@
-from metrics import StatisticsMeter
 import torch
-from print_util import print_train_classifier, Color, print_bar, print_rates
 import torch.nn as nn
 
+from metrics import StatisticsMeter
+from print_util import print_train_classifier, Color, print_rates, ContextPrinter
 
-def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler, color=''):
+
+def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler, ctp: ContextPrinter):
+    ctp.add_header('      ')
     model.train()
 
     num_elements = len(train_loader.dataset)
@@ -33,13 +35,14 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
 
             accuracy.update(success.mean(), end-start)
             if i % 1000 == 0:
-                print_train_classifier(epoch, num_epochs, i, len(train_loader), accuracy.avg, lr, persistent=False, color=color)
+                print_train_classifier(epoch, num_epochs, i, len(train_loader), accuracy.avg, lr, ctp, persistent=False)
 
-        print_train_classifier(epoch, num_epochs, len(train_loader), len(train_loader), accuracy.avg, lr, persistent=True, color=color)
+        print_train_classifier(epoch, num_epochs, len(train_loader), len(train_loader), accuracy.avg, lr, ctp, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
+    ctp.remove_header()
 
 
 def test_classifier(model, test_loader):
@@ -75,46 +78,49 @@ def test_classifier(model, test_loader):
         return tp, tn, fp, fn
 
 
-# tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
-# this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(tests, main_title='Multitest classifiers', color=''):
-    print(Color.BOLD + color + main_title + Color.END)
-    if type(tests) == zip:
-        tests = list(tests)
+# trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
+# this function will train each model on its associated dataloader, and will print the title for it
+def multitrain_classifiers(trains, lr, epochs, ctp: ContextPrinter, main_title='Multitrain classifiers', color=Color.NONE):
+    ctp.print(main_title, color=color, bold=True)
+    ctp.add_bar(color)
 
-    tp, tn, fp, fn = 0, 0, 0, 0
-    for i, (title, dataloader, model) in enumerate(tests):
-        print_bar(color)
-        print('[{}/{}] '.format(i + 1, len(tests)) + title)
-        current_tp, current_tn, current_fp, current_fn = test_classifier(model, dataloader)
-        print_rates(current_tp, current_tn, current_fp, current_fn, color)
-        tp += current_tp
-        tn += current_tn
-        fp += current_fp
-        fn += current_fn
-        print_bar(color)
-        print()
-
-    print_bar(color)
-    print('Average results')
-    print_rates(tp, tn, fp, fn, color)
-    print('\n')
-
-
-def multitrain_classifiers(trains, lr, epochs, main_title='Multitrain autoencoders', color=''):
-    print(Color.BOLD + color + main_title + Color.END)
     if type(trains) == zip:
         trains = list(trains)
 
     criterion = nn.BCELoss()
     for i, (title, dataloader, model) in enumerate(trains):
-        print_bar(color)
-        print('[{}/{}] '.format(i + 1, len(trains)) + title)
+        ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title)
 
         optimizer = torch.optim.Adadelta(model.parameters(), lr=lr, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
-        train_classifier(model, epochs, dataloader, optimizer, criterion, scheduler, color)
-        if i != len(trains)-1:
-            print_bar(color)
-        print()
-    print()
+        train_classifier(model, epochs, dataloader, optimizer, criterion, scheduler, ctp)
+        if i == len(trains)-1:
+            ctp.remove_header()
+        ctp.print()
+    ctp.print()
+
+
+# tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
+# this function will test each model on its associated dataloader, and will print the title for it
+def multitest_classifiers(tests, ctp: ContextPrinter, main_title='Multitest classifiers', color=Color.NONE):
+    ctp.print(main_title, color=color, bold=True)
+    ctp.add_bar(color)
+
+    if type(tests) == zip:
+        tests = list(tests)
+
+    tp, tn, fp, fn = 0, 0, 0, 0
+    for i, (title, dataloader, model) in enumerate(tests):
+        ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title)
+        current_tp, current_tn, current_fp, current_fn = test_classifier(model, dataloader)
+        print_rates(current_tp, current_tn, current_fp, current_fn, ctp)
+        tp += current_tp
+        tn += current_tn
+        fp += current_fp
+        fn += current_fn
+        ctp.print()
+
+    ctp.print('Average results')
+    print_rates(tp, tn, fp, fn, ctp)
+    ctp.remove_header()
+    ctp.print('\n')

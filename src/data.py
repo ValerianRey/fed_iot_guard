@@ -1,7 +1,6 @@
-import torch
 import pandas as pd
+import torch
 import torch.utils.data
-
 
 all_devices = ['Danmini_Doorbell',
                'Ecobee_Thermostat',
