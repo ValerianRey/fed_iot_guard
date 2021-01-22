@@ -29,7 +29,7 @@ def main(experiment='single_classifier'):
     classifier_opt_federated_params = {'epochs': 3,
                                        'train_bs': 64,
                                        'lr': 1.0,
-                                       'federated_rounds': 3,
+                                       'federation_rounds': 3,
                                        'gamma_round': 0.5}
 
     if experiment == 'single_autoencoder':
@@ -64,6 +64,8 @@ def main(experiment='single_classifier'):
 # TODO: evaluation mode (just test a model without training it first)
 
 # TODO: grid search mode to find some hyper parameters, using a validation set
+
+# TODO: implement federated autoencoders
 
 
 if __name__ == "__main__":

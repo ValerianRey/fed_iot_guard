@@ -22,7 +22,7 @@ class ContextPrinter(object):
         self.headers = []
 
     def add_bar(self, color):
-        self.add_header(color + '| ' + Color.END)
+        self.add_header(color + '█ ' + Color.END)
 
     def add_header(self, txt):
         self.headers.append(txt)
@@ -30,13 +30,18 @@ class ContextPrinter(object):
     def remove_header(self):
         self.headers = self.headers[:-1]
 
-    def print(self, txt='', color='', bold=False, rewrite=False, end='\n'):
+    def __print_line(self, txt='', color='', bold=False, rewrite=False, end='\n'):
         if rewrite:
             print('\r', end='')
         for header in self.headers:
             print(header, end='')
 
         print(color + (Color.BOLD if bold else '') + txt + Color.END, end=end)
+
+    def print(self, txt='', color='', bold=False, rewrite=False, end='\n'):
+        lines = txt.split('\n')
+        for line in lines:
+            self.__print_line(line, color=color, bold=bold, rewrite=rewrite, end=end)
 
 
 def print_positives(positives, total, ctp: ContextPrinter):
@@ -68,9 +73,22 @@ def print_train_autoencoder(epoch, num_epochs, losses, lr, ctp: ContextPrinter):
 
 
 def print_test_autoencoder(title, losses, ctp: ContextPrinter):
-    ctp.print(title + ' - Min loss: {:.4f}'.format(losses.min())
-              + ' - 0.01 quantile: {:.4f}'.format(torch.quantile(losses, 0.01).item())
-              + ' Average loss: {:.4f}'.format(losses.mean())
-              + ' - 0.99 quantile: {:.4f}'.format(torch.quantile(losses, 0.99).item())
-              + ' - Max loss: {:.4f}'.format(losses.max())
-              + ' - STD loss: {:.4f}'.format(losses.std()))
+    column_size = 16
+    ctp.print(title.ljust(column_size)
+              + '| {:.4f}'.format(losses.min()).ljust(column_size)
+              + '| {:.4f}'.format(torch.quantile(losses, 0.01).item()).ljust(column_size)
+              + '| {:.4f}'.format(losses.mean()).ljust(column_size)
+              + '| {:.4f}'.format(torch.quantile(losses, 0.99).item()).ljust(column_size)
+              + '| {:.4f}'.format(losses.max()).ljust(column_size)
+              + '| {:.4f}'.format(losses.std()).ljust(column_size))
+
+
+def print_loss_stats_header(ctp: ContextPrinter):
+    column_size = 16
+    ctp.print('LOSS STATS'.ljust(column_size)
+              + '| Min'.ljust(column_size)
+              + '| Q-0.01'.ljust(column_size)
+              + '| Avg'.ljust(column_size)
+              + '| Q-0.99'.ljust(column_size)
+              + '| Max'.ljust(column_size)
+              + '| Std'.ljust(column_size), bold=True)

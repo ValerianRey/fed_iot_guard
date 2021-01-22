@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from data import mirai_attacks, gafgyt_attacks
-from print_util import print_train_autoencoder, print_test_autoencoder, Color, print_rates, print_positives, ContextPrinter
+from print_util import print_train_autoencoder, print_test_autoencoder, Color, print_rates, print_positives, ContextPrinter, print_loss_stats_header
 
 
 def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler, ctp: ContextPrinter):
@@ -54,7 +54,6 @@ def test_autoencoder(model, test_loader, criterion, ctp: ContextPrinter, title='
             losses[start:end] = loss.mean(dim=1)
 
         print_test_autoencoder(title, losses, ctp)
-
         return losses
 
 
@@ -91,6 +90,7 @@ def compute_thresholds(opts, ctp: ContextPrinter, main_title='Computing threshol
     thresholds = []
     for i, (title, dataloader, model) in enumerate(opts):
         ctp.print('[{}/{}] '.format(i + 1, len(opts)) + title)
+        print_loss_stats_header(ctp)
         losses = test_autoencoder(model, dataloader, criterion, ctp, '[Benign (opt)]')
         avg_loss_val = losses.mean()
         std_loss_val = losses.std()
@@ -133,6 +133,7 @@ def multitest_autoencoders(tests, ctp: ContextPrinter, main_title='Multitest aut
     for i, (title, dataloader_benign_test, dataloaders_mirai, dataloaders_gafgyt, model, threshold) in enumerate(tests):
         ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
         ctp.add_bar(Color.NONE)
+        print_loss_stats_header(ctp)
         losses = test_autoencoder(model, dataloader_benign_test, criterion, ctp, '[Benign (test)]')
         predictions = torch.gt(losses, threshold).int()
         (tp, tn, fp, fn) = tuple(map(sum, zip((tp, tn, fp, fn), count_scores(predictions, is_malicious=False, ctp=ctp))))

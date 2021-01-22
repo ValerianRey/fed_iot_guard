@@ -1,47 +1,40 @@
 from copy import deepcopy
 
-import torch
-import torch.utils.data
-
 from architectures import BinaryClassifier
 from classification_ml import multitrain_classifiers, multitest_classifiers
-from data import get_classifier_datasets, all_devices
+from data import all_devices, get_classifier_dataloaders
 from federated_util import federated_averaging
 from print_util import Color, ContextPrinter
 
 
 def single_classifier(args):
-    # Initialize the model
-    model = BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
-
-    # Loading the data
-    dataset_train, dataset_test = get_classifier_datasets(all_devices, normalization=args.normalization)
-    dataloader_train = torch.utils.data.DataLoader(dataset_train, batch_size=args.train_bs, shuffle=True)
-    dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.test_bs)
-
     ctp = ContextPrinter()
     ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER\n', bold=True)
 
+    # Initialize the model
+    model = BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
+
+    # Loading the data and creating the dataloaders
+    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
+
     # Training
-    multitrain_classifiers(trains=[('with data from all devices', dataloader_train, model)], lr=args.lr, epochs=args.epochs,
+    multitrain_classifiers(trains=zip(['with data from all devices'], dataloaders_train, [model]), lr=args.lr, epochs=args.epochs,
                            ctp=ctp, main_title='Training the single model', color=Color.GREEN)
 
     # Testing
-    multitest_classifiers(tests=[('Model trained on all devices', dataloader_test, model)],
+    multitest_classifiers(tests=zip(['Model trained on all devices'], dataloaders_test, [model]),
                           ctp=ctp, main_title='Testing the single model', color=Color.BLUE)
 
 
 def multiple_classifiers(args):
+    ctp = ContextPrinter()
+    ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS\n', bold=True)
+
     # Initialization of the models
     models = [BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers) for _ in range(len(all_devices))]
 
     # Loading the data and creating the dataloaders
-    datasets = [get_classifier_datasets([device], normalization=args.normalization) for device in all_devices]
-    dataloaders_train = [torch.utils.data.DataLoader(dataset_train, batch_size=args.train_bs, shuffle=True) for (dataset_train, _) in datasets]
-    dataloaders_test = [torch.utils.data.DataLoader(dataset_test, batch_size=args.test_bs) for (_, dataset_test) in datasets]
-
-    ctp = ContextPrinter()
-    ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS\n', bold=True)
+    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
 
     # Local training of each client
     multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices], dataloaders_train, models),
@@ -55,18 +48,19 @@ def multiple_classifiers(args):
 
 def federated_classifiers(args):
     ctp = ContextPrinter()
+    ctp.print('\n\t\t\t\t\tFEDERATED CLASSIFIERS\n', bold=True)
 
     # Initialization of a global model
     global_model = BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
 
     # Loading the data and creating the dataloaders (one per client)
-    datasets = [get_classifier_datasets([device], normalization=args.normalization) for device in all_devices]
-    dataloaders_train = [torch.utils.data.DataLoader(dataset_train, batch_size=args.train_bs, shuffle=True) for (dataset_train, _) in datasets[:8]]
-    dataloaders_test = [torch.utils.data.DataLoader(dataset_test, batch_size=args.test_bs) for (_, dataset_test) in datasets]
+    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
+    dataloaders_train = dataloaders_train[:8]  # We only see the data from 8 devices during training, so that the data from the last device is unseen
+
     ctp.print()
 
     for federation_round in range(args.federation_rounds):
-        ctp.print('\t\t\t\t\tFEDERATION ROUND [{}/{}]'.format(federation_round + 1, args.federation_rounds), bold=True)
+        ctp.print('\t\t\t\t\tFederation round [{}/{}]'.format(federation_round + 1, args.federation_rounds), bold=True)
         ctp.add_bar(Color.BOLD)
         ctp.print()
         # Distribute the global model to all clients
@@ -94,3 +88,4 @@ def federated_classifiers(args):
         multitest_classifiers(tests=zip(['Data from device ' + device for device in all_devices], dataloaders_test, [global_model for _ in range(9)]),
                               ctp=ctp, main_title='Testing global model (after averaging) on data from different devices', color=Color.CYAN)
         ctp.remove_header()
+        ctp.print('\n')

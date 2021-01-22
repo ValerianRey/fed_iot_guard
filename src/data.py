@@ -2,6 +2,8 @@ import pandas as pd
 import torch
 import torch.utils.data
 
+from print_util import ContextPrinter, Color
+
 all_devices = ['Danmini_Doorbell',
                'Ecobee_Thermostat',
                'Ennio_Doorbell',
@@ -44,7 +46,6 @@ def get_sub_div(benign_data_train, normalization):
 
 
 def get_dataframes(devices):
-    print('Reading data')
     benign_dataframes = [pd.read_csv(benign_paths[device]) for device in devices]
     mirai_dataframes = [[pd.read_csv(attack_paths[device]) for device in devices if device in mirai_devices]
                         for attack_paths in mirai_paths]
@@ -54,16 +55,15 @@ def get_dataframes(devices):
 
 def get_splits(devices, splits_benign=1, splits_attack=1, chronological=True):
     benign_dataframes, mirai_dataframes, gafgyt_dataframes = get_dataframes(devices)
-    print('Constructing tensors')
 
     if chronological:
-        benign_indexes = [[slice(split*(len(df.values)//splits_benign),
-                                 (split+1)*(len(df.values)//splits_benign))
+        benign_indexes = [[slice(split * (len(df.values) // splits_benign),
+                                 (split + 1) * (len(df.values) // splits_benign))
                            for df in benign_dataframes]
                           for split in range(splits_benign)]
 
-        mirai_indexes = [[[slice(split*(len(df.values)//splits_attack),
-                                 (split+1)*(len(df.values)//splits_attack))
+        mirai_indexes = [[[slice(split * (len(df.values) // splits_attack),
+                                 (split + 1) * (len(df.values) // splits_attack))
                            for df in mirai_dataframes[attack_id]]
                           for attack_id in range(len(mirai_attacks))]
                          for split in range(splits_attack)]
@@ -170,3 +170,58 @@ def get_autoencoder_datasets(devices, normalization='0-mean 1-var'):
     datasets_gafgyt = [torch.utils.data.TensorDataset(attack_data) for attack_data in gafgyt_data]
 
     return dataset_benign_train, dataset_benign_opt, dataset_benign_test, datasets_mirai, datasets_gafgyt
+
+
+def get_autoencoder_dataloaders(args, devices_list, ctp: ContextPrinter, color=Color.NONE):
+    ctp.print('Reading data', color=color, bold=True)
+    ctp.add_bar(color)
+
+    dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt = [], [], [], [], []
+
+    for i, devices in enumerate(devices_list):
+        ctp.print('[{}/{}] Data from '.format(i + 1, len(devices_list)), end='')
+        if type(devices) == list:
+            print('{} devices: '.format(len(devices)) + ', '.join(devices))
+            dataset = get_autoencoder_datasets(devices, args.normalization)
+        else:
+            print(devices)
+            dataset = get_autoencoder_datasets([devices], args.normalization)
+
+        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
+        dataloaders_opt.append(torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs))
+        dataloaders_benign_test.append(torch.utils.data.DataLoader(dataset[2], batch_size=args.test_bs))
+        if dataset[3] is not None:
+            dataloaders_mirai.append([torch.utils.data.DataLoader(dataset[3][i], batch_size=args.test_bs) for i in range(len(mirai_attacks))])
+        else:
+            dataloaders_mirai.append(None)
+        dataloaders_gafgyt.append([torch.utils.data.DataLoader(dataset[4][i], batch_size=args.test_bs) for i in range(len(gafgyt_attacks))])
+
+    ctp.remove_header()
+    ctp.print('\n')
+    return dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt
+
+
+# devices_list can be a list of devices or a list of lists of devices (so that each output dataloader will contain data from multiple devices)
+def get_classifier_dataloaders(args, devices_list, ctp: ContextPrinter, color=Color.NONE):
+    ctp.print('Reading data', color=color, bold=True)
+    ctp.add_bar(color)
+
+    dataloaders_train, dataloaders_test = [], []
+
+    for i, devices in enumerate(devices_list):
+        ctp.print('[{}/{}] Data from '.format(i + 1, len(devices_list)), end='')
+        if type(devices) == list:
+            print('{} devices: '.format(len(devices)) + ', '.join(devices))
+            dataset = get_classifier_datasets(devices, normalization=args.normalization)
+        else:
+            print(devices)
+            dataset = get_classifier_datasets([devices], normalization=args.normalization)
+
+        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
+
+        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
+        dataloaders_test.append(torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs))
+
+    ctp.remove_header()
+    ctp.print('\n')
+    return dataloaders_train, dataloaders_test
