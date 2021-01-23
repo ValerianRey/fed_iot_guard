@@ -20,15 +20,24 @@ def main(experiment='single_classifier'):
 
     autoencoder_opt_default_params = {'epochs': 0,
                                       'train_bs': 64,
-                                      'lr': 1.0}
+                                      'optimizer': torch.optim.Adadelta,
+                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
+                                      'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
+                                      'lr_scheduler_params': {'patience': 5, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 2,
                                      'train_bs': 64,
-                                     'lr': 1.0}
+                                     'optimizer': torch.optim.Adadelta,
+                                     'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
+                                     'lr_scheduler': torch.optim.lr_scheduler.StepLR,
+                                     'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
     classifier_opt_federated_params = {'epochs': 3,
                                        'train_bs': 64,
-                                       'lr': 1.0,
+                                       'optimizer': torch.optim.Adadelta,
+                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
+                                       'lr_scheduler': torch.optim.lr_scheduler.StepLR,
+                                       'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5},
                                        'federation_rounds': 3,
                                        'gamma_round': 0.5}
 
@@ -52,8 +61,6 @@ def main(experiment='single_classifier'):
 #  => the objective is to have a greater variety of results
 
 # TODO: custom loss function (more weight on false positives than false negatives for example)
-
-# TODO: better handling of the parameters: add parameters to decide the optimizer and LRS
 
 # TODO: make a few interesting experiments: test global model on a dataset that has been seen during training (actually already done)
 

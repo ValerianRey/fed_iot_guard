@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from data import mirai_attacks, gafgyt_attacks
 from print_util import print_train_autoencoder, print_test_autoencoder, Color, print_rates, print_positives, ContextPrinter, print_loss_stats_header
+from metrics import BinaryClassificationResults
 
 
 def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler, ctp: ContextPrinter):
@@ -33,7 +34,7 @@ def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, sch
             break
 
 
-def test_autoencoder(model, test_loader, criterion, ctp: ContextPrinter, title=''):
+def autoencode(model, test_loader, criterion, ctp: ContextPrinter, title=''):
     with torch.no_grad():
         model.eval()
         num_elements = len(test_loader.dataset)
@@ -57,21 +58,47 @@ def test_autoencoder(model, test_loader, criterion, ctp: ContextPrinter, title='
         return losses
 
 
+def test_autoencoder(model, threshold, dataloader_benign_test, dataloaders_gafgyt, dataloaders_mirai, criterion, ctp):
+    ctp.add_bar(Color.NONE)
+    print_loss_stats_header(ctp)
+    losses = autoencode(model, dataloader_benign_test, criterion, ctp, '[Benign (test)]')
+    predictions = torch.gt(losses, threshold).int()
+    results = count_scores(predictions, is_malicious=False, ctp=ctp)
+    # Mirai validation
+    if dataloaders_mirai is not None:
+        for j, attack in enumerate(mirai_attacks):
+            losses = autoencode(model, dataloaders_mirai[j], criterion, ctp, '[Mirai ' + attack + ']')
+            predictions = torch.gt(losses, threshold)
+            results += count_scores(predictions, is_malicious=True, ctp=ctp)
+    # Gafgyt validation
+    for j, attack in enumerate(gafgyt_attacks):
+        losses = autoencode(model, dataloaders_gafgyt[j], criterion, ctp, '[Gafgyt ' + attack + ']')
+        predictions = torch.gt(losses, threshold)
+        results += count_scores(predictions, is_malicious=True, ctp=ctp)
+    print_rates(results, ctp)
+    ctp.remove_header()
+    return results
+
+
 # trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will train each model on its associated dataloader, and will print the title for it
-def multitrain_autoencoders(trains, lr, epochs, ctp: ContextPrinter, main_title='Multitrain autoencoders', color=Color.NONE):
+def multitrain_autoencoders(trains, args, ctp: ContextPrinter, lr_factor=1.0, main_title='Multitrain autoencoders', color=Color.NONE):
     ctp.print(main_title, color=color, bold=True)
     ctp.add_bar(color)
+
     if type(trains) == zip:
         trains = list(trains)
 
     criterion = nn.MSELoss(reduction='none')
     for i, (title, dataloader, model) in enumerate(trains):
         ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title)
-        optimizer = torch.optim.Adadelta(model.parameters(), lr=lr, weight_decay=5 * 1e-5)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, threshold=1e-2,
-                                                               factor=0.5, verbose=True)
-        train_autoencoder(model, epochs, dataloader, optimizer, criterion, scheduler, ctp)
+        optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = param_group['lr'] * lr_factor
+
+        scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
+
+        train_autoencoder(model, args.epochs, dataloader, optimizer, criterion, scheduler, ctp)
         if i != len(trains) - 1:
             ctp.print()
     ctp.remove_header()
@@ -90,7 +117,7 @@ def compute_thresholds(opts, ctp: ContextPrinter, main_title='Computing threshol
     for i, (title, dataloader, model) in enumerate(opts):
         ctp.print('[{}/{}] '.format(i + 1, len(opts)) + title)
         print_loss_stats_header(ctp)
-        losses = test_autoencoder(model, dataloader, criterion, ctp, '[Benign (opt)]')
+        losses = autoencode(model, dataloader, criterion, ctp, '[Benign (opt)]')
         avg_loss_val = losses.mean()
         std_loss_val = losses.std()
         threshold = avg_loss_val + std_loss_val
@@ -106,15 +133,14 @@ def count_scores(predictions, is_malicious, ctp: ContextPrinter):
     positive_predictions = predictions.sum().item()
     negative_predictions = len(predictions) - positive_predictions
     print_positives(positive_predictions, len(predictions), ctp)
+    results = BinaryClassificationResults()
     if is_malicious:
-        tp = positive_predictions
-        fn = negative_predictions
-        tn, fp = 0, 0
+        results.add_tp(positive_predictions)
+        results.add_fn(negative_predictions)
     else:
-        fp = positive_predictions
-        tn = negative_predictions
-        tp, fn = 0, 0
-    return tp, tn, fp, fn
+        results.add_fp(positive_predictions)
+        results.add_tn(negative_predictions)
+    return results
 
 
 # tests should be a list of tuples (title, dataloader_benign_test, dataloaders_mirai, dataloaders_gafgyt, model, threshold)
@@ -123,36 +149,17 @@ def count_scores(predictions, is_malicious, ctp: ContextPrinter):
 def multitest_autoencoders(tests, ctp: ContextPrinter, main_title='Multitest autoencoders', color=Color.NONE):
     ctp.print(main_title, color=color, bold=True)
     ctp.add_bar(color)
+
     if type(tests) == zip:
         tests = list(tests)
 
     criterion = nn.MSELoss(reduction='none')
-    tp, tn, fp, fn = 0, 0, 0, 0
+    results = BinaryClassificationResults()
     for i, (title, dataloader_benign_test, dataloaders_mirai, dataloaders_gafgyt, model, threshold) in enumerate(tests):
         ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
-        ctp.add_bar(Color.NONE)
-        print_loss_stats_header(ctp)
-        losses = test_autoencoder(model, dataloader_benign_test, criterion, ctp, '[Benign (test)]')
-        predictions = torch.gt(losses, threshold).int()
-        (tp, tn, fp, fn) = tuple(map(sum, zip((tp, tn, fp, fn), count_scores(predictions, is_malicious=False, ctp=ctp))))
-
-        # Mirai validation
-        if dataloaders_mirai is not None:
-            for j, attack in enumerate(mirai_attacks):
-                losses = test_autoencoder(model, dataloaders_mirai[j], criterion, ctp, '[Mirai ' + attack + ']')
-                predictions = torch.gt(losses, threshold)
-                (tp, tn, fp, fn) = tuple(map(sum, zip((tp, tn, fp, fn), count_scores(predictions, is_malicious=True, ctp=ctp))))
-
-        # Gafgyt validation
-        for j, attack in enumerate(gafgyt_attacks):
-            losses = test_autoencoder(model, dataloaders_gafgyt[j], criterion, ctp, '[Gafgyt ' + attack + ']')
-            predictions = torch.gt(losses, threshold)
-            (tp, tn, fp, fn) = tuple(map(sum, zip((tp, tn, fp, fn), count_scores(predictions, is_malicious=False, ctp=ctp))))
-
-        print_rates(tp, tn, fp, fn, ctp)
-        ctp.remove_header()
+        results += test_autoencoder(model, threshold, dataloader_benign_test, dataloaders_gafgyt, dataloaders_mirai, criterion, ctp)
         ctp.print()
 
     ctp.print('Average results')
-    print_rates(tp, tn, fp, fn, ctp)
+    print_rates(results, ctp)
     ctp.remove_header()

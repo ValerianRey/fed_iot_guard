@@ -19,8 +19,8 @@ def single_classifier(args):
     ctp.print('\n')
 
     # Training
-    multitrain_classifiers(trains=zip(['with data from all devices'], dataloaders_train, [model]), lr=args.lr, epochs=args.epochs,
-                           ctp=ctp, main_title='Training the single model', color=Color.GREEN)
+    multitrain_classifiers(trains=zip(['with data from all devices'], dataloaders_train, [model]),
+                           args=args, ctp=ctp, main_title='Training the single model', color=Color.GREEN)
     ctp.print('\n')
 
     # Testing
@@ -41,8 +41,7 @@ def multiple_classifiers(args):
 
     # Local training of each client
     multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices], dataloaders_train, models),
-                           lr=args.lr, epochs=args.epochs,
-                           ctp=ctp, main_title='Training the different clients', color=Color.GREEN)
+                           args=args, ctp=ctp, main_title='Training the different clients', color=Color.GREEN)
     ctp.print('\n')
 
     # Local testing
@@ -71,9 +70,9 @@ def federated_classifiers(args):
         models = [deepcopy(global_model) for _ in all_devices[:8]]
 
         # Local training of each client
-        multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices[:8]], dataloaders_train[:8], models[:8]),
-                               lr=(args.lr * args.gamma_round ** federation_round), epochs=args.epochs,
-                               ctp=ctp, main_title='Training the different clients', color=Color.GREEN)
+        multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices[:8]], dataloaders_train, models[:8]),
+                               args=args, ctp=ctp, lr_factor=(args.gamma_round ** federation_round),
+                               main_title='Training the different clients', color=Color.GREEN)
         ctp.print('\n')
 
         # Experiment 1: test all 8 trained clients on the data of the unseen device (9th)

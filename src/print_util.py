@@ -1,4 +1,5 @@
 import torch
+from metrics import BinaryClassificationResults
 
 
 class Color:
@@ -48,14 +49,9 @@ def print_positives(positives, total, ctp: ContextPrinter):
     ctp.print('Positive predictions: ' + repr(positives) + '/' + repr(total) + ' ({:.4f}%)'.format(100 * positives / total))
 
 
-def print_rates(tp, tn, fp, fn, ctp: ContextPrinter):
-    tpr = tp / (tp + fn)
-    tnr = tn / (tn + fp)
-    fpr = fp / (tn + fp)
-    fnr = fn / (tp + fn)
-    acc = (tp + tn) / (tp + tn + fp + fn)
-
-    ctp.print('TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f} - ACC:{:.6f}'.format(tpr, tnr, fpr, fnr, acc))
+def print_rates(results: BinaryClassificationResults, ctp: ContextPrinter):
+    ctp.print('TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f} - ACC:{:.6f}'
+              .format(results.tpr(), results.tnr(), results.fpr(), results.fnr(), results.acc()))
 
 
 def print_train_classifier(epoch, num_epochs, batch, num_batches, avg_acc, lr, ctp: ContextPrinter, persistent=False):

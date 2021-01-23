@@ -18,8 +18,7 @@ def single_autoencoder(args):
 
     # Local training of each autoencoder
     multitrain_autoencoders(trains=zip(['with train data from all devices'], dataloaders_train, [model]),
-                            lr=args.lr, epochs=args.epochs,
-                            ctp=ctp, main_title='Training the single autoencoder', color=Color.GREEN)
+                            args=args, ctp=ctp, main_title='Training the single autoencoder', color=Color.GREEN)
     ctp.print('\n')
 
     # Computation of the thresholds
@@ -48,8 +47,7 @@ def multiple_autoencoders(args):
 
     # Local training of each autoencoder
     multitrain_autoencoders(trains=zip(['with train data from ' + device for device in all_devices], dataloaders_train, models),
-                            lr=args.lr, epochs=args.epochs,
-                            ctp=ctp, main_title='Training the different autoencoders', color=Color.GREEN)
+                            args=args, ctp=ctp, main_title='Training the different autoencoders', color=Color.GREEN)
     ctp.print('\n')
 
     # Computation of the thresholds
