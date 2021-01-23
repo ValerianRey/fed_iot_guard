@@ -2,6 +2,12 @@ import torch
 from metrics import BinaryClassificationResults
 
 
+class Columns:
+    SMALL = 12
+    MEDIUM = 16
+    LARGE = 22
+
+
 class Color:
     PURPLE = '\033[95m'
     CYAN = '\033[96m'
@@ -45,46 +51,48 @@ class ContextPrinter(object):
             self.__print_line(line, color=color, bold=bold, rewrite=rewrite, end=end)
 
 
-def print_positives(positives, total, ctp: ContextPrinter):
-    ctp.print('Positive predictions: ' + repr(positives) + '/' + repr(total) + ' ({:.4f}%)'.format(100 * positives / total))
-
-
 def print_rates(results: BinaryClassificationResults, ctp: ContextPrinter):
     ctp.print('TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f} - ACC:{:.6f}'
               .format(results.tpr(), results.tnr(), results.fpr(), results.fnr(), results.acc()))
 
 
-def print_train_classifier(epoch, num_epochs, batch, num_batches, avg_acc, lr, ctp: ContextPrinter, persistent=False):
-    ctp.print('[{}/{}] [{}/{}] Average acc: {:.6f} - LR: {:.6f}'.format(epoch + 1, num_epochs, batch, num_batches, avg_acc, lr),
+def print_train_classifier_header(ctp: ContextPrinter):
+    ctp.print('Epoch'.ljust(Columns.SMALL)
+              + '| Batch'.ljust(Columns.MEDIUM)
+              + '| Avg accuracy'.ljust(Columns.MEDIUM)
+              + '| LR'.ljust(Columns.MEDIUM), bold=True)
+
+
+def print_train_classifier(batch, num_batches, avg_acc, lr, ctp: ContextPrinter, persistent=False):
+    ctp.print('| [{}/{}]'.format(batch, num_batches).ljust(Columns.MEDIUM)
+              + '| {:.6f}'.format(avg_acc).ljust(Columns.MEDIUM)
+              + '| {:.6f}'.format(lr).ljust(Columns.MEDIUM),
               rewrite=True, end='\n' if persistent else '')
 
 
-def print_train_autoencoder(epoch, num_epochs, losses, lr, ctp: ContextPrinter):
-    ctp.print('[{}/{}] Average loss: {:.4f}'.format(epoch + 1, num_epochs, losses.mean())
-              + ' - Min loss: {:.4f}'.format(losses.min())
-              + ' - 0.99 quantile: {:.4f}'.format(torch.quantile(losses, 0.99).item())
-              + ' - Max loss: {:.4f}'.format(losses.max())
-              + ' - STD loss: {:.4f}'.format(losses.std())
-              + ' - LR: {:.6f}'.format(lr))
+def print_loss_autoencoder_header(ctp: ContextPrinter, first_column='Dataset', print_positives=False, print_lr=False):
+    ctp.print(first_column.ljust(Columns.MEDIUM)
+              + '| Min loss'.ljust(Columns.MEDIUM)
+              + '| Q-0.01 loss'.ljust(Columns.MEDIUM)
+              + '| Avg loss'.ljust(Columns.MEDIUM)
+              + '| Q-0.99 loss'.ljust(Columns.MEDIUM)
+              + '| Max loss'.ljust(Columns.MEDIUM)
+              + '| Std loss'.ljust(Columns.MEDIUM)
+              + ('| Positive samples'.ljust(Columns.LARGE) + '| Positive %'.ljust(Columns.MEDIUM) if print_positives else '')
+              + ('| LR'.ljust(Columns.MEDIUM) if print_lr else ''),
+              bold=True)
 
 
-def print_test_autoencoder(title, losses, ctp: ContextPrinter):
-    column_size = 16
-    ctp.print(title.ljust(column_size)
-              + '| {:.4f}'.format(losses.min()).ljust(column_size)
-              + '| {:.4f}'.format(torch.quantile(losses, 0.01).item()).ljust(column_size)
-              + '| {:.4f}'.format(losses.mean()).ljust(column_size)
-              + '| {:.4f}'.format(torch.quantile(losses, 0.99).item()).ljust(column_size)
-              + '| {:.4f}'.format(losses.max()).ljust(column_size)
-              + '| {:.4f}'.format(losses.std()).ljust(column_size))
+def print_loss_autoencoder(title, losses, ctp: ContextPrinter, positives=None, n_samples=None, lr=None):
+    print_positives = (positives is not None and n_samples is not None)
 
-
-def print_loss_stats_header(ctp: ContextPrinter):
-    column_size = 16
-    ctp.print('LOSS STATS'.ljust(column_size)
-              + '| Min'.ljust(column_size)
-              + '| Q-0.01'.ljust(column_size)
-              + '| Avg'.ljust(column_size)
-              + '| Q-0.99'.ljust(column_size)
-              + '| Max'.ljust(column_size)
-              + '| Std'.ljust(column_size), bold=True)
+    ctp.print(title.ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(losses.min()).ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(torch.quantile(losses, 0.01).item()).ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(losses.mean()).ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(torch.quantile(losses, 0.99).item()).ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(losses.max()).ljust(Columns.MEDIUM)
+              + '| {:.4f}'.format(losses.std()).ljust(Columns.MEDIUM)
+              + ('| {}/{}'.format(positives, n_samples).ljust(Columns.LARGE)
+                 + '| {:.4f}%'.format(100.0 * positives / n_samples).ljust(Columns.MEDIUM) if print_positives else '')
+              + ('| {:.6f}'.format(lr) if lr is not None else ''))

@@ -82,3 +82,6 @@ class BinaryClassificationResults(object):
     # F1-Score
     def f1(self):
         return (2 * self.precision() * self.recall()) / (self.precision() + self.recall())
+
+    def n_samples(self):
+        return self.tp + self.tn + self.fp + self.fn

@@ -58,19 +58,19 @@ def federated_classifiers(args):
 
     # Loading the data and creating the dataloaders (one per client)
     dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
-    ctp.print('\n')
-
     dataloaders_train = dataloaders_train[:8]  # We only see the data from 8 devices during training, so that the data from the last device is unseen
+    ctp.print('\n')
 
     for federation_round in range(args.federation_rounds):
         ctp.print('\t\t\t\t\tFederation round [{}/{}]'.format(federation_round + 1, args.federation_rounds), bold=True)
         ctp.add_bar(Color.BOLD)
         ctp.print()
+
         # Distribute the global model to all clients
         models = [deepcopy(global_model) for _ in all_devices[:8]]
 
         # Local training of each client
-        multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices[:8]], dataloaders_train, models[:8]),
+        multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices[:8]], dataloaders_train, models),
                                args=args, ctp=ctp, lr_factor=(args.gamma_round ** federation_round),
                                main_title='Training the different clients', color=Color.GREEN)
         ctp.print('\n')
@@ -89,7 +89,7 @@ def federated_classifiers(args):
         # Federated averaging
         federated_averaging(global_model, models)
 
-        # Experiment 2: test the global model on the data of all devices, after it has been averaged
+        # Experiment 3: test the global model on the data of all devices, after it has been averaged
         multitest_classifiers(tests=zip(['Data from device ' + device for device in all_devices], dataloaders_test, [global_model for _ in range(9)]),
                               ctp=ctp, main_title='Testing global model (after averaging) on data from different devices', color=Color.CYAN)
         ctp.remove_header()

@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 
 from metrics import StatisticsMeter, BinaryClassificationResults
-from print_util import print_train_classifier, Color, print_rates, ContextPrinter
+from print_util import print_train_classifier, print_train_classifier_header, Color, print_rates, ContextPrinter, Columns
 
 
 def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler, ctp: ContextPrinter):
-    ctp.add_header('      ')
+    ctp.add_bar(Color.GRAY)
+    print_train_classifier_header(ctp)
     model.train()
 
     num_elements = len(train_loader.dataset)
@@ -14,6 +15,7 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
     batch_size = train_loader.batch_size
 
     for epoch in range(num_epochs):
+        ctp.add_header('[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL))
         accuracy = StatisticsMeter()
         lr = optimizer.param_groups[0]['lr']
 
@@ -35,13 +37,14 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
 
             accuracy.update(success.mean(), end-start)
             if i % 1000 == 0:
-                print_train_classifier(epoch, num_epochs, i, len(train_loader), accuracy.avg, lr, ctp, persistent=False)
+                print_train_classifier(i, len(train_loader), accuracy.avg, lr, ctp, persistent=False)
 
-        print_train_classifier(epoch, num_epochs, len(train_loader), len(train_loader), accuracy.avg, lr, ctp, persistent=True)
+        print_train_classifier(len(train_loader), len(train_loader), accuracy.avg, lr, ctp, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
+        ctp.remove_header()
     ctp.remove_header()
 
 
@@ -87,7 +90,7 @@ def multitrain_classifiers(trains, args, ctp: ContextPrinter, lr_factor=1.0, mai
 
     criterion = nn.BCELoss()
     for i, (title, dataloader, model) in enumerate(trains):
-        ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title)
+        ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title, bold=True)
         optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
         for param_group in optimizer.param_groups:
             param_group['lr'] = param_group['lr'] * lr_factor
