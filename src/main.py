@@ -67,6 +67,12 @@ def main(experiment='single_classifier'):
 
 # TODO: implement federated autoencoders
 
+# TODO: use other aggregation methods
+
+# TODO: implement random reruns that return avg and std results to get a sense of confidence interval
+
+# TODO: implement cross validation
+
 
 if __name__ == "__main__":
     main(sys.argv[1])

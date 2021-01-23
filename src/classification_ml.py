@@ -94,10 +94,9 @@ def multitrain_classifiers(trains, lr, epochs, ctp: ContextPrinter, main_title='
         optimizer = torch.optim.Adadelta(model.parameters(), lr=lr, weight_decay=1e-5)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.5)
         train_classifier(model, epochs, dataloader, optimizer, criterion, scheduler, ctp)
-        if i == len(trains)-1:
-            ctp.remove_header()
-        ctp.print()
-    ctp.print()
+        if i != len(trains)-1:
+            ctp.print()
+    ctp.remove_header()
 
 
 # tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
@@ -123,4 +122,3 @@ def multitest_classifiers(tests, ctp: ContextPrinter, main_title='Multitest clas
     ctp.print('Average results')
     print_rates(tp, tn, fp, fn, ctp)
     ctp.remove_header()
-    ctp.print('\n')

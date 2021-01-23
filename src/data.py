@@ -197,7 +197,6 @@ def get_autoencoder_dataloaders(args, devices_list, ctp: ContextPrinter, color=C
         dataloaders_gafgyt.append([torch.utils.data.DataLoader(dataset[4][i], batch_size=args.test_bs) for i in range(len(gafgyt_attacks))])
 
     ctp.remove_header()
-    ctp.print('\n')
     return dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt
 
 
@@ -223,5 +222,4 @@ def get_classifier_dataloaders(args, devices_list, ctp: ContextPrinter, color=Co
         dataloaders_test.append(torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs))
 
     ctp.remove_header()
-    ctp.print('\n')
     return dataloaders_train, dataloaders_test

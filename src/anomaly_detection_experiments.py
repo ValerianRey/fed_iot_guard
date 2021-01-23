@@ -14,15 +14,18 @@ def single_autoencoder(args):
     # Loading the data and creating the dataloaders
     dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt = \
         get_autoencoder_dataloaders(args, [all_devices], ctp=ctp, color=Color.YELLOW)
+    ctp.print('\n')
 
     # Local training of each autoencoder
     multitrain_autoencoders(trains=zip(['with train data from all devices'], dataloaders_train, [model]),
                             lr=args.lr, epochs=args.epochs,
                             ctp=ctp, main_title='Training the single autoencoder', color=Color.GREEN)
+    ctp.print('\n')
 
     # Computation of the thresholds
     [threshold] = compute_thresholds(opts=zip(['with opt data from all devices'], dataloaders_opt, [model]),
                                      ctp=ctp, main_title='Computing threshold', color=Color.RED)
+    ctp.print('\n')
 
     # Local testing of each autoencoder
     multitest_autoencoders(tests=zip(['Model trained on all devices'],
@@ -41,15 +44,18 @@ def multiple_autoencoders(args):
     # Loading the data and creating the dataloaders
     dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt =\
         get_autoencoder_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
+    ctp.print('\n')
 
     # Local training of each autoencoder
     multitrain_autoencoders(trains=zip(['with train data from ' + device for device in all_devices], dataloaders_train, models),
                             lr=args.lr, epochs=args.epochs,
                             ctp=ctp, main_title='Training the different autoencoders', color=Color.GREEN)
+    ctp.print('\n')
 
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=zip(['with opt data from ' + device for device in all_devices], dataloaders_opt, models),
                                     ctp=ctp, color=Color.RED)
+    ctp.print('\n')
 
     # Local testing of each autoencoder
     multitest_autoencoders(tests=zip(['Model trained on dataset ' + device for device in all_devices],

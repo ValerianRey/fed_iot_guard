@@ -72,10 +72,9 @@ def multitrain_autoencoders(trains, lr, epochs, ctp: ContextPrinter, main_title=
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5, threshold=1e-2,
                                                                factor=0.5, verbose=True)
         train_autoencoder(model, epochs, dataloader, optimizer, criterion, scheduler, ctp)
-        if i == len(trains) - 1:
-            ctp.remove_header()
-        ctp.print()
-    ctp.print()
+        if i != len(trains) - 1:
+            ctp.print()
+    ctp.remove_header()
 
 
 # opts should be a list of tuples (title, dataloader_benign_opt, model), (or a zip of the lists: titles, dataloaders_benign_opt, models)
@@ -97,10 +96,9 @@ def compute_thresholds(opts, ctp: ContextPrinter, main_title='Computing threshol
         threshold = avg_loss_val + std_loss_val
         thresholds.append(threshold)
         ctp.print('The threshold is {:.4f}'.format(threshold.item()))
-        if i == len(opts) - 1:
-            ctp.remove_header()
-        ctp.print()
-    ctp.print()
+        if i != len(opts) - 1:
+            ctp.print()
+    ctp.remove_header()
     return thresholds
 
 
@@ -158,4 +156,3 @@ def multitest_autoencoders(tests, ctp: ContextPrinter, main_title='Multitest aut
     ctp.print('Average results')
     print_rates(tp, tn, fp, fn, ctp)
     ctp.remove_header()
-    ctp.print('\n')
