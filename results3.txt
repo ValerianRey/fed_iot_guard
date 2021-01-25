@@ -1,0 +1,453 @@
+
+					FEDERATED CLASSIFIERS
+
+Reading data
+█ [1/9] Data from Danmini_Doorbell
+█ [2/9] Data from Ecobee_Thermostat
+█ [3/9] Data from Ennio_Doorbell
+█ [4/9] Data from Philips_B120N10_Baby_Monitor
+█ [5/9] Data from Provision_PT_737E_Security_Camera
+█ [6/9] Data from Provision_PT_838_Security_Camera
+█ [7/9] Data from Samsung_SNH_1011_N_Webcam
+█ [8/9] Data from SimpleHome_XCS7_1002_WHT_Security_Camera
+█ [9/9] Data from SimpleHome_XCS7_1003_WHT_Security_Camera
+
+
+					Federation round [1/3]
+█ 
+█ Training the different clients
+█ █ [1/8] with data from Danmini_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999739      | 1.000000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999947      | 0.500000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999953      | 0.250000      
+█ █ 
+█ █ [2/8] with data from Ecobee_Thermostat
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999768      | 1.000000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999939      | 0.500000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999957      | 0.250000      
+█ █ 
+█ █ [3/8] with data from Ennio_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999577      | 1.000000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999931      | 0.500000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999938      | 0.250000      
+█ █ 
+█ █ [4/8] with data from Philips_B120N10_Baby_Monitor
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999615      | 1.000000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999923      | 0.500000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999935      | 0.250000      
+█ █ 
+█ █ [5/8] with data from Provision_PT_737E_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.998886      | 1.000000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999561      | 0.500000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999589      | 0.250000      
+█ █ 
+█ █ [6/8] with data from Provision_PT_838_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.998954      | 1.000000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999511      | 0.500000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999572      | 0.250000      
+█ █ 
+█ █ [7/8] with data from Samsung_SNH_1011_N_Webcam
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999660      | 1.000000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999827      | 0.500000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999849      | 0.250000      
+█ █ 
+█ █ [8/8] with data from SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999636      | 1.000000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999847      | 0.500000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999838      | 0.250000      
+█ 
+█ 
+█ Testing different models on data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ [1/8] Model trained on dataset Danmini_Doorbell
+█ █ TPR: 0.999803 - TNR: 0.986481 - FPR: 0.013519 - FNR: 0.000197 - ACC:0.999497
+█ █ 
+█ █ [2/8] Model trained on dataset Ecobee_Thermostat
+█ █ TPR: 0.999815 - TNR: 0.980387 - FPR: 0.019613 - FNR: 0.000185 - ACC:0.999369
+█ █ 
+█ █ [3/8] Model trained on dataset Ennio_Doorbell
+█ █ TPR: 0.999808 - TNR: 0.981804 - FPR: 0.018196 - FNR: 0.000192 - ACC:0.999394
+█ █ 
+█ █ [4/8] Model trained on dataset Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999805 - TNR: 0.981821 - FPR: 0.018179 - FNR: 0.000195 - ACC:0.999392
+█ █ 
+█ █ [5/8] Model trained on dataset Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999770 - TNR: 0.983961 - FPR: 0.016039 - FNR: 0.000230 - ACC:0.999407
+█ █ 
+█ █ [6/8] Model trained on dataset Provision_PT_838_Security_Camera
+█ █ TPR: 0.995674 - TNR: 0.985423 - FPR: 0.014577 - FNR: 0.004326 - ACC:0.995439
+█ █ 
+█ █ [7/8] Model trained on dataset Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.996258 - TNR: 0.984974 - FPR: 0.015026 - FNR: 0.003742 - ACC:0.995999
+█ █ 
+█ █ [8/8] Model trained on dataset SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.996698 - TNR: 0.985918 - FPR: 0.014082 - FNR: 0.003302 - ACC:0.996450
+█ █ 
+█ █ Average results
+█ █ TPR: 0.996698 - TNR: 0.985918 - FPR: 0.014082 - FNR: 0.003302 - ACC:0.996450
+█ 
+█ 
+█ Testing global model (before averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.704679 - TNR: 1.000000 - FPR: 0.000000 - FNR: 0.295321 - ACC:0.719049
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.692407 - TNR: 1.000000 - FPR: 0.000000 - FNR: 0.307593 - ACC:0.702802
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.626198 - TNR: 0.999764 - FPR: 0.000236 - FNR: 0.373802 - ACC:0.643401
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.669058 - TNR: 0.999856 - FPR: 0.000144 - FNR: 0.330942 - ACC:0.696755
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.670866 - TNR: 0.999882 - FPR: 0.000118 - FNR: 0.329134 - ACC:0.697841
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.675633 - TNR: 0.999909 - FPR: 0.000091 - FNR: 0.324367 - ACC:0.704169
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.646135 - TNR: 0.999918 - FPR: 0.000082 - FNR: 0.353865 - ACC:0.678534
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.657334 - TNR: 0.999925 - FPR: 0.000075 - FNR: 0.342666 - ACC:0.686918
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.611346 - TNR: 0.999928 - FPR: 0.000072 - FNR: 0.388654 - ACC:0.641933
+█ █ 
+█ █ Average results
+█ █ TPR: 0.611346 - TNR: 0.999928 - FPR: 0.000072 - FNR: 0.388654 - ACC:0.641933
+█ 
+█ 
+█ Testing global model (after averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.999889 - TNR: 0.995641 - FPR: 0.004359 - FNR: 0.000111 - ACC:0.999682
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.999924 - TNR: 0.996393 - FPR: 0.003607 - FNR: 0.000076 - ACC:0.999805
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.999904 - TNR: 0.991706 - FPR: 0.008294 - FNR: 0.000096 - ACC:0.999527
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999885 - TNR: 0.995011 - FPR: 0.004989 - FNR: 0.000115 - ACC:0.999476
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999866 - TNR: 0.994752 - FPR: 0.005248 - FNR: 0.000134 - ACC:0.999447
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.999855 - TNR: 0.994982 - FPR: 0.005018 - FNR: 0.000145 - ACC:0.999427
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999825 - TNR: 0.992601 - FPR: 0.007399 - FNR: 0.000175 - ACC:0.999164
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999813 - TNR: 0.991685 - FPR: 0.008315 - FNR: 0.000187 - ACC:0.999111
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.999806 - TNR: 0.991697 - FPR: 0.008303 - FNR: 0.000194 - ACC:0.999168
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999806 - TNR: 0.991697 - FPR: 0.008303 - FNR: 0.000194 - ACC:0.999168
+
+
+					Federation round [2/3]
+█ 
+█ Training the different clients
+█ █ [1/8] with data from Danmini_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999864      | 0.500000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999941      | 0.250000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999953      | 0.125000      
+█ █ 
+█ █ [2/8] with data from Ecobee_Thermostat
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999892      | 0.500000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999951      | 0.250000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999957      | 0.125000      
+█ █ 
+█ █ [3/8] with data from Ennio_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999904      | 0.500000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999931      | 0.250000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999940      | 0.125000      
+█ █ 
+█ █ [4/8] with data from Philips_B120N10_Baby_Monitor
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999895      | 0.500000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999923      | 0.250000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999933      | 0.125000      
+█ █ 
+█ █ [5/8] with data from Provision_PT_737E_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.999488      | 0.500000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999561      | 0.250000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999584      | 0.125000      
+█ █ 
+█ █ [6/8] with data from Provision_PT_838_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.999477      | 0.500000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999567      | 0.250000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999595      | 0.125000      
+█ █ 
+█ █ [7/8] with data from Samsung_SNH_1011_N_Webcam
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999758      | 0.500000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999838      | 0.250000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999849      | 0.125000      
+█ █ 
+█ █ [8/8] with data from SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999763      | 0.500000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999825      | 0.250000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999842      | 0.125000      
+█ 
+█ 
+█ Testing different models on data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ [1/8] Model trained on dataset Danmini_Doorbell
+█ █ TPR: 0.999783 - TNR: 0.993138 - FPR: 0.006862 - FNR: 0.000217 - ACC:0.999631
+█ █ 
+█ █ [2/8] Model trained on dataset Ecobee_Thermostat
+█ █ TPR: 0.999797 - TNR: 0.991448 - FPR: 0.008552 - FNR: 0.000203 - ACC:0.999605
+█ █ 
+█ █ [3/8] Model trained on dataset Ennio_Doorbell
+█ █ TPR: 0.999783 - TNR: 0.988734 - FPR: 0.011266 - FNR: 0.000217 - ACC:0.999530
+█ █ 
+█ █ [4/8] Model trained on dataset Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999780 - TNR: 0.987351 - FPR: 0.012649 - FNR: 0.000220 - ACC:0.999495
+█ █ 
+█ █ [5/8] Model trained on dataset Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999800 - TNR: 0.988468 - FPR: 0.011532 - FNR: 0.000200 - ACC:0.999540
+█ █ 
+█ █ [6/8] Model trained on dataset Provision_PT_838_Security_Camera
+█ █ TPR: 0.999811 - TNR: 0.989246 - FPR: 0.010754 - FNR: 0.000189 - ACC:0.999569
+█ █ 
+█ █ [7/8] Model trained on dataset Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999804 - TNR: 0.989524 - FPR: 0.010476 - FNR: 0.000196 - ACC:0.999568
+█ █ 
+█ █ [8/8] Model trained on dataset SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999799 - TNR: 0.989707 - FPR: 0.010293 - FNR: 0.000201 - ACC:0.999567
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999799 - TNR: 0.989707 - FPR: 0.010293 - FNR: 0.000201 - ACC:0.999567
+█ 
+█ 
+█ Testing global model (before averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.999889 - TNR: 0.995641 - FPR: 0.004359 - FNR: 0.000111 - ACC:0.999682
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.999924 - TNR: 0.996393 - FPR: 0.003607 - FNR: 0.000076 - ACC:0.999805
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.999904 - TNR: 0.991706 - FPR: 0.008294 - FNR: 0.000096 - ACC:0.999527
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999885 - TNR: 0.995011 - FPR: 0.004989 - FNR: 0.000115 - ACC:0.999476
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999866 - TNR: 0.994752 - FPR: 0.005248 - FNR: 0.000134 - ACC:0.999447
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.999855 - TNR: 0.994982 - FPR: 0.005018 - FNR: 0.000145 - ACC:0.999427
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999825 - TNR: 0.992601 - FPR: 0.007399 - FNR: 0.000175 - ACC:0.999164
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999813 - TNR: 0.991685 - FPR: 0.008315 - FNR: 0.000187 - ACC:0.999111
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.999806 - TNR: 0.991697 - FPR: 0.008303 - FNR: 0.000194 - ACC:0.999168
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999806 - TNR: 0.991697 - FPR: 0.008303 - FNR: 0.000194 - ACC:0.999168
+█ 
+█ 
+█ Testing global model (after averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.999903 - TNR: 0.997941 - FPR: 0.002059 - FNR: 0.000097 - ACC:0.999808
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.999929 - TNR: 0.998213 - FPR: 0.001787 - FNR: 0.000071 - ACC:0.999871
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.999901 - TNR: 0.995480 - FPR: 0.004520 - FNR: 0.000099 - ACC:0.999698
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999876 - TNR: 0.996816 - FPR: 0.003184 - FNR: 0.000124 - ACC:0.999620
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999871 - TNR: 0.996397 - FPR: 0.003603 - FNR: 0.000129 - ACC:0.999586
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.999858 - TNR: 0.996422 - FPR: 0.003578 - FNR: 0.000142 - ACC:0.999555
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999827 - TNR: 0.994190 - FPR: 0.005810 - FNR: 0.000173 - ACC:0.999310
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999815 - TNR: 0.993591 - FPR: 0.006409 - FNR: 0.000185 - ACC:0.999277
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.999808 - TNR: 0.993557 - FPR: 0.006443 - FNR: 0.000191 - ACC:0.999316
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999808 - TNR: 0.993557 - FPR: 0.006443 - FNR: 0.000191 - ACC:0.999316
+
+
+					Federation round [3/3]
+█ 
+█ Training the different clients
+█ █ [1/8] with data from Danmini_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999916      | 0.250000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999941      | 0.125000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999947      | 0.062500      
+█ █ 
+█ █ [2/8] with data from Ecobee_Thermostat
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [7956/7956]   | 0.999919      | 0.250000      
+█ █ █ [2/3]       | [7956/7956]   | 0.999943      | 0.125000      
+█ █ █ [3/3]       | [7956/7956]   | 0.999947      | 0.062500      
+█ █ 
+█ █ [3/8] with data from Ennio_Doorbell
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999902      | 0.250000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999933      | 0.125000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999933      | 0.062500      
+█ █ 
+█ █ [4/8] with data from Philips_B120N10_Baby_Monitor
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [6531/6531]   | 0.999909      | 0.250000      
+█ █ █ [2/3]       | [6531/6531]   | 0.999933      | 0.125000      
+█ █ █ [3/3]       | [6531/6531]   | 0.999933      | 0.062500      
+█ █ 
+█ █ [5/8] with data from Provision_PT_737E_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.999533      | 0.250000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999584      | 0.125000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999601      | 0.062500      
+█ █ 
+█ █ [6/8] with data from Provision_PT_838_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [2778/2778]   | 0.999522      | 0.250000      
+█ █ █ [2/3]       | [2778/2778]   | 0.999589      | 0.125000      
+█ █ █ [3/3]       | [2778/2778]   | 0.999589      | 0.062500      
+█ █ 
+█ █ [7/8] with data from Samsung_SNH_1011_N_Webcam
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999734      | 0.250000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999836      | 0.125000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999838      | 0.062500      
+█ █ 
+█ █ [8/8] with data from SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ █ Epoch       | Batch         | Avg accuracy  | LR            
+█ █ █ [1/3]       | [8584/8584]   | 0.999734      | 0.250000      
+█ █ █ [2/3]       | [8584/8584]   | 0.999840      | 0.125000      
+█ █ █ [3/3]       | [8584/8584]   | 0.999831      | 0.062500      
+█ 
+█ 
+█ Testing different models on data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ [1/8] Model trained on dataset Danmini_Doorbell
+█ █ TPR: 0.999793 - TNR: 0.993445 - FPR: 0.006555 - FNR: 0.000207 - ACC:0.999647
+█ █ 
+█ █ [2/8] Model trained on dataset Ecobee_Thermostat
+█ █ TPR: 0.999791 - TNR: 0.993445 - FPR: 0.006555 - FNR: 0.000209 - ACC:0.999645
+█ █ 
+█ █ [3/8] Model trained on dataset Ennio_Doorbell
+█ █ TPR: 0.999795 - TNR: 0.992285 - FPR: 0.007715 - FNR: 0.000205 - ACC:0.999623
+█ █ 
+█ █ [4/8] Model trained on dataset Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999797 - TNR: 0.991295 - FPR: 0.008705 - FNR: 0.000203 - ACC:0.999602
+█ █ 
+█ █ [5/8] Model trained on dataset Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999809 - TNR: 0.991704 - FPR: 0.008296 - FNR: 0.000191 - ACC:0.999623
+█ █ 
+█ █ [6/8] Model trained on dataset Provision_PT_838_Security_Camera
+█ █ TPR: 0.999818 - TNR: 0.991977 - FPR: 0.008023 - FNR: 0.000182 - ACC:0.999638
+█ █ 
+█ █ [7/8] Model trained on dataset Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999812 - TNR: 0.992465 - FPR: 0.007535 - FNR: 0.000188 - ACC:0.999643
+█ █ 
+█ █ [8/8] Model trained on dataset SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999806 - TNR: 0.992831 - FPR: 0.007169 - FNR: 0.000194 - ACC:0.999646
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999806 - TNR: 0.992831 - FPR: 0.007169 - FNR: 0.000194 - ACC:0.999646
+█ 
+█ 
+█ Testing global model (before averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.999903 - TNR: 0.997941 - FPR: 0.002059 - FNR: 0.000097 - ACC:0.999808
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.999929 - TNR: 0.998213 - FPR: 0.001787 - FNR: 0.000071 - ACC:0.999871
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.999901 - TNR: 0.995480 - FPR: 0.004520 - FNR: 0.000099 - ACC:0.999698
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999876 - TNR: 0.996816 - FPR: 0.003184 - FNR: 0.000124 - ACC:0.999620
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999871 - TNR: 0.996397 - FPR: 0.003603 - FNR: 0.000129 - ACC:0.999586
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.999858 - TNR: 0.996422 - FPR: 0.003578 - FNR: 0.000142 - ACC:0.999555
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999827 - TNR: 0.994190 - FPR: 0.005810 - FNR: 0.000173 - ACC:0.999310
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999815 - TNR: 0.993591 - FPR: 0.006409 - FNR: 0.000185 - ACC:0.999277
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.999808 - TNR: 0.993557 - FPR: 0.006443 - FNR: 0.000191 - ACC:0.999316
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999808 - TNR: 0.993557 - FPR: 0.006443 - FNR: 0.000191 - ACC:0.999316
+█ 
+█ 
+█ Testing global model (after averaging) on data from different devices
+█ █ [1/9] Data from device Danmini_Doorbell
+█ █ TPR: 0.999915 - TNR: 0.998062 - FPR: 0.001938 - FNR: 0.000085 - ACC:0.999825
+█ █ 
+█ █ [2/9] Data from device Ecobee_Thermostat
+█ █ TPR: 0.999930 - TNR: 0.998308 - FPR: 0.001692 - FNR: 0.000070 - ACC:0.999875
+█ █ 
+█ █ [3/9] Data from device Ennio_Doorbell
+█ █ TPR: 0.999904 - TNR: 0.996167 - FPR: 0.003833 - FNR: 0.000096 - ACC:0.999732
+█ █ 
+█ █ [4/9] Data from device Philips_B120N10_Baby_Monitor
+█ █ TPR: 0.999876 - TNR: 0.997235 - FPR: 0.002765 - FNR: 0.000124 - ACC:0.999655
+█ █ 
+█ █ [5/9] Data from device Provision_PT_737E_Security_Camera
+█ █ TPR: 0.999875 - TNR: 0.996816 - FPR: 0.003184 - FNR: 0.000125 - ACC:0.999624
+█ █ 
+█ █ [6/9] Data from device Provision_PT_838_Security_Camera
+█ █ TPR: 0.999863 - TNR: 0.996792 - FPR: 0.003208 - FNR: 0.000137 - ACC:0.999593
+█ █ 
+█ █ [7/9] Data from device Samsung_SNH_1011_N_Webcam
+█ █ TPR: 0.999838 - TNR: 0.994737 - FPR: 0.005263 - FNR: 0.000162 - ACC:0.999371
+█ █ 
+█ █ [8/9] Data from device SimpleHome_XCS7_1002_WHT_Security_Camera
+█ █ TPR: 0.999825 - TNR: 0.994527 - FPR: 0.005474 - FNR: 0.000175 - ACC:0.999367
+█ █ 
+█ █ [9/9] Data from device SimpleHome_XCS7_1003_WHT_Security_Camera
+█ █ TPR: 0.999820 - TNR: 0.994481 - FPR: 0.005519 - FNR: 0.000180 - ACC:0.999399
+█ █ 
+█ █ Average results
+█ █ TPR: 0.999820 - TNR: 0.994481 - FPR: 0.005519 - FNR: 0.000180 - ACC:0.999399
+
+
+
+Process finished with exit code 0
+

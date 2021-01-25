@@ -69,7 +69,7 @@ class BinaryClassificationResults(object):
 
     # Accuracy
     def acc(self):
-        return (self.tp + self.tn) / (self.tp + self.tn + self.fp + self.fn)
+        return (self.tp + self.tn) / self.n_samples()
 
     # Recall (same as true positive rate)
     def recall(self):

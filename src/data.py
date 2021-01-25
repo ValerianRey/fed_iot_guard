@@ -31,17 +31,16 @@ gafgyt_paths = [{device: data_path + device + '/gafgyt_attacks/' + attack + '.cs
                 for attack in gafgyt_attacks]
 
 
-def get_sub_div(benign_data_train, normalization):
+def get_sub_div(train_data, normalization):
     if normalization == '0-mean 1-var':
-        sub = benign_data_train.mean(dim=0)
-        div = benign_data_train.std(dim=0)
+        sub = train_data.mean(dim=0)
+        div = train_data.std(dim=0)
     elif normalization == 'min-max':
-        sub = benign_data_train.min(dim=0)[0]
-        div = benign_data_train.max(dim=0)[0] - sub
+        sub = train_data.min(dim=0)[0]
+        div = train_data.max(dim=0)[0] - sub
     else:
         sub = 0.
         div = 1.
-
     return sub, div
 
 
@@ -110,7 +109,24 @@ def get_data(devices, supervised, normalization='0-mean 1-var'):
                                                                            splits_benign=splits_benign,
                                                                            splits_attack=splits_attack)
 
-    sub, div = get_sub_div(benign_data_splits[0], normalization)
+    # TODO: this is the correct way to normalize, however due to class imbalance (too much attack data compared to benign data) and to the fact
+    #  that we use a baseline binary cross entropy loss function (thus not correcting the class imbalance) it ends up being better to normalize
+    #  using only benign data for now (in order to give an advantage to benign data for the learned classifier). This is not cheating because
+    #  such data is in the training set, but it's quite unusual and it should be changed later on once we address the class imbalance problem
+    # if supervised:
+    #     # When using the supervised more we want to normalize based on the whole training set (benign + attack)
+    #     if mirai_data_splits[0] is not None:
+    #         print('mirai data not none')
+    #         data_to_compute_normalization = torch.cat([benign_data_splits[0]] + mirai_data_splits[0] + gafgyt_data_splits[0], dim=0)
+    #     else:
+    #         print('mirai data none')
+    #         data_to_compute_normalization = torch.cat([benign_data_splits[0]] + gafgyt_data_splits[0], dim=0)
+    # else:
+    #     data_to_compute_normalization = benign_data_splits[0]
+
+    data_to_compute_normalization = benign_data_splits[0]
+
+    sub, div = get_sub_div(data_to_compute_normalization, normalization)
 
     benign_data_splits = [(split - sub) / div for split in benign_data_splits]
 
@@ -172,6 +188,19 @@ def get_autoencoder_datasets(devices, normalization='0-mean 1-var'):
     return dataset_benign_train, dataset_benign_opt, dataset_benign_test, datasets_mirai, datasets_gafgyt
 
 
+def get_devices_ids(args):
+    device_ids = []
+    for client_devices in args.clients_devices:
+        for device_id in client_devices:
+            if device_id not in device_ids:
+                device_ids.append(device_id)
+
+    for device_id in args.test_devices:
+        if device_id not in device_ids:
+            device_ids.append(device_id)
+    return device_ids
+
+
 def get_autoencoder_dataloaders(args, devices_list, ctp: ContextPrinter, color=Color.NONE):
     ctp.print('Reading data', color=color, bold=True)
     ctp.add_bar(color)
@@ -200,26 +229,96 @@ def get_autoencoder_dataloaders(args, devices_list, ctp: ContextPrinter, color=C
     return dataloaders_train, dataloaders_opt, dataloaders_benign_test, dataloaders_mirai, dataloaders_gafgyt
 
 
-# devices_list can be a list of devices or a list of lists of devices (so that each output dataloader will contain data from multiple devices)
-def get_classifier_dataloaders(args, devices_list, ctp: ContextPrinter, color=Color.NONE):
+def get_autoencoder_dataloaders_v2(args, ctp: ContextPrinter, color=Color.NONE):
     ctp.print('Reading data', color=color, bold=True)
     ctp.add_bar(color)
 
-    dataloaders_train, dataloaders_test = [], []
+    # Step 1: construct the list of all the devices for which we need to read data
+    device_ids = get_devices_ids(args)
 
-    for i, devices in enumerate(devices_list):
-        ctp.print('[{}/{}] Data from '.format(i + 1, len(devices_list)), end='')
-        if type(devices) == list:
-            print('{} devices: '.format(len(devices)) + ', '.join(devices))
-            dataset = get_classifier_datasets(devices, normalization=args.normalization)
+    # Step 2: load the data
+    datasets = {idx: None for idx in range(len(all_devices))}
+    for i, device_id in enumerate(device_ids):
+        ctp.print('[{}/{}] Data from '.format(i + 1, len(device_ids)) + all_devices[device_id])
+        datasets[device_id] = get_autoencoder_datasets([device_id], args.normalization)
+
+    # Step 3: create the dataloaders
+    clients_dataloaders_train, clients_dataloaders_opt, clients_dataloaders_benign_test, clients_dataloaders_mirai, clients_dataloaders_gafgyt = \
+        [], [], [], [], []
+
+    for client_devices in args.clients_devices:
+        combined_dataset_train = torch.utils.data.ConcatDataset([datasets[device_id][0] for device_id in client_devices])
+        clients_dataloaders_train.append(torch.utils.data.DataLoader(combined_dataset_train, batch_size=args.train_bs, shuffle=True))
+
+        combined_dataset_opt = torch.utils.data.ConcatDataset([datasets[device_id][1] for device_id in client_devices])
+        clients_dataloaders_opt.append(torch.utils.data.DataLoader(combined_dataset_opt, batch_size=args.test_bs))
+
+        combined_dataset_benign_test = torch.utils.data.ConcatDataset([datasets[device_id][2] for device_id in client_devices])
+        clients_dataloaders_benign_test.append(torch.utils.data.DataLoader(combined_dataset_benign_test, batch_size=args.test_bs))
+
+        datasets_mirai = [datasets[device_id][3] for device_id in client_devices if datasets[device_id][3] is not None]
+        if len(datasets_mirai) >= 1:
+            combined_datasets_mirai = [torch.utils.data.ConcatDataset(datasets_mirai[device_id][i] for device_id in client_devices)
+                                       for i in range(len(mirai_attacks))]
+            clients_dataloaders_mirai.append([torch.utils.data.DataLoader(combined_datasets_mirai[i], batch_size=args.test_bs)
+                                              for i in range(len(mirai_attacks))])
         else:
-            print(devices)
-            dataset = get_classifier_datasets([devices], normalization=args.normalization)
+            clients_dataloaders_mirai.append(None)
 
-        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
+        datasets_gafgyt = [datasets[device_id][4] for device_id in client_devices]
+        combined_datasets_gafgyt = [torch.utils.data.ConcatDataset(datasets_gafgyt[device_id][i] for device_id in client_devices)
+                                    for i in range(len(gafgyt_attacks))]
+        clients_dataloaders_gafgyt.append([torch.utils.data.DataLoader(combined_datasets_gafgyt[i], batch_size=args.test_bs)
+                                           for i in range(len(gafgyt_attacks))])
 
-        dataloaders_train.append(torch.utils.data.DataLoader(dataset[0], batch_size=args.train_bs, shuffle=True))
-        dataloaders_test.append(torch.utils.data.DataLoader(dataset[1], batch_size=args.test_bs))
+    combined_dataset_benign_test = torch.utils.data.ConcatDataset([datasets[device_id][2] for device_id in args.test_devices])
+    new_dataloader_benign_test = torch.utils.data.DataLoader(combined_dataset_benign_test, batch_size=args.test_bs)
+
+    datasets_mirai = [datasets[device_id][3] for device_id in args.test_devices if datasets[device_id][3] is not None]
+    if len(datasets_mirai) >= 1:
+        combined_datasets_mirai = [torch.utils.data.ConcatDataset(datasets_mirai[device_id][i] for device_id in args.test_devices)
+                                   for i in range(len(mirai_attacks))]
+        new_dataloaders_mirai = [torch.utils.data.DataLoader(combined_datasets_mirai[i], batch_size=args.test_bs)
+                                 for i in range(len(mirai_attacks))]
+    else:
+        new_dataloaders_mirai = None
+
+    datasets_gafgyt = [datasets[device_id][4] for device_id in args.test_devices]
+    combined_datasets_gafgyt = [torch.utils.data.ConcatDataset(datasets_gafgyt[device_id][i] for device_id in args.test_devices)
+                                for i in range(len(gafgyt_attacks))]
+    new_dataloaders_gafgyt = [torch.utils.data.DataLoader(combined_datasets_gafgyt[i], batch_size=args.test_bs)
+                              for i in range(len(gafgyt_attacks))]
 
     ctp.remove_header()
-    return dataloaders_train, dataloaders_test
+    return clients_dataloaders_train, clients_dataloaders_opt, clients_dataloaders_benign_test, \
+           clients_dataloaders_mirai, clients_dataloaders_gafgyt, new_dataloader_benign_test, new_dataloaders_mirai, new_dataloaders_gafgyt
+
+
+# args.clients_devices should be a list of lists of devices and args.test_devices should be a list of devices
+def get_classifier_dataloaders(args, ctp: ContextPrinter, color=Color.NONE):
+    ctp.print('Reading data', color=color, bold=True)
+    ctp.add_bar(color)
+
+    # Step 1: construct the list of all the devices for which we need to read data
+    device_ids = get_devices_ids(args)
+
+    # Step 2: load the data
+    datasets = {idx: None for idx in range(len(all_devices))}
+    for i, device_id in enumerate(device_ids):
+        ctp.print('[{}/{}] Data from '.format(i + 1, len(device_ids)) + all_devices[device_id])
+        datasets[device_id] = get_classifier_datasets([all_devices[device_id]], normalization=args.normalization)
+
+    # Step 3: create the dataloaders
+    clients_dataloaders_train, clients_dataloaders_test = [], []
+    for client_devices in args.clients_devices:
+        client_datasets = [datasets[device_id] for device_id in client_devices]
+        combined_dataset_train = torch.utils.data.ConcatDataset([dataset[0] for dataset in client_datasets])
+        combined_dataset_test = torch.utils.data.ConcatDataset([dataset[1] for dataset in client_datasets])
+        clients_dataloaders_train.append(torch.utils.data.DataLoader(combined_dataset_train, batch_size=args.train_bs, shuffle=True))
+        clients_dataloaders_test.append(torch.utils.data.DataLoader(combined_dataset_test, batch_size=args.test_bs))
+
+    combined_dataset_test = torch.utils.data.ConcatDataset([dataset[1] for dataset in [datasets[device_id] for device_id in args.test_devices]])
+    new_dataloader_test = torch.utils.data.DataLoader(combined_dataset_test, batch_size=args.test_bs)
+
+    ctp.remove_header()
+    return clients_dataloaders_train, clients_dataloaders_test, new_dataloader_test

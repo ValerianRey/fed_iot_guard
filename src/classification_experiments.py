@@ -7,58 +7,55 @@ from federated_util import federated_averaging
 from print_util import Color, ContextPrinter
 
 
-def single_classifier(args):
+def device_names(device_ids):
+    return ', '.join([all_devices[device_id] for device_id in device_ids])
+
+
+def local_classifiers(args):
     ctp = ContextPrinter()
-    ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER\n', bold=True)
+    n_clients = len(args.clients_devices)
+    if n_clients == 1:
+        ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER\n', bold=True)
+    else:
+        ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS\n', bold=True)
 
     # Initialize the model
-    model = BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
+    models = [BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers) for _ in range(n_clients)]
 
     # Loading the data and creating the dataloaders
-    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
+    clients_dataloaders_train, clients_dataloaders_test, new_dataloader_test = get_classifier_dataloaders(args, ctp=ctp, color=Color.YELLOW)
     ctp.print('\n')
 
     # Training
-    multitrain_classifiers(trains=zip(['with data from all devices'], dataloaders_train, [model]),
-                           args=args, ctp=ctp, main_title='Training the single model', color=Color.GREEN)
-    ctp.print('\n')
-
-    # Testing
-    multitest_classifiers(tests=zip(['Model trained on all devices'], dataloaders_test, [model]),
-                          ctp=ctp, main_title='Testing the single model', color=Color.BLUE)
-
-
-def multiple_classifiers(args):
-    ctp = ContextPrinter()
-    ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS\n', bold=True)
-
-    # Initialization of the models
-    models = [BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers) for _ in range(len(all_devices))]
-
-    # Loading the data and creating the dataloaders
-    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
-    ctp.print('\n')
-
-    # Local training of each client
-    multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices], dataloaders_train, models),
-                           args=args, ctp=ctp, main_title='Training the different clients', color=Color.GREEN)
+    multitrain_classifiers(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                       for i, client_devices in enumerate(args.clients_devices)],
+                                      clients_dataloaders_train, models),
+                           args=args, ctp=ctp, main_title='Training the clients', color=Color.GREEN)
     ctp.print('\n')
 
     # Local testing
-    multitest_classifiers(tests=zip(['Model trained on dataset ' + device for device in all_devices], dataloaders_test, models),
-                          ctp=ctp, main_title='Testing different clients on their own data', color=Color.BLUE)
+    multitest_classifiers(tests=zip(['Testing client {} on: '.format(i) + device_names(client_devices)
+                                     for i, client_devices in enumerate(args.clients_devices)],
+                                    clients_dataloaders_test, models),
+                          ctp=ctp, main_title='Testing the clients on their own devices', color=Color.BLUE)
+    ctp.print('\n')
+
+    # New devices testing
+    multitest_classifiers(tests=zip(['Testing client trained on: ' + device_names(client_devices) for client_devices in args.clients_devices],
+                                    [new_dataloader_test for _ in range(n_clients)], models),
+                          ctp=ctp, main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARKCYAN)
 
 
 def federated_classifiers(args):
     ctp = ContextPrinter()
     ctp.print('\n\t\t\t\t\tFEDERATED CLASSIFIERS\n', bold=True)
+    n_clients = len(args.clients_devices)
 
     # Initialization of a global model
     global_model = BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers)
 
-    # Loading the data and creating the dataloaders (one per client)
-    dataloaders_train, dataloaders_test = get_classifier_dataloaders(args, all_devices, ctp=ctp, color=Color.YELLOW)
-    dataloaders_train = dataloaders_train[:8]  # We only see the data from 8 devices during training, so that the data from the last device is unseen
+    clients_dataloaders_train, clients_dataloaders_test, new_dataloader_test = get_classifier_dataloaders(args, ctp=ctp, color=Color.YELLOW)
+
     ctp.print('\n')
 
     for federation_round in range(args.federation_rounds):
@@ -67,30 +64,43 @@ def federated_classifiers(args):
         ctp.print()
 
         # Distribute the global model to all clients
-        models = [deepcopy(global_model) for _ in all_devices[:8]]
+        models = [deepcopy(global_model) for _ in range(n_clients)]
 
         # Local training of each client
-        multitrain_classifiers(trains=zip(['with data from ' + device for device in all_devices[:8]], dataloaders_train, models),
+        multitrain_classifiers(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                           for i, client_devices in enumerate(args.clients_devices)],
+                                          clients_dataloaders_train, models),
                                args=args, ctp=ctp, lr_factor=(args.gamma_round ** federation_round),
-                               main_title='Training the different clients', color=Color.GREEN)
+                               main_title='Training the clients', color=Color.GREEN)
         ctp.print('\n')
 
-        # Experiment 1: test all 8 trained clients on the data of the unseen device (9th)
-        multitest_classifiers(tests=zip(['Model trained on dataset ' + device for device in all_devices[:8]],
-                                        [dataloaders_test[8] for _ in range(8)],  # we always test on the same data
-                                        models[:8]),
-                              ctp=ctp, main_title='Testing different models on data from device ' + all_devices[8], color=Color.BLUE)
+        # Local testing before federated averaging
+        multitest_classifiers(tests=zip(['Testing client {} on: '.format(i) + device_names(client_devices)
+                                         for i, client_devices in enumerate(args.clients_devices)],
+                                        clients_dataloaders_test, models),
+                              ctp=ctp, main_title='Testing the clients on their own devices', color=Color.BLUE)
         ctp.print('\n')
 
-        # Experiment 2: test the global model on the data of all devices, before it has been averaged
-        multitest_classifiers(tests=zip(['Data from device ' + device for device in all_devices], dataloaders_test, [global_model for _ in range(9)]),
-                              ctp=ctp, main_title='Testing global model (before averaging) on data from different devices', color=Color.DARKCYAN)
+        # New devices testing before federated aggregation
+        multitest_classifiers(tests=zip(['Testing client {} on: '.format(i) + device_names(args.test_devices)
+                                         for i in range(n_clients)],
+                                        [new_dataloader_test for _ in range(len(models))], models),
+                              ctp=ctp, main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
+                              color=Color.DARKCYAN)
         ctp.print('\n')
         # Federated averaging
         federated_averaging(global_model, models)
 
-        # Experiment 3: test the global model on the data of all devices, after it has been averaged
-        multitest_classifiers(tests=zip(['Data from device ' + device for device in all_devices], dataloaders_test, [global_model for _ in range(9)]),
-                              ctp=ctp, main_title='Testing global model (after averaging) on data from different devices', color=Color.CYAN)
+        # Global model testing on each client's data
+        multitest_classifiers(tests=zip(['Testing global model on: ' + device_names(client_devices)
+                                         for client_devices in args.clients_devices],
+                                        clients_dataloaders_test, [global_model for _ in range(n_clients)]),
+                              ctp=ctp, main_title='Testing the global model on data from all clients', color=Color.PURPLE)
+        ctp.print('\n')
+
+        # Global model testing on new devices
+        multitest_classifiers(tests=zip(['Testing global model on: ' + device_names(args.test_devices)], [new_dataloader_test], [global_model]),
+                              ctp=ctp, main_title='Testing the global model on the new devices: ' + device_names(args.test_devices),
+                              color=Color.CYAN)
         ctp.remove_header()
         ctp.print('\n')
