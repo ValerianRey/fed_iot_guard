@@ -7,7 +7,6 @@ from federated_util import federated_averaging
 from print_util import Color, ContextPrinter
 
 
-# TODO: add normalization to the autoencoder model
 def local_autoencoders(args):
     ctp = ContextPrinter()
     n_clients = len(args.clients_devices)
@@ -31,7 +30,7 @@ def local_autoencoders(args):
 
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
-                                               for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
+                                              for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
                                     ctp=ctp, main_title='Computing the thresholds', color=Color.RED)
     ctp.print('\n')
 
@@ -47,7 +46,6 @@ def local_autoencoders(args):
                            ctp=ctp, main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARKCYAN)
 
 
-# TODO: update with the new dataloading process and with the new experiments
 def federated_autoencoders(args):
     ctp = ContextPrinter()
     ctp.print('\n\t\t\t\t\tFEDERATED AUTOENCODERS\n', bold=True)

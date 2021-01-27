@@ -5,11 +5,12 @@ import torch
 import torch.utils.data
 
 from classification_experiments import local_classifiers, federated_classifiers
-from anomaly_detection_experiments import single_autoencoder, multiple_autoencoders, federated_autoencoders, local_autoencoders
+from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 
 
 def main(experiment='single_classifier'):
-    common_params = {'normalization': '0-mean 1-var',
+    common_params = {'n_features': 115,
+                     'normalization': '0-mean 1-var',
                      'test_bs': 4096}
 
     autoencoder_params = {'hidden_layers': [86, 58, 38, 29, 38, 58, 86],
@@ -61,8 +62,8 @@ def main(experiment='single_classifier'):
                                                 **autoencoder_opt_default_params, **single_client_params))
 
     elif experiment == 'multiple_autoencoders':
-        multiple_autoencoders(args=SimpleNamespace(**common_params, **autoencoder_params,
-                                                   **autoencoder_opt_default_params, **multiple_clients_params))
+        local_autoencoders(args=SimpleNamespace(**common_params, **autoencoder_params,
+                                                **autoencoder_opt_default_params, **multiple_clients_params))
 
     elif experiment == 'federated_autoencoders':
         federated_autoencoders(args=SimpleNamespace(**common_params, **autoencoder_params,
@@ -98,7 +99,7 @@ def main(experiment='single_classifier'):
 
 # TODO: grid search mode to find some hyper parameters, using a validation set
 
-# TODO: use other aggregation methods
+# TODO: use other aggregation methods, for example weighted federated averaging
 
 # TODO: implement random reruns that return avg and std results to get a sense of confidence interval
 
@@ -111,19 +112,18 @@ def main(experiment='single_classifier'):
 #  etc ...
 #  The dataloader would actually only contain a single dataset though
 
-# TODO: change normalization for classifier so that is also uses attack train data and not just benign train data
-#  also change it so that each client remembers its normalization values, and the global model normalize the data that it sees with average
-#  values
-
-# TODO: update autoencoder code so that it works similarly as classifier
-
-# TODO: make get_dataset functions only require a single device as input
-
-# TODO: the autoencoder experiments should only have one dataloader to test, that should contain a separate dataset for each class
-#  (benign, mirai 1, mirai 2, ..., gafgyt 1, ...) along with the name of each dataset and the positivity of each dataset
-
 # TODO: it seems like the normalization of the data can play a huge factor in the accuracy (no proof for that yet but just a guess)
 #  thus is would be cool to have a more advanced normalization with a common factor and bias that can learn
+
+# TODO: add normalization to the autoencoder model
+
+# TODO: rework multitest_autoencoders
+
+# TODO: update federated_autoencoders with the new dataloading process and with the new experiments
+
+# TODO: try other methods for normalization: keep local per-feature normalization values and share a factor and a bias with the federation
+#  OR compute global normalization values thanks to SMC (Etienne's idea)
+
 
 if __name__ == "__main__":
     main(sys.argv[1])
