@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-from data import mirai_attacks, gafgyt_attacks
 from print_util import print_loss_autoencoder, Color, print_rates, ContextPrinter, print_loss_autoencoder_header
 from metrics import BinaryClassificationResults
 

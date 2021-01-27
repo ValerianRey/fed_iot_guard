@@ -5,7 +5,7 @@ import torch
 import torch.utils.data
 
 from classification_experiments import local_classifiers, federated_classifiers
-from src.anomaly_detection_experiments import single_autoencoder, multiple_autoencoders, federated_autoencoders
+from anomaly_detection_experiments import single_autoencoder, multiple_autoencoders, federated_autoencoders, local_autoencoders
 
 
 def main(experiment='single_classifier'):
@@ -57,7 +57,7 @@ def main(experiment='single_classifier'):
                                        'gamma_round': 0.5}
 
     if experiment == 'single_autoencoder':
-        single_autoencoder(args=SimpleNamespace(**common_params, **autoencoder_params,
+        local_autoencoders(args=SimpleNamespace(**common_params, **autoencoder_params,
                                                 **autoencoder_opt_default_params, **single_client_params))
 
     elif experiment == 'multiple_autoencoders':
@@ -121,6 +121,9 @@ def main(experiment='single_classifier'):
 
 # TODO: the autoencoder experiments should only have one dataloader to test, that should contain a separate dataset for each class
 #  (benign, mirai 1, mirai 2, ..., gafgyt 1, ...) along with the name of each dataset and the positivity of each dataset
+
+# TODO: it seems like the normalization of the data can play a huge factor in the accuracy (no proof for that yet but just a guess)
+#  thus is would be cool to have a more advanced normalization with a common factor and bias that can learn
 
 if __name__ == "__main__":
     main(sys.argv[1])

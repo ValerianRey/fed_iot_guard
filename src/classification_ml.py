@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from architectures import NormalizingBinaryClassifier
+from data import get_sub_div
 from metrics import StatisticsMeter, BinaryClassificationResults
 from print_util import print_train_classifier, print_train_classifier_header, Color, print_rates, ContextPrinter, Columns
 
@@ -21,7 +23,6 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
 
         for i, (data, label) in enumerate(train_loader):
             output = model(data)
-
             loss = criterion(output, label)
             optimizer.zero_grad()
             loss.mean().backward()
@@ -76,6 +77,20 @@ def test_classifier(model, test_loader):
             predictions[start:end] = pred.squeeze()
 
         return results
+
+
+def initialize_models(args, clients_dataloaders_train, ctp: ContextPrinter, title='Initializing the models', color=Color.NONE):
+    ctp.print(title, color=color, bold=True)
+    ctp.add_bar(color)
+    n_clients = len(clients_dataloaders_train)
+    models = []
+    for i, dataloader_train in enumerate(clients_dataloaders_train):
+        ctp.print('[{}/{}]'.format(i + 1, n_clients))
+        sub, div = get_sub_div(dataloader_train.dataset[:][0], normalization=args.normalization)
+        models.append(NormalizingBinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers,
+                                                  sub=sub, div=div))
+    ctp.remove_header()
+    return models
 
 
 # trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
