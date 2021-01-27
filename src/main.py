@@ -24,12 +24,12 @@ def main(experiment='single_classifier'):
     single_client_params = {'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]],
                             'test_devices': [8]}
 
-    autoencoder_opt_default_params = {'epochs': 0,
+    autoencoder_opt_default_params = {'epochs': 20,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
-                                      'lr_scheduler_params': {'patience': 5, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
+                                      'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
     autoencoder_opt_federated_params = {'epochs': 20,
                                         'train_bs': 64,
@@ -118,6 +118,9 @@ def main(experiment='single_classifier'):
 # TODO: update autoencoder code so that it works similarly as classifier
 
 # TODO: make get_dataset functions only require a single device as input
+
+# TODO: the autoencoder experiments should only have one dataloader to test, that should contain a separate dataset for each class
+#  (benign, mirai 1, mirai 2, ..., gafgyt 1, ...) along with the name of each dataset and the positivity of each dataset
 
 if __name__ == "__main__":
     main(sys.argv[1])

@@ -53,3 +53,16 @@ class BinaryClassifier(nn.Module):
 
     def forward(self, x):
         return self.seq(x)
+
+
+class NormalizingBinaryClassifier(nn.Module):
+    def __init__(self, activation_function, hidden_layers, sub, div, verbose=False):
+        super(NormalizingBinaryClassifier, self).__init__()
+        self.sub = nn.Parameter(sub, requires_grad=False)
+        self.div = nn.Parameter(div, requires_grad=False)
+        self.bc = BinaryClassifier(activation_function, hidden_layers, verbose)
+
+    def forward(self, x):
+        normalized_x = (x - self.sub) / self.div
+        return self.bc(x)
+

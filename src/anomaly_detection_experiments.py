@@ -36,6 +36,18 @@ def single_autoencoder(args):
                            ctp=ctp, main_title='Testing the autoencoder on test data from all devices', color=Color.BLUE)
 
 
+def local_autoencoders(args):
+    ctp = ContextPrinter()
+    n_clients = len(args.clients_devices)
+    if n_clients == 1:
+        ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER\n', bold=True)
+    else:
+        ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS\n', bold=True)
+
+    # Initialization of the model
+    models = [SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers) for _ in range(n_clients)]
+
+
 def multiple_autoencoders(args):
     ctp = ContextPrinter()
     ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODERS\n', bold=True)

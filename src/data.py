@@ -31,16 +31,57 @@ gafgyt_paths = [{device: data_path + device + '/gafgyt_attacks/' + attack + '.cs
                 for attack in gafgyt_attacks]
 
 
+def device_names(device_ids):
+    return ', '.join([all_devices[device_id] for device_id in device_ids])
+
+
 def get_sub_div(train_data, normalization):
     if normalization == '0-mean 1-var':
         sub = train_data.mean(dim=0)
         div = train_data.std(dim=0)
     elif normalization == 'min-max':
         sub = train_data.min(dim=0)[0]
+        print("Sub shape:" + repr(sub.shape))
         div = train_data.max(dim=0)[0] - sub
     else:
         sub = 0.
         div = 1.
+    return sub, div
+
+
+def get_sub_div_dl(dataloader: torch.utils.data.DataLoader, normalization):
+    original_batch_size = dataloader.batch_size
+    dataloader.batch_size = 4096
+
+    dataloader.dataset
+
+    if normalization == '0-mean 1-var':
+        input_shape = next(iter(dataloader))[0][0].shape
+        sum_ = torch.zeros(input_shape)
+        sum_of_squares = torch.zeros(input_shape)
+        n_samples = 0
+        original_batch_size = dataloader.batch_size
+        dataloader.batch_size = 4096
+        for data, _ in dataloader:
+            sum_ += torch.sum(data, dim=0)
+            sum_of_squares += torch.sum(data ** 2, dim=0)
+            n_samples += data.shape[0]
+
+        mean = sum_ / n_samples
+        var = (sum_of_squares / n_samples) - (mean ** 2)
+        div = var ** (1./2.)
+    elif normalization == 'min-max':
+        min = torch.min(next(iter(dataloader))[0], dim=0)
+        max = torch.max(next(iter(dataloader))[0], dim=0)
+
+        for data, _ in dataloader:
+            min = torch.min(torch.min(data, dim=0), min)
+
+        mean = sum_ / n_samples
+        var = (sum_of_squares / n_samples) - (mean ** 2)
+        div = var ** (1. / 2.)
+
+    dataloader.batch_size = original_batch_size
     return sub, div
 
 

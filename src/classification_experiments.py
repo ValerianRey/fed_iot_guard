@@ -1,14 +1,10 @@
 from copy import deepcopy
 
-from architectures import BinaryClassifier
+from architectures import BinaryClassifier, NormalizingBinaryClassifier
 from classification_ml import multitrain_classifiers, multitest_classifiers
-from data import all_devices, get_classifier_dataloaders
+from data import get_classifier_dataloaders, device_names, get_sub_div_dl
 from federated_util import federated_averaging
 from print_util import Color, ContextPrinter
-
-
-def device_names(device_ids):
-    return ', '.join([all_devices[device_id] for device_id in device_ids])
 
 
 def local_classifiers(args):
@@ -24,6 +20,10 @@ def local_classifiers(args):
 
     # Loading the data and creating the dataloaders
     clients_dataloaders_train, clients_dataloaders_test, new_dataloader_test = get_classifier_dataloaders(args, ctp=ctp, color=Color.YELLOW)
+    sub, div = get_sub_div_dl(clients_dataloaders_train[0], normalization=args.normalization)
+    print(sub)
+    print(div)
+
     ctp.print('\n')
 
     # Training
