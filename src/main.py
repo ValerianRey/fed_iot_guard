@@ -141,6 +141,8 @@ def main(experiment='single_classifier'):
 
 # TODO: use BinaryClassifier instead of StatisticsMeter during training
 
+# TODO: create requirements file
+
 
 if __name__ == "__main__":
     main(sys.argv[1])
