@@ -69,5 +69,7 @@ class NormalizingModel(nn.Module):
         self.div = nn.Parameter(div, requires_grad=False)
 
     def forward(self, x):
-        normalized_x = (x - self.sub) / self.div
-        return self.model(normalized_x)
+        return self.model(self.normalize(x))
+
+    def normalize(self, x):
+        return (x - self.sub) / self.div

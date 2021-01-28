@@ -52,9 +52,15 @@ class ContextPrinter(object):
             self.__print_line(line, color=color, bold=bold, rewrite=rewrite, end=end)
 
 
+def print_federation_round(federation_round, n_rounds, ctp: ContextPrinter):
+    ctp.print('\t\t\t\t\tFederation round [{}/{}]'.format(federation_round + 1, n_rounds), bold=True)
+    ctp.add_bar(Color.BOLD)
+    ctp.print()
+
+
 def print_rates(results: BinaryClassificationResults, ctp: ContextPrinter):
-    ctp.print('TPR: {:.6f} - TNR: {:.6f} - FPR: {:.6f} - FNR: {:.6f} - ACC:{:.6f}'
-              .format(results.tpr(), results.tnr(), results.fpr(), results.fnr(), results.acc()))
+    ctp.print('TPR: {:.5f} - TNR: {:.5f} - Accuracy: {:.5f} - Recall:{:.5f} - Precision: {:.5f} - F1-Score: {:.5f}'
+              .format(results.tpr(), results.tnr(), results.acc(), results.recall(), results.precision(), results.f1()))
 
 
 def print_train_classifier_header(ctp: ContextPrinter):
