@@ -66,14 +66,24 @@ def print_rates(results: BinaryClassificationResults, ctp: ContextPrinter):
 def print_train_classifier_header(ctp: ContextPrinter):
     ctp.print('Epoch'.ljust(Columns.SMALL)
               + '| Batch'.ljust(Columns.MEDIUM)
-              + '| Avg accuracy'.ljust(Columns.MEDIUM)
+              + '| TPR'.ljust(Columns.MEDIUM)
+              + '| TNR'.ljust(Columns.MEDIUM)
+              + '| Accuracy'.ljust(Columns.MEDIUM)
+              + '| Recall'.ljust(Columns.MEDIUM)
+              + '| Precision'.ljust(Columns.MEDIUM)
+              + '| F1-Score'.ljust(Columns.MEDIUM)
               + '| LR'.ljust(Columns.MEDIUM), bold=True)
 
 
-def print_train_classifier(batch, num_batches, avg_acc, lr, ctp: ContextPrinter, persistent=False):
+def print_train_classifier(batch, num_batches, results, lr, ctp: ContextPrinter, persistent=False):
     ctp.print('| [{}/{}]'.format(batch, num_batches).ljust(Columns.MEDIUM)
-              + '| {:.6f}'.format(avg_acc).ljust(Columns.MEDIUM)
-              + '| {:.6f}'.format(lr).ljust(Columns.MEDIUM),
+              + '| {:.5f}'.format(results.tpr()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(results.tnr()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(results.acc()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(results.recall()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(results.precision()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(results.f1()).ljust(Columns.MEDIUM)
+              + '| {:.5f}'.format(lr).ljust(Columns.MEDIUM),
               rewrite=True, end='\n' if persistent else '')
 
 

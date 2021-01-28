@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from metrics import StatisticsMeter, BinaryClassificationResults
+from metrics import BinaryClassificationResults
 from print_util import print_train_classifier, print_train_classifier_header, Color, print_rates, ContextPrinter, Columns
 
 
@@ -10,15 +10,10 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
     print_train_classifier_header(ctp)
     model.train()
 
-    num_elements = len(train_loader.dataset)
-    num_batches = len(train_loader)
-    batch_size = train_loader.batch_size
-
     for epoch in range(num_epochs):
         ctp.add_header('[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL))
-        accuracy = StatisticsMeter()
         lr = optimizer.param_groups[0]['lr']
-
+        results = BinaryClassificationResults()
         for i, (data, label) in enumerate(train_loader):
             output = model(data)
             loss = criterion(output, label)
@@ -26,19 +21,13 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
             loss.mean().backward()
             optimizer.step()
 
-            predictions = torch.gt(output, torch.tensor(0.5)).int()
-            success = torch.eq(predictions, label).float()
+            pred = torch.gt(output, torch.tensor(0.5)).int()
+            results.update(pred, label)
 
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            accuracy.update(success.mean(), end-start)
             if i % 1000 == 0:
-                print_train_classifier(i, len(train_loader), accuracy.avg, lr, ctp, persistent=False)
+                print_train_classifier(i, len(train_loader), results, lr, ctp, persistent=False)
 
-        print_train_classifier(len(train_loader), len(train_loader), accuracy.avg, lr, ctp, persistent=True)
+        print_train_classifier(len(train_loader), len(train_loader), results, lr, ctp, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:
@@ -50,29 +39,12 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
 def test_classifier(model, test_loader):
     with torch.no_grad():
         model.eval()
-
-        num_elements = len(test_loader.dataset)
-        num_batches = len(test_loader)
-        batch_size = test_loader.batch_size
-
-        predictions = torch.zeros(num_elements)
         results = BinaryClassificationResults()
-
         for i, (data, label) in enumerate(test_loader):
             output = model(data)
 
             pred = torch.gt(output, torch.tensor(0.5)).int()
-            results.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum())
-            results.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum())
-            results.add_fp(torch.logical_and(torch.logical_not(torch.eq(pred, label)), torch.logical_not(label.bool())).int().sum())
-            results.add_fn(torch.logical_and(torch.logical_not(torch.eq(pred, label)), label.bool()).int().sum())
-
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            predictions[start:end] = pred.squeeze()
+            results.update(pred, label)
 
         return results
 
