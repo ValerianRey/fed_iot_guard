@@ -15,7 +15,6 @@ from print_util import print_federation_round
 def local_classifiers(device_id_to_dataframes: dict, args):
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_supervised_dataloaders(args, device_id_to_dataframes)
-    Ctp.print('\n')
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(args.clients_devices)
@@ -47,7 +46,6 @@ def local_classifiers(device_id_to_dataframes: dict, args):
 def federated_classifiers(device_id_to_dataframes: dict, args):
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_supervised_dataloaders(args, device_id_to_dataframes)
-    Ctp.print('\n')
 
     # Initialization of a global model
     n_clients = len(args.clients_devices)

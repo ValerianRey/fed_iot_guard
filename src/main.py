@@ -17,13 +17,18 @@ def run_grid_search(experiment_function, constant_args: dict, varying_args: dict
     device_id_to_dataframes = get_dataframes(Color.YELLOW)
     Ctp.print('\n')
 
-    args = constant_args
+    args_dict = constant_args
     product = list(itertools.product(*varying_args.values()))
     for i, experiment_args_tuple in enumerate(product):
         experiment_args = {key: arg for (key, arg) in zip(varying_args.keys(), experiment_args_tuple)}
-        args.update(experiment_args)
+        args_dict.update(experiment_args)
+        args = SimpleNamespace(**args_dict)
+        # if experiment function is autoencoder => Compute the dataloaders with autoencoder function
+        # else compute that with classifier function
+        # experiment_function should take as parameter the dataloaders so that it is agnostic to the current fold or the fact it is using
+        # train/test set vs train/validation
         Ctp.enter_section('Experiment [{}/{}] with args: '.format(i + 1, len(product)) + str(experiment_args), color=Color.BLINK)
-        experiment_function(device_id_to_dataframes, args=SimpleNamespace(**args))
+        experiment_function(device_id_to_dataframes, args=args)
         Ctp.exit_section()
         Ctp.print('\n')
 
@@ -121,8 +126,7 @@ def main(experiment='single_classifier'):
 #  assuming 10% of the dataset is left out for test, the first case would make its train/opt splits from the first 90% of the dataset
 #  while the second case would take the whole 90% of the dataset as train set and the remaining 10% as test set
 # TODO: idea leave an unused set between train set and test set so that the test set is not too much dependent on the train set
-# TODO: rework get_splits so that you can give a list of proportions as input instead of just the number of splits
-
+# TODO: decide of the parameters of function
 
 if __name__ == "__main__":
     main(sys.argv[1])

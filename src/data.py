@@ -73,8 +73,6 @@ def get_splits(device_dataframes: dict, splits_benign: list, splits_attack: list
     indexes.update({key: [0] + list(np.cumsum([int(split_proportion * len(device_dataframes[key])) for split_proportion in splits_attack]))
                     for key in device_dataframes.keys() if key != 'benign'})
 
-    Ctp.print(str(indexes))
-
     # For each key (benign, mirai_ack, ...) and for each split we take the corresponding rows of the corresponding dataframe
     data_splits = {key: [torch.tensor(device_dataframes[key].values[indexes[key][split_id]:indexes[key][split_id+1]]).float()
                          for split_id in range(len(indexes[key]) - 1)]
@@ -106,7 +104,6 @@ def get_unsupervised_datasets(devices_dataframes: list):
 
     for device_dataframes in devices_dataframes:
         data_splits = get_splits(device_dataframes, splits_benign=[0.33, 0.33, 0.33], splits_attack=[1.0])
-        print(len(data_splits))
         train_data.append(data_splits['benign'][0])
         opt_data.append(data_splits['benign'][1])
         test_data['benign'].append(data_splits['benign'][2])
@@ -172,8 +169,9 @@ def get_supervised_dataloaders(args, device_id_to_dataframes: dict):
 
 
 # args.clients_devices should be a list of lists of devices and args.test_devices should be a list of devices
-def get_supervised_dataloaders_v2(args, device_id_to_dataframes: dict, proportion_test: float, proportion_unused: float = 0., test=False, n_folds=1,
-                                  fold=1, ):
+def get_supervised_dataloaders_v2(args, device_id_to_dataframes: dict,
+                                  proportion_test: float, proportion_unused: float = 0., test=False,
+                                  n_folds=1, fold=1):
     if test:
         pass
         # Clients train on (1 - proportion_test - proportion_unused) of their data
@@ -186,18 +184,8 @@ def get_supervised_dataloaders_v2(args, device_id_to_dataframes: dict, proportio
         # Clients test on (1 - proportion_test - proportion_unused) * 1 / k of their data
         # Global model is also tested on (1 - proportion_test - proportion_unused) of the test devices' data
 
-    # Step 1: create the datasets and the dataloaders of the clients: 1 train and 1 test per client
-    clients_dl_train, clients_dl_test = [], []
-    for client_device_ids in args.clients_devices:
-        client_dl_train, client_dl_test = get_client_supervised_dataloaders(args, client_device_ids, device_id_to_dataframes)
-        clients_dl_train.append(client_dl_train)
-        clients_dl_test.append(client_dl_test)
-
-    # Step 2: create the dataset and the dataloader of the new devices (test only)
-    _, new_dl_test = get_client_supervised_dataloaders(args, args.test_devices, device_id_to_dataframes)
-
     Ctp.exit_section()
-    return clients_dl_train, clients_dl_test, new_dl_test
+    return
 
 
 def get_client_unsupervised_dataloaders(args, client_device_ids, device_id_to_dataframes):
