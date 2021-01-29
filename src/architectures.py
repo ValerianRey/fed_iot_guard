@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 
@@ -53,3 +54,22 @@ class BinaryClassifier(nn.Module):
 
     def forward(self, x):
         return self.seq(x)
+
+
+class NormalizingModel(nn.Module):
+    def __init__(self, model, sub: torch.tensor, div: torch.tensor):
+        super(NormalizingModel, self).__init__()
+        self.sub = nn.Parameter(sub, requires_grad=False)
+        self.div = nn.Parameter(div, requires_grad=False)
+        self.model = model
+
+    # Manually change normalization values
+    def set_sub_div(self, sub: torch.tensor, div: torch.tensor):
+        self.sub = nn.Parameter(sub, requires_grad=False)
+        self.div = nn.Parameter(div, requires_grad=False)
+
+    def forward(self, x):
+        return self.model(self.normalize(x))
+
+    def normalize(self, x):
+        return (x - self.sub) / self.div

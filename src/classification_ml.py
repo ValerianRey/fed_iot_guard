@@ -1,79 +1,52 @@
 import torch
 import torch.nn as nn
+from context_printer import Color
+from context_printer import ContextPrinter as Ctp
 
-from metrics import StatisticsMeter, BinaryClassificationResults
-from print_util import print_train_classifier, print_train_classifier_header, Color, print_rates, ContextPrinter, Columns
+from metrics import BinaryClassificationResults
+from print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
 
 
-def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler, ctp: ContextPrinter):
-    ctp.add_bar(Color.GRAY)
-    print_train_classifier_header(ctp)
+def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler):
+    Ctp.enter_section(color=Color.GRAY)
+    print_train_classifier_header()
     model.train()
 
-    num_elements = len(train_loader.dataset)
-    num_batches = len(train_loader)
-    batch_size = train_loader.batch_size
-
     for epoch in range(num_epochs):
-        ctp.add_header('[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL))
-        accuracy = StatisticsMeter()
+        Ctp.enter_section(header='[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL))
         lr = optimizer.param_groups[0]['lr']
-
+        results = BinaryClassificationResults()
         for i, (data, label) in enumerate(train_loader):
             output = model(data)
-
             loss = criterion(output, label)
             optimizer.zero_grad()
             loss.mean().backward()
             optimizer.step()
 
-            predictions = torch.gt(output, torch.tensor(0.5)).int()
-            success = torch.eq(predictions, label).float()
+            pred = torch.gt(output, torch.tensor(0.5)).int()
+            results.update(pred, label)
 
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            accuracy.update(success.mean(), end-start)
             if i % 1000 == 0:
-                print_train_classifier(i, len(train_loader), accuracy.avg, lr, ctp, persistent=False)
+                print_train_classifier(i, len(train_loader), results, lr, persistent=False)
 
-        print_train_classifier(len(train_loader), len(train_loader), accuracy.avg, lr, ctp, persistent=True)
+        print_train_classifier(len(train_loader), len(train_loader), results, lr, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
-        ctp.remove_header()
-    ctp.remove_header()
+        Ctp.exit_section()
+    Ctp.exit_section()
 
 
 def test_classifier(model, test_loader):
     with torch.no_grad():
         model.eval()
-
-        num_elements = len(test_loader.dataset)
-        num_batches = len(test_loader)
-        batch_size = test_loader.batch_size
-
-        predictions = torch.zeros(num_elements)
         results = BinaryClassificationResults()
-
         for i, (data, label) in enumerate(test_loader):
             output = model(data)
 
             pred = torch.gt(output, torch.tensor(0.5)).int()
-            results.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum())
-            results.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum())
-            results.add_fp(torch.logical_and(torch.logical_not(torch.eq(pred, label)), torch.logical_not(label.bool())).int().sum())
-            results.add_fn(torch.logical_and(torch.logical_not(torch.eq(pred, label)), label.bool()).int().sum())
-
-            start = i * batch_size
-            end = start + batch_size
-            if i == num_batches - 1:
-                end = num_elements
-
-            predictions[start:end] = pred.squeeze()
+            results.update(pred, label)
 
         return results
 
@@ -81,44 +54,42 @@ def test_classifier(model, test_loader):
 # trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will train each model on its associated dataloader, and will print the title for it
 # lr_factor is used to multiply the lr that is contained in args (and that should remain constant)
-def multitrain_classifiers(trains, args, ctp: ContextPrinter, lr_factor=1.0, main_title='Multitrain classifiers', color=Color.NONE):
-    ctp.print(main_title, color=color, bold=True)
-    ctp.add_bar(color)
+def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain classifiers', color=Color.NONE):
+    Ctp.enter_section(main_title, color)
 
     if type(trains) == zip:
         trains = list(trains)
 
     criterion = nn.BCELoss()
     for i, (title, dataloader, model) in enumerate(trains):
-        ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title, bold=True)
+        Ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title, bold=True)
         optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
         for param_group in optimizer.param_groups:
             param_group['lr'] = param_group['lr'] * lr_factor
 
         scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
 
-        train_classifier(model, args.epochs, dataloader, optimizer, criterion, scheduler, ctp)
+        train_classifier(model, args.epochs, dataloader, optimizer, criterion, scheduler)
         if i != len(trains)-1:
-            ctp.print()
-    ctp.remove_header()
+            Ctp.print()
+    Ctp.exit_section()
 
 
 # tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(tests, ctp: ContextPrinter, main_title='Multitest classifiers', color=Color.NONE):
-    ctp.print(main_title, color=color, bold=True)
-    ctp.add_bar(color)
+def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE):
+    Ctp.enter_section(main_title, color)
 
     if type(tests) == zip:
         tests = list(tests)
 
     results = BinaryClassificationResults()
     for i, (title, dataloader, model) in enumerate(tests):
-        ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title)
+        Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title)
         results += test_classifier(model, dataloader)
-        print_rates(results, ctp)
-        ctp.print()
+        print_rates(results)
+        Ctp.print()
 
-    ctp.print('Average results')
-    print_rates(results, ctp)
-    ctp.remove_header()
+    Ctp.print('Average results')
+    print_rates(results)
+    Ctp.exit_section()
