@@ -8,7 +8,7 @@ from print_util import print_loss_autoencoder, print_rates, print_loss_autoencod
 
 
 def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler):
-    Ctp.enter_section(color=Color.GRAY)
+    Ctp.enter_section(color=Color.DARK_GRAY)
 
     model.train()
     num_elements = len(train_loader.dataset)
@@ -70,7 +70,7 @@ def autoencode(model, test_loader, criterion):
 
 
 def test_autoencoder(model, threshold, dataloaders, criterion):
-    Ctp.enter_section(color=Color.GRAY)
+    Ctp.enter_section(color=Color.DARK_GRAY)
     print_loss_autoencoder_header(print_positives=True)
     results = BinaryClassificationResults()
     for key, dataloader in dataloaders.items():

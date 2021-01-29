@@ -12,18 +12,13 @@ from general_ml import set_models_sub_divs
 from print_util import print_federation_round
 
 
-def local_autoencoders(args):
-    n_clients = len(args.clients_devices)
-    if n_clients == 1:
-        Ctp.print('\n\t\t\t\t\tSINGLE AUTOENCODER\n', bold=True)
-    else:
-        Ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODER\n', bold=True)
-
-    # Loading the data and creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, color=Color.YELLOW)
+def local_autoencoders(device_id_to_dataframes: dict, args):
+    # Creating the dataloaders
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, device_id_to_dataframes)
     Ctp.print('\n')
 
     # Initialize the models and compute the normalization values with each client's local training data
+    n_clients = len(args.clients_devices)
     models = [NormalizingModel(SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
                                sub=torch.zeros(args.n_features), div=torch.ones(args.n_features)) for _ in range(n_clients)]
     set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
@@ -38,7 +33,7 @@ def local_autoencoders(args):
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
                                               for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
-                                    main_title='Computing the thresholds', color=Color.RED)
+                                    main_title='Computing the thresholds', color=Color.DARK_PURPLE)
     Ctp.print('\n')
 
     # Local testing of each autoencoder
@@ -53,15 +48,13 @@ def local_autoencoders(args):
                            main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARK_CYAN)
 
 
-def federated_autoencoders(args):
-    n_clients = len(args.clients_devices)
-    Ctp.print('\n\t\t\t\t\tFEDERATED AUTOENCODERS\n', bold=True)
-
-    # Loading the data and creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, color=Color.YELLOW)
+def federated_autoencoders(device_id_to_dataframes: dict, args):
+    # Creating the dataloaders
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, device_id_to_dataframes)
     Ctp.print('\n')
 
     # Initialization of a global model
+    n_clients = len(args.clients_devices)
     global_model = NormalizingModel(SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
                                     sub=torch.zeros(args.n_features), div=torch.ones(args.n_features))
     models = [deepcopy(global_model) for _ in range(n_clients)]
@@ -82,7 +75,7 @@ def federated_autoencoders(args):
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
                                                   for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
-                                        main_title='Computing the thresholds', color=Color.RED)
+                                        main_title='Computing the thresholds', color=Color.DARK_PURPLE)
         Ctp.print('\n')
 
         # Local testing before federated averaging
