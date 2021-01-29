@@ -1,10 +1,9 @@
-from types import SimpleNamespace
+from context_printer import Color
+from context_printer import ContextPrinter as Ctp
 
 import pandas as pd
 import torch
 import torch.utils.data
-
-from print_util import ContextPrinter, Color
 
 all_devices = ['Danmini_Doorbell',
                'Ecobee_Thermostat',
@@ -138,9 +137,8 @@ def get_device_ids(args):
     return device_ids
 
 
-def get_dataframes(args, ctp: ContextPrinter, color=Color.NONE):
-    ctp.print('Reading data', color=color, bold=True)
-    ctp.add_bar(color)
+def get_dataframes(args, color=Color.NONE):
+    Ctp.enter_section('Reading data', color)
 
     # Step 1: construct the list of all the devices for which we need to read data
     device_ids = get_device_ids(args)
@@ -148,9 +146,9 @@ def get_dataframes(args, ctp: ContextPrinter, color=Color.NONE):
     # Step 2: load the data
     device_id_to_dataframes = {}
     for i, device_id in enumerate(device_ids):
-        ctp.print('[{}/{}] Data from '.format(i + 1, len(device_ids)) + all_devices[device_id])
+        Ctp.print('[{}/{}] Data from '.format(i + 1, len(device_ids)) + all_devices[device_id])
         device_id_to_dataframes.update({device_id: get_device_dataframes(device_id)})
-    ctp.remove_header()
+    Ctp.exit_section()
 
     return device_id_to_dataframes
 
@@ -164,9 +162,9 @@ def get_client_supervised_dataloaders(args, client_device_ids, device_id_to_data
 
 
 # args.clients_devices should be a list of lists of devices and args.test_devices should be a list of devices
-def get_supervised_dataloaders(args, ctp: ContextPrinter, color=Color.NONE):
+def get_supervised_dataloaders(args, color=Color.NONE):
     # Step 1: load the data from memory
-    device_id_to_dataframes = get_dataframes(args, ctp, color)
+    device_id_to_dataframes = get_dataframes(args, color)
 
     # Step 2: create the datasets and the dataloaders of the clients: 1 train and 1 test per client
     clients_dl_train, clients_dl_test = [], []
@@ -178,7 +176,7 @@ def get_supervised_dataloaders(args, ctp: ContextPrinter, color=Color.NONE):
     # Step 3: create the dataset and the dataloader of the new devices (test only)
     _, new_dl_test = get_client_supervised_dataloaders(args, args.test_devices, device_id_to_dataframes)
 
-    ctp.remove_header()
+    Ctp.exit_section()
     return clients_dl_train, clients_dl_test, new_dl_test
 
 
@@ -192,9 +190,9 @@ def get_client_unsupervised_dataloaders(args, client_device_ids, device_id_to_da
 
 
 # args.clients_devices should be a list of lists of devices and args.test_devices should be a list of devices
-def get_unsupervised_dataloaders(args, ctp: ContextPrinter, color=Color.NONE):
+def get_unsupervised_dataloaders(args, color=Color.NONE):
     # Step 1: load the data from memory
-    device_id_to_dataframes = get_dataframes(args, ctp, color)
+    device_id_to_dataframes = get_dataframes(args, color)
 
     # Step 2: create the datasets and the dataloaders of the clients: 1 train, 1 opt and 1 dict of test dataloaders per client
     clients_dl_train, clients_dl_opt, clients_dls_test = [], [], []
