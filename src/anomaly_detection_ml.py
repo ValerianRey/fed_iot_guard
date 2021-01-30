@@ -104,8 +104,6 @@ def multitrain_autoencoders(trains, args, lr_factor=1.0, main_title='Multitrain 
         scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
 
         train_autoencoder(model, args.epochs, dataloader, optimizer, criterion, scheduler)
-        if i != len(trains) - 1:
-            Ctp.print()
     Ctp.exit_section()
 
 
@@ -129,8 +127,6 @@ def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.
         threshold = avg_loss_val + std_loss_val
         thresholds.append(threshold)
         Ctp.print('The threshold is {:.4f}'.format(threshold.item()))
-        if i != len(opts) - 1:
-            Ctp.print()
     Ctp.exit_section()
     return thresholds
 
@@ -162,7 +158,6 @@ def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Col
     for i, (title, dataloaders, model, threshold) in enumerate(tests):
         Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
         results += test_autoencoder(model, threshold, dataloaders, criterion)
-        Ctp.print()
 
     Ctp.print('Average results')
     print_rates(results)

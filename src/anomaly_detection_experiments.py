@@ -12,34 +12,30 @@ from general_ml import set_models_sub_divs
 from print_util import print_federation_round
 
 
-def local_autoencoders(device_id_to_dataframes: dict, args):
+def local_autoencoders(dataframes: list, args):
     # Creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, device_id_to_dataframes)
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, dataframes)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(args.clients_devices)
     models = [NormalizingModel(SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
                                sub=torch.zeros(args.n_features), div=torch.ones(args.n_features)) for _ in range(n_clients)]
     set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
-    Ctp.print('\n')
 
     # Local training of the autoencoder
     multitrain_autoencoders(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
                                         for i, client_devices in enumerate(args.clients_devices)], clients_dl_train, models),
                             args=args, main_title='Training the clients', color=Color.GREEN)
-    Ctp.print('\n')
 
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
                                               for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
-    Ctp.print('\n')
 
     # Local testing of each autoencoder
     multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
                                       for i, client_devices in enumerate(args.clients_devices)], clients_dls_test, models, thresholds),
                            main_title='Testing the clients on their own devices', color=Color.BLUE)
-    Ctp.print('\n')
 
     # New devices testing
     multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
@@ -47,9 +43,9 @@ def local_autoencoders(device_id_to_dataframes: dict, args):
                            main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARK_CYAN)
 
 
-def federated_autoencoders(device_id_to_dataframes: dict, args):
+def federated_autoencoders(dataframes: list, args):
     # Creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, device_id_to_dataframes)
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, dataframes)
 
     # Initialization of a global model
     n_clients = len(args.clients_devices)
@@ -57,7 +53,6 @@ def federated_autoencoders(device_id_to_dataframes: dict, args):
                                     sub=torch.zeros(args.n_features), div=torch.ones(args.n_features))
     models = [deepcopy(global_model) for _ in range(n_clients)]
     set_models_sub_divs(args, models, clients_dl_train, Color.RED)
-    Ctp.print('\n')
 
     for federation_round in range(args.federation_rounds):
         print_federation_round(federation_round, args.federation_rounds)
@@ -68,20 +63,17 @@ def federated_autoencoders(device_id_to_dataframes: dict, args):
                                            clients_dl_train, models),
                                 args=args, lr_factor=(args.gamma_round ** federation_round),
                                 main_title='Training the clients', color=Color.GREEN)
-        Ctp.print('\n')
 
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
                                                   for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
-        Ctp.print('\n')
 
         # Local testing before federated averaging
         multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
                                           for i, client_devices in enumerate(args.clients_devices)],
                                          clients_dls_test, models, thresholds),
                                main_title='Testing the clients on their own devices', color=Color.BLUE)
-        Ctp.print('\n')
 
         # New devices testing before federated aggregation
         multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices)
@@ -89,7 +81,6 @@ def federated_autoencoders(device_id_to_dataframes: dict, args):
                                          [new_dls_test for _ in range(len(models))], models, thresholds),
                                main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
                                color=Color.DARK_CYAN)
-        Ctp.print('\n')
 
         # Federated averaging
         federated_averaging(global_model, models)
@@ -103,7 +94,6 @@ def federated_autoencoders(device_id_to_dataframes: dict, args):
                                           for client_devices in args.clients_devices],
                                          clients_dls_test, [global_model for _ in range(n_clients)], [global_threshold for _ in range(n_clients)]),
                                main_title='Testing the global model on data from all clients', color=Color.PURPLE)
-        Ctp.print('\n')
 
         # Global model testing on new devices
         multitest_autoencoders(tests=zip(['Testing global model on: ' + device_names(args.test_devices)],
@@ -111,4 +101,3 @@ def federated_autoencoders(device_id_to_dataframes: dict, args):
                                main_title='Testing the global model on the new devices: ' + device_names(args.test_devices),
                                color=Color.CYAN)
         Ctp.exit_section()
-        Ctp.print('\n')

@@ -9,13 +9,10 @@ from context_printer import ContextPrinter as Ctp
 
 from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from classification_experiments import local_classifiers, federated_classifiers
-from data import get_dataframes
+from data import get_all_data, split_data
 
 
-def run_grid_search(experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds: int = 1):
-    # Loading the data
-    device_id_to_dataframes = get_dataframes(Color.YELLOW)
-    Ctp.print('\n')
+def run_grid_search(train_data, experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds=1):
     args_dict = constant_args
     product = list(itertools.product(*varying_args.values()))
     for i, experiment_args_tuple in enumerate(product):
@@ -33,29 +30,26 @@ def run_grid_search(experiment_function, constant_args: dict, varying_args: dict
                 # experiment_function should take as parameter the dataloaders so that it is agnostic to the current fold or the fact it is using
                 # train/test set vs train/validation
 
-                experiment_function(device_id_to_dataframes, args=args)
+                experiment_function(train_data, args=args)
                 Ctp.exit_section()
-                if fold != n_folds - 1:
-                    Ctp.print('\n')
-
             Ctp.exit_section()
-            if j != len(configurations) - 1:
-                Ctp.print('\n\n')
-
         Ctp.exit_section()
-        if i != len(product) - 1:
-            Ctp.print('\n\n\n')
 
 
-def test_parameters(experiment_function, args_dict, n_random_reruns=5):
+def test_parameters(train_data, test_data, experiment_function, args_dict, n_random_reruns=5):
     for run_id in range(n_random_reruns):
         # Load train/test data
-        data = None
-        experiment_function(data, SimpleNamespace(**args_dict))
+        dataloaders = None
+        experiment_function(dataloaders, SimpleNamespace(**args_dict))
 
 
 def main(experiment='single_classifier'):
     Ctp.set_max_depth(4)
+    Ctp.set_automatic_skip(True)
+
+    # Loading the data
+    data = get_all_data(Color.YELLOW)
+    train_data, test_data = split_data(data, p_test=0.1, p_unused=0.01)
 
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
@@ -121,57 +115,65 @@ def main(experiment='single_classifier'):
 
     if experiment == 'single_autoencoder':
         Ctp.print('\n\t\t\t\t\tSINGLE AUTOENCODER GRID SEARCH\n', bold=True)
-        run_grid_search(local_autoencoders,
+        run_grid_search(train_data, local_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
                         {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[20, 5, 20], [86, 58, 38, 29, 38, 58, 86]]},
                         centralized_configurations)
 
     elif experiment == 'multiple_autoencoders':
         Ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODERS GRID SEARCH\n', bold=True)
-        run_grid_search(local_autoencoders,
+        run_grid_search(train_data, local_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
                         {'normalization': ['min-max']},
                         decentralized_configurations)
 
     elif experiment == 'federated_autoencoders':
         Ctp.print('\n\t\t\t\t\tFEDERATED AUTOENCODERS GRID SEARCH\n', bold=True)
-        run_grid_search(federated_autoencoders,
+        run_grid_search(train_data, federated_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_federated_params},
                         {'normalization': ['min-max']},
                         decentralized_configurations)
 
     elif experiment == 'single_classifier':
         Ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER GRID SEARCH\n', bold=True)
-        run_grid_search(local_classifiers,
+        run_grid_search(train_data, local_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_default_params},
                         {'normalization': ['min-max']},
                         centralized_configurations)
 
     elif experiment == 'multiple_classifiers':
         Ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS GRID SEARCH\n', bold=True)
-        run_grid_search(local_classifiers,
+        run_grid_search(train_data, local_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_default_params},
                         {'normalization': ['min-max']},
                         decentralized_configurations)
 
     elif experiment == 'federated_classifiers':
         Ctp.print('\n\t\t\t\t\tFEDERATED CLASSIFIERS GRID SEARCH\n', bold=True)
-        run_grid_search(federated_classifiers,
+        run_grid_search(train_data, federated_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_federated_params},
                         {'normalization': ['min-max']},
                         decentralized_configurations)
 
 
 # TODO: each experiment function should return some results to be able to know with which arguments it performed the best
+
 # TODO: make a test function that should use the test set only and test a specific set of parameters
+
 # TODO: improve the dataloading so that it can either get its data for training and validation or for training and testing
 #  the first case would be used by the grid search function, the second would be used by the test params function
 #  assuming 10% of the dataset is left out for test, the first case would make its train/opt splits from the first 90% of the dataset
 #  while the second case would take the whole 90% of the dataset as train set and the remaining 10% as test set
+
 # TODO: idea leave an unused set between train set and test set so that the test set is not too much dependent on the train set
-# TODO: decide of the parameters of data loading functions
-# TODO: verbose parameter on each experiment function
+
 # TODO: experiment functions should take as parameter the dataloaders directly instead of having to compute them
+
+# TODO: the function that makes the k-folds should also be usable without any cross validation by specifying the proportion
+#  of train and validation data
+
+# TODO: step 2: from train-val set, get either everything as train (when testing), a proportion of train and a proportion of val (when grid search
+#  with no cv, or just give the current fold and the number of folds and get the corresponding train val sets
 
 if __name__ == "__main__":
     main(sys.argv[1])

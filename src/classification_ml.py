@@ -70,8 +70,6 @@ def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain c
         scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
 
         train_classifier(model, args.epochs, dataloader, optimizer, criterion, scheduler)
-        if i != len(trains)-1:
-            Ctp.print()
     Ctp.exit_section()
 
 
@@ -88,7 +86,6 @@ def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color
         Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title)
         results += test_classifier(model, dataloader)
         print_rates(results)
-        Ctp.print()
 
     Ctp.print('Average results')
     print_rates(results)
