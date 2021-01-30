@@ -8,7 +8,7 @@ from print_util import print_train_classifier, print_train_classifier_header, pr
 
 
 def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler):
-    Ctp.enter_section(color=Color.DARK_GRAY)
+    Ctp.enter_section(color=Color.BLACK)
     print_train_classifier_header()
     model.train()
 

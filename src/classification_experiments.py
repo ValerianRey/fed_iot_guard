@@ -40,7 +40,8 @@ def local_classifiers(device_id_to_dataframes: dict, args):
     # New devices testing
     multitest_classifiers(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
                                     [new_dl_test for _ in range(n_clients)], models),
-                          main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARK_CYAN)
+                          main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
+                          color=Color.DARK_CYAN)
 
 
 def federated_classifiers(device_id_to_dataframes: dict, args):
@@ -52,7 +53,7 @@ def federated_classifiers(device_id_to_dataframes: dict, args):
     global_model = NormalizingModel(BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
                                     sub=torch.zeros(args.n_features), div=torch.ones(args.n_features))
     models = [deepcopy(global_model) for _ in range(n_clients)]
-    set_models_sub_divs(args, models, clients_dl_train, Color.RED)
+    set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
     Ctp.print('\n')
 
     for federation_round in range(args.federation_rounds):

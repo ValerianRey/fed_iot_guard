@@ -11,8 +11,7 @@ class Columns:
 
 
 def print_federation_round(federation_round, n_rounds):
-    Ctp.enter_section('\t\t\t\t\tFederation round [{}/{}]'.format(federation_round + 1, n_rounds), Color.BOLD)
-    Ctp.print()
+    Ctp.enter_section('Federation round [{}/{}]'.format(federation_round + 1, n_rounds), Color.DARK_GRAY)
 
 
 def print_rates(results: BinaryClassificationResults):
