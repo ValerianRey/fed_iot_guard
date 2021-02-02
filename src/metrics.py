@@ -31,10 +31,10 @@ class BinaryClassificationResults:
 
     # Update the results based on the pred tensor and on the label tensor
     def update(self, pred: torch.tensor, label: torch.tensor):
-        self.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum())
-        self.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum())
-        self.add_fp(torch.logical_and(torch.logical_not(torch.eq(pred, label)), torch.logical_not(label.bool())).int().sum())
-        self.add_fn(torch.logical_and(torch.logical_not(torch.eq(pred, label)), label.bool()).int().sum())
+        self.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum().item())
+        self.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum().item())
+        self.add_fp(torch.logical_and(torch.logical_not(torch.eq(pred, label)), torch.logical_not(label.bool())).int().sum().item())
+        self.add_fn(torch.logical_and(torch.logical_not(torch.eq(pred, label)), label.bool()).int().sum().item())
 
     # True positive rate
     def tpr(self):
@@ -73,10 +73,3 @@ class BinaryClassificationResults:
 
     def to_json(self):
         return {'tp': self.tp, 'tn': self.tn, 'fp': self.fp, 'fn': self.fn}
-
-
-def dumper(obj):
-    try:
-        return obj.to_json()
-    except AttributeError:
-        return obj.__dict__

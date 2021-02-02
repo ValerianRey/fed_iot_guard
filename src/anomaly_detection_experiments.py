@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import torch
 from context_printer import Color
@@ -13,9 +13,13 @@ from general_ml import set_models_sub_divs
 from metrics import BinaryClassificationResults
 from print_util import print_federation_round
 from unsupervised_data import get_all_unsupervised_dls
+import numpy as np
+from types import SimpleNamespace
 
 
-def local_autoencoders(train_opt_data, test_data, args) -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
+def local_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+        -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
+
     # Split train data between actual train and opt
     train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
 
@@ -54,7 +58,9 @@ def local_autoencoders(train_opt_data, test_data, args) -> Tuple[BinaryClassific
     return local_result, new_devices_result
 
 
-def federated_autoencoders(train_opt_data, test_data, args) -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
+def federated_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+        -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
+
     # Split train data between actual train and opt
     train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
 
