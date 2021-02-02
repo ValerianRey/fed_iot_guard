@@ -38,7 +38,7 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
     Ctp.exit_section()
 
 
-def test_classifier(model, test_loader):
+def test_classifier(model, test_loader) -> BinaryClassificationResults:
     with torch.no_grad():
         model.eval()
         results = BinaryClassificationResults()
@@ -75,7 +75,7 @@ def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain c
 
 # tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE):
+def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> BinaryClassificationResults:
     Ctp.enter_section(main_title, color)
 
     if type(tests) == zip:
@@ -90,3 +90,4 @@ def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color
     Ctp.print('Average results')
     print_rates(results)
     Ctp.exit_section()
+    return results

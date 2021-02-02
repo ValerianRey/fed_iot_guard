@@ -10,30 +10,60 @@ from context_printer import ContextPrinter as Ctp
 from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from classification_experiments import local_classifiers, federated_classifiers
 from data import get_all_data, split_data, split_data_current_fold
+from metrics import BinaryClassificationResults, dumper
+import json
+import os
+from time import time
 
 
-def run_grid_search(train_val_data, experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds=5):
+def run_grid_search(train_val_data, experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds=1):
+    results_path = 'results/' + experiment_function.__name__ + '/'
+
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
+
+    dummy_results = {'a': [BinaryClassificationResults(tp=1, fp=5)]}
+    with open(results_path + 'dummy.json', 'w') as outfile:
+        json.dump(dummy_results, outfile, default=dumper)
+
     args_dict = constant_args
     product = list(itertools.product(*varying_args.values()))
-    for i, experiment_args_tuple in enumerate(product):
+    local_results, new_devices_results = {}, {}
+
+    for i, experiment_args_tuple in enumerate(product):  # Grid search: we iterate over the sets of parameters to be tested
         experiment_args = {key: arg for (key, arg) in zip(varying_args.keys(), experiment_args_tuple)}
         args_dict.update(experiment_args)
         Ctp.enter_section('Experiment [{}/{}] with args: '.format(i + 1, len(product)) + str(experiment_args), Color.WHITE)
-        for j, configuration in enumerate(configurations):
+        local_results.update({repr(experiment_args): {}})
+        new_devices_results.update({repr(experiment_args): {}})
+        for j, configuration in enumerate(configurations):  # Multiple configurations: we iterate over the possible configurations of the clients
             Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
             args_dict.update(configuration)
             args = SimpleNamespace(**args_dict)
+            local_results[repr(experiment_args)].update({repr(configuration): {}})
+            new_devices_results[repr(experiment_args)].update({repr(configuration): {}})
             if n_folds == 1:  # We do not use cross-validation
                 train_data, val_data = split_data(train_val_data, p_test=0.2, p_unused=0.0)
-                experiment_function(train_data, val_data, args=args)
+                local_result, new_devices_result = experiment_function(train_data, val_data, args=args)
+                local_results[repr(experiment_args)][repr(configuration)] = [local_result]
+                new_devices_results[repr(experiment_args)][repr(configuration)] = [new_devices_result]
             else:
-                for fold in range(n_folds):  # Cross validation
+                for fold in range(n_folds):  # Cross validation: we iterate over the folds
                     Ctp.enter_section('Fold [{}/{}]'.format(fold + 1, n_folds), Color.GRAY)
                     train_data, val_data = split_data_current_fold(train_val_data, n_folds, fold)
-                    experiment_function(train_data, val_data, args=args)
+                    local_result, new_devices_result = experiment_function(train_data, val_data, args=args)
+                    local_results[repr(experiment_args)][repr(configuration)].append(local_result)
+                    new_devices_results[repr(experiment_args)][repr(configuration)].append(new_devices_result)
                     Ctp.exit_section()
             Ctp.exit_section()
         Ctp.exit_section()
+
+    current_time = time()
+    with open(results_path + 'local_results_{}.json'.format(current_time), 'w') as outfile:
+        json.dump(local_results, outfile, default=dumper)
+
+    with open(results_path + 'new_devices_results_{}.json'.format(current_time), 'w') as outfile:
+        json.dump(new_devices_results, outfile, default=dumper)
 
 
 def test_parameters(train_data, test_data, experiment_function, args_dict, n_random_reruns=5):
@@ -110,7 +140,7 @@ def main(experiment='single_classifier'):
                                        'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                        'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                        'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5},
-                                       'federation_rounds': 5,
+                                       'federation_rounds': 3,
                                        'gamma_round': 0.5}
 
     if experiment == 'single_autoencoder':
@@ -118,47 +148,47 @@ def main(experiment='single_classifier'):
         run_grid_search(train_val_data, local_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
                         {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[20, 5, 20], [86, 58, 38, 29, 38, 58, 86]]},
-                        centralized_configurations)
+                        centralized_configurations, n_folds=1)
 
     elif experiment == 'multiple_autoencoders':
         Ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODERS GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, local_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
                         {'normalization': ['min-max']},
-                        decentralized_configurations)
+                        decentralized_configurations, n_folds=1)
 
     elif experiment == 'federated_autoencoders':
         Ctp.print('\n\t\t\t\t\tFEDERATED AUTOENCODERS GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, federated_autoencoders,
                         {**common_params, **autoencoder_params, **autoencoder_opt_federated_params},
                         {'normalization': ['min-max']},
-                        decentralized_configurations)
+                        decentralized_configurations, n_folds=1)
 
     elif experiment == 'single_classifier':
         Ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, local_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_default_params},
                         {'normalization': ['min-max']},
-                        centralized_configurations)
+                        centralized_configurations, n_folds=1)
 
     elif experiment == 'multiple_classifiers':
         Ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, local_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_default_params},
                         {'normalization': ['min-max']},
-                        decentralized_configurations)
+                        decentralized_configurations, n_folds=1)
 
     elif experiment == 'federated_classifiers':
         Ctp.print('\n\t\t\t\t\tFEDERATED CLASSIFIERS GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, federated_classifiers,
                         {**common_params, **classifier_params, **classifier_opt_federated_params},
                         {'normalization': ['min-max']},
-                        decentralized_configurations)
+                        decentralized_configurations[:1], n_folds=1)
 
-
-# TODO: each experiment function should return some results to be able to know with which arguments it performed the best
 
 # TODO: make a test function that should use the test set only and test a specific set of parameters
+
+# TODO: implement the function that assigns a score based on a tuple of results
 
 if __name__ == "__main__":
     main(sys.argv[1])

@@ -1,7 +1,7 @@
 import torch
 
 
-class BinaryClassificationResults(object):
+class BinaryClassificationResults:
     def __init__(self, tp=0, tn=0, fp=0, fn=0):
         self.tp = tp  # Number of true positives
         self.tn = tn  # Number of true negatives
@@ -70,3 +70,13 @@ class BinaryClassificationResults(object):
 
     def n_samples(self):
         return self.tp + self.tn + self.fp + self.fn
+
+    def to_json(self):
+        return {'tp': self.tp, 'tn': self.tn, 'fp': self.fp, 'fn': self.fn}
+
+
+def dumper(obj):
+    try:
+        return obj.to_json()
+    except AttributeError:
+        return obj.__dict__
