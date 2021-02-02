@@ -6,15 +6,21 @@ from context_printer import ContextPrinter as Ctp
 
 from anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds
 from architectures import SimpleAutoencoder, NormalizingModel
-from data import get_unsupervised_dataloaders, device_names
+from data import device_names, split_data
+from unsupervised_data import get_all_unsupervised_dls
 from federated_util import federated_averaging
 from general_ml import set_models_sub_divs
 from print_util import print_federation_round
 
 
-def local_autoencoders(dataframes: list, args):
-    # Creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, dataframes)
+def local_autoencoders(train_opt_data, test_data, args):
+    # Split train data between actual train and opt
+    train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
+
+    # Create the dataloaders
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_all_unsupervised_dls(train_data, opt_data, test_data,
+                                                                                                args.clients_devices, args.test_devices,
+                                                                                                args.train_bs, args.test_bs)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(args.clients_devices)
@@ -43,16 +49,21 @@ def local_autoencoders(dataframes: list, args):
                            main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARK_CYAN)
 
 
-def federated_autoencoders(dataframes: list, args):
-    # Creating the dataloaders
-    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_unsupervised_dataloaders(args, dataframes)
+def federated_autoencoders(train_opt_data, test_data, args):
+    # Split train data between actual train and opt
+    train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
+
+    # Create the dataloaders
+    clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_all_unsupervised_dls(train_data, opt_data, test_data,
+                                                                                                args.clients_devices, args.test_devices,
+                                                                                                args.train_bs, args.test_bs)
 
     # Initialization of a global model
     n_clients = len(args.clients_devices)
     global_model = NormalizingModel(SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
                                     sub=torch.zeros(args.n_features), div=torch.ones(args.n_features))
     models = [deepcopy(global_model) for _ in range(n_clients)]
-    set_models_sub_divs(args, models, clients_dl_train, Color.RED)
+    set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
 
     for federation_round in range(args.federation_rounds):
         print_federation_round(federation_round, args.federation_rounds)
