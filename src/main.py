@@ -198,8 +198,6 @@ def main(experiment: str = 'single_classifier'):
 
 # TODO: better type hinting for the whole project
 
-# TODO: be able to serialize the whole set of parameters
-
 # TODO: rethink of the way the results should be stored
 #  grid search case: results/grid_search/run_0/(local_results.json, new_devices_results.json, fixed_parameters.json)
 #  the run id should be automatically implemented based on existing folders
@@ -207,8 +205,6 @@ def main(experiment: str = 'single_classifier'):
 #  2 things to code:
 #  - be able to store any set of parameters as json
 #  - be able to automatically find the id of the run in order to name the folder properly
-
-# TODO: remove commented multi-tests and store them in a different branch just in case
 
 
 if __name__ == "__main__":

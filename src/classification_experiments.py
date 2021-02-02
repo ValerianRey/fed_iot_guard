@@ -75,19 +75,6 @@ def federated_classifiers(train_data, test_data, args) -> Tuple[List[BinaryClass
                                args=args, lr_factor=(args.gamma_round ** federation_round),
                                main_title='Training the clients', color=Color.GREEN)
 
-        # # Local testing before federated averaging
-        # multitest_classifiers(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
-        #                                  for i, client_devices in enumerate(args.clients_devices)],
-        #                                 clients_dl_test, models),
-        #                       main_title='Testing the clients on their own devices', color=Color.BLUE)
-        #
-        # # New devices testing before federated aggregation
-        # multitest_classifiers(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices)
-        #                                  for i in range(n_clients)],
-        #                                 [new_dl_test for _ in range(len(models))], models),
-        #                       main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
-        #                       color=Color.DARK_CYAN)
-
         # Federated averaging
         federated_averaging(global_model, models)
 

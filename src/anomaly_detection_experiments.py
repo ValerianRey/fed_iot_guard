@@ -96,19 +96,6 @@ def federated_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data:
                                                   for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
-        # # Local testing before federated averaging
-        # multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
-        #                                   for i, client_devices in enumerate(args.clients_devices)],
-        #                                  clients_dls_test, models, thresholds),
-        #                        main_title='Testing the clients on their own devices', color=Color.BLUE)
-        #
-        # # New devices testing before federated aggregation
-        # multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices)
-        #                                   for i in range(n_clients)],
-        #                                  [new_dls_test for _ in range(len(models))], models, thresholds),
-        #                        main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
-        #                        color=Color.DARK_CYAN)
-
         # Federated averaging
         federated_averaging(global_model, models)
         global_threshold = sum(thresholds) / len(thresholds)
