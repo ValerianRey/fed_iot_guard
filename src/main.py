@@ -9,10 +9,10 @@ from context_printer import ContextPrinter as Ctp
 
 from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from classification_experiments import local_classifiers, federated_classifiers
-from data import get_all_data, split_data
+from data import get_all_data, split_data, split_data_current_fold
 
 
-def run_grid_search(train_val_data, experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds=1):
+def run_grid_search(train_val_data, experiment_function, constant_args: dict, varying_args: dict, configurations: list, n_folds=5):
     args_dict = constant_args
     product = list(itertools.product(*varying_args.values()))
     for i, experiment_args_tuple in enumerate(product):
@@ -23,13 +23,13 @@ def run_grid_search(train_val_data, experiment_function, constant_args: dict, va
             Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
             args_dict.update(configuration)
             args = SimpleNamespace(**args_dict)
-
             if n_folds == 1:  # We do not use cross-validation
                 train_data, val_data = split_data(train_val_data, p_test=0.2, p_unused=0.0)
                 experiment_function(train_data, val_data, args=args)
             else:
                 for fold in range(n_folds):  # Cross validation
                     Ctp.enter_section('Fold [{}/{}]'.format(fold + 1, n_folds), Color.GRAY)
+                    train_data, val_data = split_data_current_fold(train_val_data, n_folds, fold)
                     experiment_function(train_data, val_data, args=args)
                     Ctp.exit_section()
             Ctp.exit_section()
@@ -44,12 +44,12 @@ def test_parameters(train_data, test_data, experiment_function, args_dict, n_ran
 
 
 def main(experiment='single_classifier'):
-    Ctp.set_max_depth(6)
+    Ctp.set_max_depth(4)
     Ctp.set_automatic_skip(True)
 
     # Loading the data
     data = get_all_data(Color.YELLOW)
-    train_val_data, test_data = split_data(data, p_test=0.1, p_unused=0.01)
+    train_val_data, test_data = split_data(data, p_test=0.2, p_unused=0.01)
 
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
@@ -88,7 +88,7 @@ def main(experiment='single_classifier'):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    autoencoder_opt_federated_params = {'epochs': 1,
+    autoencoder_opt_federated_params = {'epochs': 30,
                                         'train_bs': 64,
                                         'optimizer': torch.optim.Adadelta,
                                         'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
@@ -159,8 +159,6 @@ def main(experiment='single_classifier'):
 # TODO: each experiment function should return some results to be able to know with which arguments it performed the best
 
 # TODO: make a test function that should use the test set only and test a specific set of parameters
-
-# TODO: implement cross validation splitting (using sklearn)
 
 if __name__ == "__main__":
     main(sys.argv[1])

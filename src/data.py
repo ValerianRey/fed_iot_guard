@@ -5,6 +5,8 @@ import pandas as pd
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
+from sklearn.model_selection import KFold
+
 all_devices = ['Danmini_Doorbell',
                'Ecobee_Thermostat',
                'Ennio_Doorbell',
@@ -70,17 +72,17 @@ def split_data(data: List[Dict[str, np.array]], p_test: float, p_unused: float) 
     return train_data, test_data
 
 
-# Note that if the number of rows in a dataframe is not a multiple of the number of splits, some rows will be left out of all splits
-# def get_splits(device_dataframes: dict, splits_benign: list, splits_attack: list) -> dict:
-#     # Compute the indexes of the splits.
-#     # For example for benign data, with splits_benign = [0.3, 0.7] and device_dataframes['benign'] of length 100,
-#     # we would have indexes['benign'] = [0, 30, 100]
-#     indexes = {'benign': [0] + list(np.cumsum([int(split_proportion * len(device_dataframes['benign'])) for split_proportion in splits_benign]))}
-#     indexes.update({key: [0] + list(np.cumsum([int(split_proportion * len(device_dataframes[key])) for split_proportion in splits_attack]))
-#                     for key in device_dataframes.keys() if key != 'benign'})
-#
-#     # For each key (benign, mirai_ack, ...) and for each split we take the corresponding rows of the corresponding dataframe
-#     data_splits = {key: [torch.tensor(device_dataframes[key][indexes[key][split_id]:indexes[key][split_id + 1]]).float()
-#                          for split_id in range(len(indexes[key]) - 1)]
-#                    for key in device_dataframes.keys()}
-#     return data_splits
+def split_data_current_fold(train_val_data: List[Dict[str, np.array]], n_folds: int, fold: int) \
+        -> Tuple[List[Dict[str, np.array]], List[Dict[str, np.array]]]:
+
+    kf = KFold(n_splits=n_folds)
+    train_data, val_data = [], []
+    for device_id, device_data in enumerate(train_val_data):
+        train_data.append({})
+        val_data.append({})
+        for key, array in device_data.items():
+            train_index, val_index = list(kf.split(array))[fold]
+            train_data[device_id][key] = array[train_index]
+            val_data[device_id][key] = array[val_index]
+
+    return train_data, val_data
