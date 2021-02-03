@@ -24,7 +24,6 @@ def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_functi
     # (if it does not work it's better to know before we do the whole grid search)
     base_path = 'grid_search_results/' + experiment_function.__name__ + '/run_'
     results_path = create_new_numbered_dir(base_path)
-    save_dummy_results(results_path)
 
     args_dict = deepcopy(constant_args)
     product = list(itertools.product(*varying_args.values()))  # Compute the different sets of hyper-parameters to test in the grid search
@@ -70,20 +69,24 @@ def test_parameters(train_data: List[Dict[str, np.array]], test_data: List[Dict[
     # (if it does not work it's better to know before we do the whole testing)
     base_path = 'test_results/' + experiment_function.__name__ + '/run_'
     results_path = create_new_numbered_dir(base_path)
-    save_dummy_results(results_path)
-
+    constant_args = deepcopy(args_dict)
     local_results, new_devices_results = {}, {}
 
     for j, configuration in enumerate(configurations):  # Multiple configurations: we iterate over the possible configurations of the clients
+        args_dict.update(configuration)
+        args = SimpleNamespace(**args_dict)
         Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
         local_results[repr(configuration)] = []
         new_devices_results[repr(configuration)] = []
         for run_id in range(n_random_reruns):  # Multiple reruns: we run the same experiment multiple times to know the confidence of the results
-            local_result, new_devices_result = experiment_function(train_data, test_data, args=SimpleNamespace(**args_dict))
+            Ctp.enter_section('Run [{}/{}]'.format(run_id + 1, n_random_reruns), Color.GRAY)
+            local_result, new_devices_result = experiment_function(train_data, test_data, args)
             local_results[repr(configuration)].append(local_result)
             new_devices_results[repr(configuration)].append(new_devices_result)
+            Ctp.exit_section()
+        Ctp.exit_section()
 
-    save_results(results_path, local_results, new_devices_results, args_dict)
+    save_results(results_path, local_results, new_devices_results, constant_args)
 
 
 def main(experiment: str = 'single_classifier', test: str = 'false'):
