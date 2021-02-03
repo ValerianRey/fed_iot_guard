@@ -206,10 +206,8 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
         raise NotImplementedError
 
     if test:
-        Ctp.print('\n\t\t\t\t\t' + experiment.upper() + ' TEST\n', bold=True)
         test_parameters(train_val_data, test_data, experiment, experiment_function, constant_args, configurations, n_random_reruns=1)
     else:
-        Ctp.print('\n\t\t\t\t\t' + experiment.upper() + ' GRID SEARCH\n', bold=True)
         run_grid_search(train_val_data, experiment, experiment_function, constant_args, varying_args, configurations, n_folds=1)
 
 
