@@ -10,19 +10,19 @@ from context_printer import ContextPrinter as Ctp
 from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from classification_experiments import local_classifiers, federated_classifiers
 from data import get_all_data, split_data, split_data_current_fold
-from saving import save_results, save_dummy_results, create_new_numbered_dir
+from saving import save_results, create_new_numbered_dir
 
 from typing import List, Dict, Callable
 import numpy as np
 from copy import deepcopy
 
 
-def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_function: Callable,
+def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment: str, experiment_function: Callable,
                     constant_args: dict, varying_args: dict, configurations: List[Dict[str, list]], n_folds: int = 1) -> None:
+    Ctp.print('\n\t\t\t\t\t' + experiment.replace('_', ' ').upper() + ' GRID SEARCH\n', bold=True)
 
-    # Create the path in which we store the results and try to store a dummy result file here
-    # (if it does not work it's better to know before we do the whole grid search)
-    base_path = 'grid_search_results/' + experiment_function.__name__ + '/run_'
+    # Create the path in which we store the results
+    base_path = 'grid_search_results/' + experiment + '/run_'
     results_path = create_new_numbered_dir(base_path)
 
     args_dict = deepcopy(constant_args)
@@ -62,12 +62,12 @@ def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_functi
 
 # This function is used to test the performance of a model with a given set of hyper-parameters on the test set
 def test_parameters(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]],
-                    experiment_function: Callable, args_dict: dict, configurations: List[Dict[str, list]],
+                    experiment: str, experiment_function: Callable, args_dict: dict, configurations: List[Dict[str, list]],
                     n_random_reruns: int = 5) -> None:
+    Ctp.print('\n\t\t\t\t\t' + experiment.replace('_', ' ').upper() + ' GRID SEARCH\n', bold=True)
 
-    # Create the path in which we store the results and try to store a dummy result file here
-    # (if it does not work it's better to know before we do the whole testing)
-    base_path = 'test_results/' + experiment_function.__name__ + '/run_'
+    # Create the path in which we store the results
+    base_path = 'test_results/' + experiment + '/run_'
     results_path = create_new_numbered_dir(base_path)
     constant_args = deepcopy(args_dict)
     local_results, new_devices_results = {}, {}
@@ -92,14 +92,13 @@ def test_parameters(train_data: List[Dict[str, np.array]], test_data: List[Dict[
 def main(experiment: str = 'single_classifier', test: str = 'false'):
     test = (test.lower() == 'true')  # Transform the str to bool
 
-    Ctp.set_max_depth(4)
     Ctp.set_automatic_skip(True)
 
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
                      'test_bs': 4096}
 
-    autoencoder_params = {'hidden_layers': [86, 58, 38, 29, 38, 58, 86],
+    autoencoder_params = {'hidden_layers': [11],  # [86, 58, 38, 29, 38, 58, 86]
                           'activation_fn': torch.nn.ELU}
 
     classifier_params = {'hidden_layers': [40, 10, 5],
@@ -125,7 +124,7 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
                                   {'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]},
                                   {'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}]
 
-    autoencoder_opt_default_params = {'epochs': 1,
+    autoencoder_opt_default_params = {'epochs': 50,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
@@ -162,42 +161,43 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
     train_val_data, test_data = split_data(data, p_test=0.2, p_unused=0.01)
 
     if experiment == 'single_autoencoder':
-        title = 'SINGLE AUTOENCODER'
+        Ctp.set_max_depth(3)
         experiment_function = local_autoencoders
         constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[20, 5, 20], [86, 58, 38, 29, 38, 58, 86]]}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'],
+                        'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 10, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
         configurations = centralized_configurations
 
     elif experiment == 'multiple_autoencoders':
-        title = 'MULTIPLE AUTOENCODERS'
+        Ctp.set_max_depth(3)
         experiment_function = local_autoencoders
         constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
         configurations = decentralized_configurations
 
     elif experiment == 'federated_autoencoders':
-        title = 'FEDERATED AUTOENCODERS'
+        Ctp.set_max_depth(4)
         experiment_function = federated_autoencoders
         constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_federated_params}
         varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
         configurations = decentralized_configurations
 
     elif experiment == 'single_classifier':
-        title = 'SINGLE CLASSIFIER'
+        Ctp.set_max_depth(3)
         experiment_function = local_classifiers
         constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
         varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
         configurations = centralized_configurations
 
     elif experiment == 'multiple_classifiers':
-        title = 'MULTIPLE CLASSIFIERS'
+        Ctp.set_max_depth(3)
         experiment_function = local_classifiers
         constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
         varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
         configurations = decentralized_configurations
 
     elif experiment == 'federated_classifiers':
-        title = 'FEDERATED CLASSIFIERS'
+        Ctp.set_max_depth(4)
         experiment_function = federated_classifiers
         constant_args = {**common_params, **classifier_params, **classifier_opt_federated_params}
         varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
@@ -206,11 +206,11 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
         raise NotImplementedError
 
     if test:
-        Ctp.print('\n\t\t\t\t\t' + title + ' TEST\n', bold=True)
-        test_parameters(train_val_data, test_data, experiment_function, constant_args, configurations, n_random_reruns=1)
+        Ctp.print('\n\t\t\t\t\t' + experiment.upper() + ' TEST\n', bold=True)
+        test_parameters(train_val_data, test_data, experiment, experiment_function, constant_args, configurations, n_random_reruns=1)
     else:
-        Ctp.print('\n\t\t\t\t\t' + title + ' GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, experiment_function, constant_args, varying_args, configurations, n_folds=1)
+        Ctp.print('\n\t\t\t\t\t' + experiment.upper() + ' GRID SEARCH\n', bold=True)
+        run_grid_search(train_val_data, experiment, experiment_function, constant_args, varying_args, configurations, n_folds=1)
 
 
 if __name__ == "__main__":
