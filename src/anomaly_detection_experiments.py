@@ -35,24 +35,25 @@ def local_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: Lis
     set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
 
     # Local training of the autoencoder
-    multitrain_autoencoders(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
-                                        for i, client_devices in enumerate(args.clients_devices)], clients_dl_train, models),
+    multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                             for i, client_devices in enumerate(args.clients_devices)], clients_dl_train, models)),
                             args=args, main_title='Training the clients', color=Color.GREEN)
 
     # Computation of the thresholds
-    thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
-                                              for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
+    thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
+                                                   for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models)),
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
     # Local testing of each autoencoder
-    local_result = multitest_autoencoders(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
-                                                     for i, client_devices in enumerate(args.clients_devices)], clients_dls_test, models, thresholds),
+    local_result = multitest_autoencoders(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
+                                                          for i, client_devices in enumerate(args.clients_devices)],
+                                                         clients_dls_test, models, thresholds)),
                                           main_title='Testing the clients on their own devices', color=Color.BLUE)
 
     # New devices testing
     new_devices_result = multitest_autoencoders(
-        tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
-                  [new_dls_test for _ in range(n_clients)], models, thresholds),
+        tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
+                       [new_dls_test for _ in range(n_clients)], models, thresholds)),
         main_title='Testing the clients on the new devices: ' + device_names(args.test_devices), color=Color.DARK_CYAN)
 
     return local_result, new_devices_result
@@ -85,15 +86,15 @@ def federated_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data:
         print_federation_round(federation_round, args.federation_rounds)
 
         # Local training of each client
-        multitrain_autoencoders(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
-                                            for i, client_devices in enumerate(args.clients_devices)],
-                                           clients_dl_train, models),
+        multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                                 for i, client_devices in enumerate(args.clients_devices)],
+                                                clients_dl_train, models)),
                                 args=args, lr_factor=(args.gamma_round ** federation_round),
                                 main_title='Training the clients', color=Color.GREEN)
 
         # Computation of the thresholds
-        thresholds = compute_thresholds(opts=zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
-                                                  for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models),
+        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
+                                                       for i, client_devices in enumerate(args.clients_devices)], clients_dl_opt, models)),
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated averaging
@@ -104,15 +105,15 @@ def federated_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data:
         models = [deepcopy(global_model) for _ in range(n_clients)]
 
         # Global model testing on each client's data
-        local_results.append(multitest_autoencoders(tests=zip(['Testing global model on: ' + device_names(client_devices)
-                                                               for client_devices in args.clients_devices],
-                                                              clients_dls_test, [global_model for _ in range(n_clients)],
-                                                              [global_threshold for _ in range(n_clients)]),
+        local_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
+                                                                    for client_devices in args.clients_devices],
+                                                                   clients_dls_test, [global_model for _ in range(n_clients)],
+                                                                   [global_threshold for _ in range(n_clients)])),
                                                     main_title='Testing the global model on data from all clients', color=Color.PURPLE))
 
         # Global model testing on new devices
-        new_devices_results.append(multitest_autoencoders(tests=zip(['Testing global model on: ' + device_names(args.test_devices)],
-                                                                    [new_dls_test], [global_model], [global_threshold]),
+        new_devices_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(args.test_devices)],
+                                                                         [new_dls_test], [global_model], [global_threshold])),
                                                           main_title='Testing the global model on the new devices: ' + device_names(
                                                               args.test_devices),
                                                           color=Color.CYAN))

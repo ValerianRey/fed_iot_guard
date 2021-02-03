@@ -10,10 +10,11 @@ from context_printer import ContextPrinter as Ctp
 from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from classification_experiments import local_classifiers, federated_classifiers
 from data import get_all_data, split_data, split_data_current_fold
-from saving import save_results, create_dirs, save_dummy_results
+from saving import save_results, save_dummy_results, create_new_numbered_dir
 
 from typing import List, Dict, Callable
 import numpy as np
+from copy import deepcopy
 
 
 def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_function: Callable,
@@ -21,11 +22,11 @@ def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_functi
 
     # Create the path in which we store the results and try to store a dummy result file here
     # (if it does not work it's better to know before we do the whole grid search)
-    results_path = 'grid_search_results/' + experiment_function.__name__ + '/'
-    create_dirs(results_path)
+    base_path = 'grid_search_results/' + experiment_function.__name__ + '/run_'
+    results_path = create_new_numbered_dir(base_path)
     save_dummy_results(results_path)
 
-    args_dict = constant_args
+    args_dict = deepcopy(constant_args)
     product = list(itertools.product(*varying_args.values()))  # Compute the different sets of hyper-parameters to test in the grid search
     local_results, new_devices_results = {}, {}
 
@@ -57,17 +58,18 @@ def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment_functi
             Ctp.exit_section()
         Ctp.exit_section()
 
-    save_results(results_path, local_results, new_devices_results)
+    save_results(results_path, local_results, new_devices_results, constant_args)
 
 
+# This function is used to test the performance of a model with a given set of hyper-parameters on the test set
 def test_parameters(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]],
                     experiment_function: Callable, args_dict: dict, configurations: List[Dict[str, list]],
                     n_random_reruns: int = 5) -> None:
 
     # Create the path in which we store the results and try to store a dummy result file here
     # (if it does not work it's better to know before we do the whole testing)
-    results_path = 'test_results/' + experiment_function.__name__ + '/'
-    create_dirs(results_path)
+    base_path = 'test_results/' + experiment_function.__name__ + '/run_'
+    results_path = create_new_numbered_dir(base_path)
     save_dummy_results(results_path)
 
     local_results, new_devices_results = {}, {}
@@ -76,21 +78,19 @@ def test_parameters(train_data: List[Dict[str, np.array]], test_data: List[Dict[
         Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
         local_results[repr(configuration)] = []
         new_devices_results[repr(configuration)] = []
-        for run_id in range(n_random_reruns):
+        for run_id in range(n_random_reruns):  # Multiple reruns: we run the same experiment multiple times to know the confidence of the results
             local_result, new_devices_result = experiment_function(train_data, test_data, args=SimpleNamespace(**args_dict))
             local_results[repr(configuration)].append(local_result)
             new_devices_results[repr(configuration)].append(new_devices_result)
 
-    save_results(results_path, local_results, new_devices_results)
+    save_results(results_path, local_results, new_devices_results, args_dict)
 
 
-def main(experiment: str = 'single_classifier'):
+def main(experiment: str = 'single_classifier', test: str = 'false'):
+    test = (test.lower() == 'true')  # Transform the str to bool
+
     Ctp.set_max_depth(4)
     Ctp.set_automatic_skip(True)
-
-    # Loading the data
-    data = get_all_data(Color.YELLOW)
-    train_val_data, test_data = split_data(data, p_test=0.2, p_unused=0.01)
 
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
@@ -154,58 +154,61 @@ def main(experiment: str = 'single_classifier'):
                                        'federation_rounds': 1,
                                        'gamma_round': 0.5}
 
+    # Loading the data
+    data = get_all_data(Color.YELLOW)
+    train_val_data, test_data = split_data(data, p_test=0.2, p_unused=0.01)
+
     if experiment == 'single_autoencoder':
-        Ctp.print('\n\t\t\t\t\tSINGLE AUTOENCODER GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, local_autoencoders,
-                        {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
-                        {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[20, 5, 20], [86, 58, 38, 29, 38, 58, 86]]},
-                        centralized_configurations, n_folds=1)
+        title = 'SINGLE AUTOENCODER'
+        experiment_function = local_autoencoders
+        constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[20, 5, 20], [86, 58, 38, 29, 38, 58, 86]]}
+        configurations = centralized_configurations
 
     elif experiment == 'multiple_autoencoders':
-        Ctp.print('\n\t\t\t\t\tMULTIPLE AUTOENCODERS GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, local_autoencoders,
-                        {**common_params, **autoencoder_params, **autoencoder_opt_default_params},
-                        {'normalization': ['min-max']},
-                        decentralized_configurations, n_folds=1)
+        title = 'MULTIPLE AUTOENCODERS'
+        experiment_function = local_autoencoders
+        constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        configurations = decentralized_configurations
 
     elif experiment == 'federated_autoencoders':
-        Ctp.print('\n\t\t\t\t\tFEDERATED AUTOENCODERS GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, federated_autoencoders,
-                        {**common_params, **autoencoder_params, **autoencoder_opt_federated_params},
-                        {'normalization': ['min-max']},
-                        decentralized_configurations, n_folds=1)
+        title = 'FEDERATED AUTOENCODERS'
+        experiment_function = federated_autoencoders
+        constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_federated_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        configurations = decentralized_configurations
 
     elif experiment == 'single_classifier':
-        Ctp.print('\n\t\t\t\t\tSINGLE CLASSIFIER GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, local_classifiers,
-                        {**common_params, **classifier_params, **classifier_opt_default_params},
-                        {'normalization': ['min-max']},
-                        centralized_configurations, n_folds=1)
+        title = 'SINGLE CLASSIFIER'
+        experiment_function = local_classifiers
+        constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        configurations = centralized_configurations
 
     elif experiment == 'multiple_classifiers':
-        Ctp.print('\n\t\t\t\t\tMULTIPLE CLASSIFIERS GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, local_classifiers,
-                        {**common_params, **classifier_params, **classifier_opt_default_params},
-                        {'normalization': ['min-max']},
-                        decentralized_configurations, n_folds=1)
+        title = 'MULTIPLE CLASSIFIERS'
+        experiment_function = local_classifiers
+        constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        configurations = decentralized_configurations
 
     elif experiment == 'federated_classifiers':
-        Ctp.print('\n\t\t\t\t\tFEDERATED CLASSIFIERS GRID SEARCH\n', bold=True)
-        run_grid_search(train_val_data, federated_classifiers,
-                        {**common_params, **classifier_params, **classifier_opt_federated_params},
-                        {'normalization': ['min-max']},
-                        decentralized_configurations[:1], n_folds=1)
+        title = 'FEDERATED CLASSIFIERS'
+        experiment_function = federated_classifiers
+        constant_args = {**common_params, **classifier_params, **classifier_opt_federated_params}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        configurations = decentralized_configurations
+    else:
+        raise NotImplementedError
 
-# TODO: better type hinting for the whole project
-
-# TODO: rethink of the way the results should be stored
-#  grid search case: results/grid_search/run_0/(local_results.json, new_devices_results.json, fixed_parameters.json)
-#  the run id should be automatically implemented based on existing folders
-#  test case: results/test/run_0/(local_results.json, new_devices_results.json, fixed_parameters.json)
-#  2 things to code:
-#  - be able to store any set of parameters as json
-#  - be able to automatically find the id of the run in order to name the folder properly
+    if test:
+        Ctp.print('\n\t\t\t\t\t' + title + ' TEST\n', bold=True)
+        test_parameters(train_val_data, test_data, experiment_function, constant_args, configurations, n_random_reruns=1)
+    else:
+        Ctp.print('\n\t\t\t\t\t' + title + ' GRID SEARCH\n', bold=True)
+        run_grid_search(train_val_data, experiment_function, constant_args, varying_args, configurations, n_folds=1)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(*sys.argv[1:])

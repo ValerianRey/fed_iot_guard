@@ -1,8 +1,10 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 
 
-def get_smooth_layers(dim_encoding, n_layers_encoder, n_layers_decoder, n_neurons_in=115):
+def get_smooth_layers(dim_encoding: int, n_layers_encoder: int, n_layers_decoder: int, n_neurons_in: int = 115) -> List[int]:
     reduction_factor = (dim_encoding / n_neurons_in) ** (1 / n_layers_encoder)
     augmentation_factor = (n_neurons_in / dim_encoding) ** (1 / n_layers_decoder)
 
@@ -14,7 +16,7 @@ def get_smooth_layers(dim_encoding, n_layers_encoder, n_layers_decoder, n_neuron
 
 
 class SimpleAutoencoder(nn.Module):
-    def __init__(self, activation_function, hidden_layers, verbose=False):
+    def __init__(self, activation_function: nn.Module, hidden_layers: List[int], verbose: bool = False) -> None:
         super(SimpleAutoencoder, self).__init__()
         self.seq = nn.Sequential()
         n_neurons_in = 115
@@ -30,12 +32,12 @@ class SimpleAutoencoder(nn.Module):
         if verbose:
             print(self.seq)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.seq(x)
 
 
 class BinaryClassifier(nn.Module):
-    def __init__(self, activation_function, hidden_layers, verbose=False):
+    def __init__(self, activation_function: nn.Module, hidden_layers: List[int], verbose: bool = False) -> None:
         super(BinaryClassifier, self).__init__()
         self.seq = nn.Sequential()
         n_neurons_in = 115
@@ -52,24 +54,24 @@ class BinaryClassifier(nn.Module):
         if verbose:
             print(self.seq)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.seq(x)
 
 
 class NormalizingModel(nn.Module):
-    def __init__(self, model, sub: torch.tensor, div: torch.tensor):
+    def __init__(self, model: torch.nn.Module, sub: torch.Tensor, div: torch.Tensor) -> None:
         super(NormalizingModel, self).__init__()
         self.sub = nn.Parameter(sub, requires_grad=False)
         self.div = nn.Parameter(div, requires_grad=False)
         self.model = model
 
     # Manually change normalization values
-    def set_sub_div(self, sub: torch.tensor, div: torch.tensor):
+    def set_sub_div(self, sub: torch.Tensor, div: torch.Tensor) -> None:
         self.sub = nn.Parameter(sub, requires_grad=False)
         self.div = nn.Parameter(div, requires_grad=False)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(self.normalize(x))
 
-    def normalize(self, x):
+    def normalize(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.sub) / self.div

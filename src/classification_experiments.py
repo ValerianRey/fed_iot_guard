@@ -1,6 +1,8 @@
 from copy import deepcopy
-from typing import Tuple, List
+from typing import Tuple, List, Dict
+from types import SimpleNamespace
 
+import numpy as np
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
@@ -15,7 +17,8 @@ from print_util import print_federation_round
 from supervised_data import get_all_supervised_dls
 
 
-def local_classifiers(train_data, test_data, args) -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
+def local_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+        -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,
                                                                             args.test_devices, args.train_bs, args.test_bs)
@@ -27,28 +30,29 @@ def local_classifiers(train_data, test_data, args) -> Tuple[BinaryClassification
     set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
 
     # Training
-    multitrain_classifiers(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
-                                       for i, client_devices in enumerate(args.clients_devices)],
-                                      clients_dl_train, models),
+    multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                            for i, client_devices in enumerate(args.clients_devices)],
+                                           clients_dl_train, models)),
                            args=args, main_title='Training the clients', color=Color.GREEN)
 
     # Local testing
-    local_result = multitest_classifiers(tests=zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
-                                                    for i, client_devices in enumerate(args.clients_devices)],
-                                                   clients_dl_test, models),
+    local_result = multitest_classifiers(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
+                                                         for i, client_devices in enumerate(args.clients_devices)],
+                                                        clients_dl_test, models)),
                                          main_title='Testing the clients on their own devices', color=Color.BLUE)
 
     # New devices testing
     new_devices_result = multitest_classifiers(
-        tests=zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
-                  [new_dl_test for _ in range(n_clients)], models),
+        tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
+                       [new_dl_test for _ in range(n_clients)], models)),
         main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
         color=Color.DARK_CYAN)
 
     return local_result, new_devices_result
 
 
-def federated_classifiers(train_data, test_data, args) -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
+def federated_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+        -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,
                                                                             args.test_devices, args.train_bs, args.test_bs)
@@ -69,9 +73,9 @@ def federated_classifiers(train_data, test_data, args) -> Tuple[List[BinaryClass
         print_federation_round(federation_round, args.federation_rounds)
 
         # Local training of each client
-        multitrain_classifiers(trains=zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
-                                           for i, client_devices in enumerate(args.clients_devices)],
-                                          clients_dl_train, models),
+        multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                                for i, client_devices in enumerate(args.clients_devices)],
+                                               clients_dl_train, models)),
                                args=args, lr_factor=(args.gamma_round ** federation_round),
                                main_title='Training the clients', color=Color.GREEN)
 
@@ -82,14 +86,14 @@ def federated_classifiers(train_data, test_data, args) -> Tuple[List[BinaryClass
         models = [deepcopy(global_model) for _ in range(n_clients)]
 
         # Global model testing on each client's data
-        local_results.append(multitest_classifiers(tests=zip(['Testing global model on: ' + device_names(client_devices)
-                                                              for client_devices in args.clients_devices],
-                                                             clients_dl_test, [global_model for _ in range(n_clients)]),
+        local_results.append(multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
+                                                                   for client_devices in args.clients_devices],
+                                                                  clients_dl_test, [global_model for _ in range(n_clients)])),
                                                    main_title='Testing the global model on data from all clients', color=Color.PURPLE))
 
         # Global model testing on new devices
         new_devices_results.append(
-            multitest_classifiers(tests=zip(['Testing global model on: ' + device_names(args.test_devices)], [new_dl_test], [global_model]),
+            multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(args.test_devices)], [new_dl_test], [global_model])),
                                   main_title='Testing the global model on the new devices: ' + device_names(args.test_devices),
                                   color=Color.CYAN))
         Ctp.exit_section()

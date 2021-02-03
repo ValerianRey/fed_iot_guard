@@ -7,7 +7,7 @@ from metrics import BinaryClassificationResults
 from print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
 
 
-def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler):
+def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:
     Ctp.enter_section(color=Color.BLACK)
     print_train_classifier_header()
     model.train()
@@ -51,14 +51,10 @@ def test_classifier(model, test_loader) -> BinaryClassificationResults:
         return results
 
 
-# trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will train each model on its associated dataloader, and will print the title for it
 # lr_factor is used to multiply the lr that is contained in args (and that should remain constant)
-def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain classifiers', color=Color.NONE):
+def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain classifiers', color=Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
-
-    if type(trains) == zip:
-        trains = list(trains)
 
     criterion = nn.BCELoss()
     for i, (title, dataloader, model) in enumerate(trains):
@@ -73,13 +69,9 @@ def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain c
     Ctp.exit_section()
 
 
-# tests should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will test each model on its associated dataloader, and will print the title for it
 def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> BinaryClassificationResults:
     Ctp.enter_section(main_title, color)
-
-    if type(tests) == zip:
-        tests = list(tests)
 
     results = BinaryClassificationResults()
     for i, (title, dataloader, model) in enumerate(tests):

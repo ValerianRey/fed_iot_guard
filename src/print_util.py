@@ -1,7 +1,10 @@
+from typing import Optional
+
 import torch
-from metrics import BinaryClassificationResults
-from context_printer import ContextPrinter as Ctp
 from context_printer import Color
+from context_printer import ContextPrinter as Ctp
+
+from metrics import BinaryClassificationResults
 
 
 class Columns:
@@ -10,16 +13,16 @@ class Columns:
     LARGE = 22
 
 
-def print_federation_round(federation_round, n_rounds):
+def print_federation_round(federation_round: int, n_rounds: int) -> None:
     Ctp.enter_section('Federation round [{}/{}]'.format(federation_round + 1, n_rounds), Color.DARK_GRAY)
 
 
-def print_rates(results: BinaryClassificationResults):
+def print_rates(results: BinaryClassificationResults) -> None:
     Ctp.print('TPR: {:.5f} - TNR: {:.5f} - Accuracy: {:.5f} - Recall:{:.5f} - Precision: {:.5f} - F1-Score: {:.5f}'
               .format(results.tpr(), results.tnr(), results.acc(), results.recall(), results.precision(), results.f1()))
 
 
-def print_train_classifier_header():
+def print_train_classifier_header() -> None:
     Ctp.print('Epoch'.ljust(Columns.SMALL)
               + '| Batch'.ljust(Columns.MEDIUM)
               + '| TPR'.ljust(Columns.MEDIUM)
@@ -31,7 +34,7 @@ def print_train_classifier_header():
               + '| LR'.ljust(Columns.MEDIUM), bold=True)
 
 
-def print_train_classifier(batch, num_batches, results, lr, persistent=False):
+def print_train_classifier(batch: int, num_batches: int, results: BinaryClassificationResults, lr: float, persistent: bool = False) -> None:
     Ctp.print('| [{}/{}]'.format(batch, num_batches).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(results.tpr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(results.tnr()).ljust(Columns.MEDIUM)
@@ -43,7 +46,7 @@ def print_train_classifier(batch, num_batches, results, lr, persistent=False):
               rewrite=True, end='\n' if persistent else '')
 
 
-def print_loss_autoencoder_header(first_column='Dataset', print_positives=False, print_lr=False):
+def print_loss_autoencoder_header(first_column: str = 'Dataset', print_positives: bool = False, print_lr: bool = False) -> None:
     Ctp.print(first_column.ljust(Columns.MEDIUM)
               + '| Min loss'.ljust(Columns.MEDIUM)
               + '| Q-0.01 loss'.ljust(Columns.MEDIUM)
@@ -56,9 +59,10 @@ def print_loss_autoencoder_header(first_column='Dataset', print_positives=False,
               bold=True)
 
 
-def print_loss_autoencoder(title, losses, positives=None, n_samples=None, lr=None):
-    print_positives = (positives is not None and n_samples is not None)
+def print_loss_autoencoder(title: str, losses: torch.Tensor, positives: Optional[int] = None,
+                           n_samples: Optional[int] = None, lr: Optional[float] = None) -> None:
 
+    print_positives = (positives is not None and n_samples is not None)
     Ctp.print(title.ljust(Columns.MEDIUM)
               + '| {:.4f}'.format(losses.min()).ljust(Columns.MEDIUM)
               + '| {:.4f}'.format(torch.quantile(losses, 0.01).item()).ljust(Columns.MEDIUM)
