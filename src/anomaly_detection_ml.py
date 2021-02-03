@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 from context_printer import Color
@@ -7,8 +9,8 @@ from metrics import BinaryClassificationResults
 from print_util import print_loss_autoencoder, print_rates, print_loss_autoencoder_header
 
 
-def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler):
-    Ctp.enter_section(color=Color.GRAY)
+def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:
+    Ctp.enter_section(color=Color.BLACK)
 
     model.train()
     num_elements = len(train_loader.dataset)
@@ -46,7 +48,7 @@ def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, sch
     Ctp.exit_section()
 
 
-def autoencode(model, test_loader, criterion):
+def autoencode(model, test_loader, criterion) -> torch.Tensor:
     with torch.no_grad():
         model.eval()
         num_elements = len(test_loader.dataset)
@@ -69,8 +71,8 @@ def autoencode(model, test_loader, criterion):
         return losses
 
 
-def test_autoencoder(model, threshold, dataloaders, criterion):
-    Ctp.enter_section(color=Color.GRAY)
+def test_autoencoder(model, threshold, dataloaders, criterion) -> BinaryClassificationResults:
+    Ctp.enter_section(color=Color.BLACK)
     print_loss_autoencoder_header(print_positives=True)
     results = BinaryClassificationResults()
     for key, dataloader in dataloaders.items():
@@ -86,13 +88,9 @@ def test_autoencoder(model, threshold, dataloaders, criterion):
     return results
 
 
-# trains should be a list of tuples (title, dataloader, model) (or a zip of the lists: titles, dataloaders, models)
 # this function will train each model on its associated dataloader, and will print the title for it
-def multitrain_autoencoders(trains, args, lr_factor=1.0, main_title='Multitrain autoencoders', color=Color.NONE):
+def multitrain_autoencoders(trains, args, lr_factor=1.0, main_title='Multitrain autoencoders', color=Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
-
-    if type(trains) == zip:
-        trains = list(trains)
 
     criterion = nn.MSELoss(reduction='none')
     for i, (title, dataloader, model) in enumerate(trains):
@@ -104,14 +102,12 @@ def multitrain_autoencoders(trains, args, lr_factor=1.0, main_title='Multitrain 
         scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
 
         train_autoencoder(model, args.epochs, dataloader, optimizer, criterion, scheduler)
-        if i != len(trains) - 1:
-            Ctp.print()
     Ctp.exit_section()
 
 
 # opts should be a list of tuples (title, dataloader_benign_opt, model), (or a zip of the lists: titles, dataloaders_benign_opt, models)
 # this function will test each model on its associated dataloader, and will find the correct threshold for them
-def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.NONE):
+def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.NONE) -> List[torch.tensor]:
     if type(opts) == zip:
         opts = list(opts)
 
@@ -129,13 +125,11 @@ def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.
         threshold = avg_loss_val + std_loss_val
         thresholds.append(threshold)
         Ctp.print('The threshold is {:.4f}'.format(threshold.item()))
-        if i != len(opts) - 1:
-            Ctp.print()
     Ctp.exit_section()
     return thresholds
 
 
-def count_scores(predictions, is_malicious):
+def count_scores(predictions, is_malicious) -> BinaryClassificationResults:
     positive_predictions = predictions.sum().item()
     negative_predictions = len(predictions) - positive_predictions
     results = BinaryClassificationResults()
@@ -148,22 +142,17 @@ def count_scores(predictions, is_malicious):
     return results
 
 
-# tests should be a list of tuples (title, dataloader_benign_test, dataloaders_mirai, dataloaders_gafgyt, model, threshold)
-# (or a zip of the lists: titles, dataloaders, models, thresholds)
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Color.NONE):
+def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Color.NONE) -> BinaryClassificationResults:
     Ctp.enter_section(main_title, color)
-
-    if type(tests) == zip:
-        tests = list(tests)
 
     criterion = nn.MSELoss(reduction='none')
     results = BinaryClassificationResults()
     for i, (title, dataloaders, model, threshold) in enumerate(tests):
         Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
         results += test_autoencoder(model, threshold, dataloaders, criterion)
-        Ctp.print()
 
     Ctp.print('Average results')
     print_rates(results)
     Ctp.exit_section()
+    return results

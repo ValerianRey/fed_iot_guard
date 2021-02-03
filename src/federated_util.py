@@ -1,7 +1,8 @@
 import torch
+from typing import List
 
 
-def federated_averaging(global_model, models):
+def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
     state_dict_mean = global_model.state_dict()
 
     for key in state_dict_mean:
