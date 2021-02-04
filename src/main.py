@@ -98,7 +98,7 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
                      'normalization': 'min-max',
                      'test_bs': 4096}
 
-    autoencoder_params = {'hidden_layers': [11],  # [86, 58, 38, 29, 38, 58, 86]
+    autoencoder_params = {'hidden_layers': [58, 29, 58],
                           'activation_fn': torch.nn.ELU}
 
     classifier_params = {'hidden_layers': [40, 10, 5],
@@ -172,7 +172,8 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
         Ctp.set_max_depth(3)
         experiment_function = local_autoencoders
         constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max'], 'hidden_layers': [[29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'],
+                        'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 10, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
         configurations = decentralized_configurations
 
     elif experiment == 'federated_autoencoders':
