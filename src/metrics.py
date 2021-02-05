@@ -64,6 +64,14 @@ class BinaryClassificationResults:
     def precision(self) -> float:
         return self.tp / (self.tp + self.fp) if self.tp != 0 else 0.
 
+    # Sensitivity (same as true positive rate)
+    def sensitivity(self) -> float:
+        return self.tpr()
+
+    # Specificity (same as true negative rate)
+    def specificity(self) -> float:
+        return self.tnr()
+
     # F1-Score
     def f1(self) -> float:
         return (2 * self.precision() * self.recall()) / (self.precision() + self.recall()) if (self.precision() + self.recall()) != 0 else 0.

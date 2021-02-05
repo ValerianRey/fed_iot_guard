@@ -131,14 +131,14 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    autoencoder_opt_federated_params = {'epochs': 30,
+    autoencoder_opt_federated_params = {'epochs': 50,
                                         'train_bs': 64,
                                         'optimizer': torch.optim.Adadelta,
                                         'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
-                                        'lr_scheduler': torch.optim.lr_scheduler.StepLR,
-                                        'lr_scheduler_params': {'step_size': 1, 'gamma': 0.9},
-                                        'federation_rounds': 3,
-                                        'gamma_round': 0.5}
+                                        'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
+                                        'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False},
+                                        'federation_rounds': 10,
+                                        'gamma_round': 0.75}
 
     classifier_opt_default_params = {'epochs': 1,
                                      'train_bs': 64,
@@ -180,7 +180,8 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
         Ctp.set_max_depth(4)
         experiment_function = federated_autoencoders
         constant_args = {**common_params, **autoencoder_params, **autoencoder_opt_federated_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        varying_args = {'normalization': ['min-max'],
+                        'hidden_layers': [[58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
         configurations = decentralized_configurations
 
     elif experiment == 'single_classifier':
