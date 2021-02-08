@@ -140,20 +140,20 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
                                         'federation_rounds': 10,
                                         'gamma_round': 0.75}
 
-    classifier_opt_default_params = {'epochs': 1,
+    classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    classifier_opt_federated_params = {'epochs': 1,
+    classifier_opt_federated_params = {'epochs': 4,
                                        'train_bs': 64,
                                        'optimizer': torch.optim.Adadelta,
-                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
+                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-5},
                                        'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                        'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5},
-                                       'federation_rounds': 1,
+                                       'federation_rounds': 5,
                                        'gamma_round': 0.5}
 
     # Loading the data
@@ -188,14 +188,16 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
         Ctp.set_max_depth(3)
         experiment_function = local_classifiers
         constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'],
+                        'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
         configurations = centralized_configurations
 
     elif experiment == 'multiple_classifiers':
         Ctp.set_max_depth(3)
         experiment_function = local_classifiers
         constant_args = {**common_params, **classifier_params, **classifier_opt_default_params}
-        varying_args = {'normalization': ['0-mean 1-var', 'min-max']}
+        varying_args = {'normalization': ['0-mean 1-var', 'min-max'],
+                        'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
         configurations = decentralized_configurations
 
     elif experiment == 'federated_classifiers':
@@ -215,3 +217,14 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
 
 if __name__ == "__main__":
     main(*sys.argv[1:])
+
+# TODO: problem: it's completely wrong to run grid searches for a model that should only train on benign data. The grid search should only
+#  be used to optimize the loss on benign data and NOT to optimize the binary classification results.
+
+# TODO: implement early stopping for autoencoders using the opt set
+
+# TODO: the multiple classifier GS could be made much faster (train all models, then test each model on its own data and on all other data).
+
+# TODO: use cuda if available to make the code able to potentially run much faster
+
+# TODO: implement notebook to analyse grid search results

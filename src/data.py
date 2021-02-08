@@ -33,6 +33,10 @@ mirai_paths = [{device: data_path + device + '/mirai_attacks/' + attack + '.csv'
 gafgyt_paths = [{device: data_path + device + '/gafgyt_attacks/' + attack + '.csv' for device in all_devices}
                 for attack in gafgyt_attacks]
 
+multiclass_labels = {**{'benign': 0.},
+                     **{'mirai_' + attack: float(i+1) for i, attack in enumerate(mirai_attacks)},
+                     **{'gafgyt_' + attack: float(i+6) for i, attack in enumerate(gafgyt_attacks)}}
+
 
 def device_names(device_ids: List[int]) -> str:
     return ', '.join([all_devices[device_id] for device_id in device_ids])

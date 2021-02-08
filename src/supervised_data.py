@@ -6,13 +6,22 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
+from src.data import multiclass_labels
 
-def get_dataset(data: List[Dict[str, np.array]]) -> Dataset:
+
+def get_target_tensor(key: str, arr: np.array, multiclass: bool = False) -> torch.Tensor:
+    if multiclass:
+        return torch.full((arr.shape[0], 1), multiclass_labels[key])
+    else:
+        return torch.full((arr.shape[0], 1), (0. if key == 'benign' else 1.))
+
+
+def get_dataset(data: List[Dict[str, np.array]], multiclass: bool = False) -> Dataset:
     data_list, target_list = [], []
     for device_data in data:
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
             data_list.append(torch.tensor(arr).float())
-            target_list.append(torch.full((arr.shape[0], 1), (0. if key == 'benign' else 1.)))
+            target_list.append(get_target_tensor(key, arr, multiclass=multiclass))
     dataset = TensorDataset(torch.cat(data_list, dim=0), torch.cat(target_list, dim=0))
     return dataset
 

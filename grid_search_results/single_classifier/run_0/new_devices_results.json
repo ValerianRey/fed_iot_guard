@@ -1,0 +1,298 @@
+{
+  "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 131302,
+        "tn": 3077,
+        "fp": 8,
+        "fn": 37
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 128968,
+        "tn": 5812,
+        "fp": 1548,
+        "fn": 27
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 51008,
+        "tn": 8186,
+        "fp": 53,
+        "fn": 35
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 116620,
+        "tn": 15225,
+        "fp": 340,
+        "fn": 39
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 120999,
+        "tn": 9702,
+        "fp": 118,
+        "fn": 40
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 145855,
+        "tn": 27096,
+        "fp": 591,
+        "fn": 44
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 49950,
+        "tn": 6113,
+        "fp": 64,
+        "fn": 38
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 129958,
+        "tn": 2071,
+        "fp": 0,
+        "fn": 34
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 153022,
+        "tn": 7771,
+        "fp": 57,
+        "fn": 37
+      }
+    ]
+  },
+  "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 131300,
+        "tn": 3058,
+        "fp": 27,
+        "fn": 39
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 128964,
+        "tn": 5932,
+        "fp": 1428,
+        "fn": 31
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 51007,
+        "tn": 8172,
+        "fp": 67,
+        "fn": 36
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 116614,
+        "tn": 15311,
+        "fp": 254,
+        "fn": 45
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 120988,
+        "tn": 9693,
+        "fp": 127,
+        "fn": 51
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 145860,
+        "tn": 26690,
+        "fp": 997,
+        "fn": 39
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 49949,
+        "tn": 6116,
+        "fp": 61,
+        "fn": 39
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 129954,
+        "tn": 2071,
+        "fp": 0,
+        "fn": 38
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 153014,
+        "tn": 7756,
+        "fp": 72,
+        "fn": 45
+      }
+    ]
+  },
+  "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 131304,
+        "tn": 3046,
+        "fp": 39,
+        "fn": 35
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 128975,
+        "tn": 6598,
+        "fp": 762,
+        "fn": 20
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 51009,
+        "tn": 8158,
+        "fp": 81,
+        "fn": 34
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 116618,
+        "tn": 15457,
+        "fp": 108,
+        "fn": 41
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 120999,
+        "tn": 9715,
+        "fp": 105,
+        "fn": 40
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 145859,
+        "tn": 26997,
+        "fp": 690,
+        "fn": 40
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 49941,
+        "tn": 6127,
+        "fp": 50,
+        "fn": 47
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 129956,
+        "tn": 2071,
+        "fp": 0,
+        "fn": 36
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 153023,
+        "tn": 7734,
+        "fp": 94,
+        "fn": 36
+      }
+    ]
+  },
+  "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 131297,
+        "tn": 3049,
+        "fp": 36,
+        "fn": 42
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 128969,
+        "tn": 6613,
+        "fp": 747,
+        "fn": 26
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 51006,
+        "tn": 8160,
+        "fp": 79,
+        "fn": 37
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 116617,
+        "tn": 15471,
+        "fp": 94,
+        "fn": 42
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 120994,
+        "tn": 9710,
+        "fp": 110,
+        "fn": 45
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 145856,
+        "tn": 27150,
+        "fp": 537,
+        "fn": 43
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 49943,
+        "tn": 6124,
+        "fp": 53,
+        "fn": 45
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 129966,
+        "tn": 2071,
+        "fp": 0,
+        "fn": 26
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 153025,
+        "tn": 7734,
+        "fp": 94,
+        "fn": 34
+      }
+    ]
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 896332,
+        "tn": 84089,
+        "fp": 658,
+        "fn": 342
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 898764,
+        "tn": 79840,
+        "fp": 632,
+        "fn": 254
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 976638,
+        "tn": 79030,
+        "fp": 563,
+        "fn": 332
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 911067,
+        "tn": 71629,
+        "fp": 638,
+        "fn": 287
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 906717,
+        "tn": 77481,
+        "fp": 531,
+        "fn": 257
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 881814,
+        "tn": 59727,
+        "fp": 418,
+        "fn": 300
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 977737,
+        "tn": 80963,
+        "fp": 692,
+        "fn": 288
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 897709,
+        "tn": 84983,
+        "fp": 778,
+        "fn": 312
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 874669,
+        "tn": 79373,
+        "fp": 631,
+        "fn": 285
+      }
+    ]
+  },
+  "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 896389,
+        "tn": 84122,
+        "fp": 625,
+        "fn": 285
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 898743,
+        "tn": 79821,
+        "fp": 651,
+        "fn": 275
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 976627,
+        "tn": 78919,
+        "fp": 674,
+        "fn": 343
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 911068,
+        "tn": 71592,
+        "fp": 675,
+        "fn": 286
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 906625,
+        "tn": 77380,
+        "fp": 632,
+        "fn": 349
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 881823,
+        "tn": 59601,
+        "fp": 544,
+        "fn": 291
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 977701,
+        "tn": 80965,
+        "fp": 690,
+        "fn": 324
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 897692,
+        "tn": 85032,
+        "fp": 729,
+        "fn": 329
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 874623,
+        "tn": 79262,
+        "fp": 742,
+        "fn": 331
+      }
+    ]
+  },
+  "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 896420,
+        "tn": 84162,
+        "fp": 585,
+        "fn": 254
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 898798,
+        "tn": 79879,
+        "fp": 593,
+        "fn": 220
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 976652,
+        "tn": 79058,
+        "fp": 535,
+        "fn": 318
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 911043,
+        "tn": 71753,
+        "fp": 514,
+        "fn": 311
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 906684,
+        "tn": 77421,
+        "fp": 591,
+        "fn": 290
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 881821,
+        "tn": 59500,
+        "fp": 645,
+        "fn": 293
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 977684,
+        "tn": 81212,
+        "fp": 443,
+        "fn": 341
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 897673,
+        "tn": 85303,
+        "fp": 458,
+        "fn": 348
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 874690,
+        "tn": 79288,
+        "fp": 716,
+        "fn": 264
+      }
+    ]
+  },
+  "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+      {
+        "tp": 896359,
+        "tn": 84148,
+        "fp": 599,
+        "fn": 315
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+      {
+        "tp": 898768,
+        "tn": 79900,
+        "fp": 572,
+        "fn": 250
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+      {
+        "tp": 976626,
+        "tn": 79060,
+        "fp": 533,
+        "fn": 344
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+      {
+        "tp": 911033,
+        "tn": 71808,
+        "fp": 459,
+        "fn": 321
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+      {
+        "tp": 906644,
+        "tn": 77398,
+        "fp": 614,
+        "fn": 330
+      }
+    ],
+    "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+      {
+        "tp": 881808,
+        "tn": 59544,
+        "fp": 601,
+        "fn": 306
+      }
+    ],
+    "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+      {
+        "tp": 977691,
+        "tn": 81153,
+        "fp": 502,
+        "fn": 334
+      }
+    ],
+    "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+      {
+        "tp": 897746,
+        "tn": 84840,
+        "fp": 921,
+        "fn": 275
+      }
+    ],
+    "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+      {
+        "tp": 874699,
+        "tn": 79132,
+        "fp": 872,
+        "fn": 255
+      }
+    ]
+  }
+}

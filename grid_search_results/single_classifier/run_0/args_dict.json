@@ -1,0 +1,23 @@
+{
+  "n_features": 115,
+  "normalization": "min-max",
+  "test_bs": 4096,
+  "hidden_layers": [
+    40,
+    10,
+    5
+  ],
+  "activation_fn": "ELU",
+  "epochs": 4,
+  "train_bs": 64,
+  "optimizer": "Adadelta",
+  "optimizer_params": {
+    "lr": 1.0,
+    "weight_decay": 1e-05
+  },
+  "lr_scheduler": "StepLR",
+  "lr_scheduler_params": {
+    "step_size": 1,
+    "gamma": 0.5
+  }
+}
