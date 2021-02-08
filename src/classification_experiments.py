@@ -1,20 +1,20 @@
 from copy import deepcopy
-from typing import Tuple, List, Dict
 from types import SimpleNamespace
+from typing import Tuple, List, Dict
 
 import numpy as np
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from architectures import BinaryClassifier, NormalizingModel
-from classification_ml import multitrain_classifiers, multitest_classifiers
-from data import device_names
-from federated_util import federated_averaging
-from general_ml import set_models_sub_divs
-from metrics import BinaryClassificationResults
-from print_util import print_federation_round
-from supervised_data import get_all_supervised_dls
+from src.architectures import BinaryClassifier, NormalizingModel
+from src.classification_ml import multitrain_classifiers, multitest_classifiers
+from src.data import device_names
+from src.federated_util import federated_averaging
+from src.general_ml import set_models_sub_divs
+from src.metrics import BinaryClassificationResults
+from src.print_util import print_federation_round
+from src.supervised_data import get_all_supervised_dls
 
 
 def local_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \

@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
-
 from sklearn.model_selection import KFold
 
 all_devices = ['Danmini_Doorbell',

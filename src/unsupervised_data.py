@@ -6,7 +6,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import mirai_attacks, gafgyt_attacks
+from src.data import mirai_attacks, gafgyt_attacks
 
 
 def get_train_dataset(train_data: List[Dict[str, np.array]]) -> Dataset:

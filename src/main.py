@@ -1,20 +1,19 @@
 import itertools
 import sys
+from copy import deepcopy
 from types import SimpleNamespace
+from typing import List, Dict, Callable
 
+import numpy as np
 import torch
 import torch.utils.data
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from anomaly_detection_experiments import local_autoencoders, federated_autoencoders
-from classification_experiments import local_classifiers, federated_classifiers
-from data import get_all_data, split_data, split_data_current_fold
-from saving import save_results, create_new_numbered_dir
-
-from typing import List, Dict, Callable
-import numpy as np
-from copy import deepcopy
+from src.anomaly_detection_experiments import local_autoencoders, federated_autoencoders
+from src.classification_experiments import local_classifiers, federated_classifiers
+from src.data import get_all_data, split_data, split_data_current_fold
+from src.saving import save_results, create_new_numbered_dir
 
 
 def run_grid_search(train_val_data: List[Dict[str, np.array]], experiment: str, experiment_function: Callable,

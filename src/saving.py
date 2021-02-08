@@ -1,8 +1,10 @@
 import json
 import os
-from metrics import BinaryClassificationResults
-from context_printer import ContextPrinter as Ctp
 from typing import Optional, Any, Union
+
+from context_printer import ContextPrinter as Ctp
+
+from src.metrics import BinaryClassificationResults
 
 
 def dumper(obj: Any) -> Union[dict, str]:

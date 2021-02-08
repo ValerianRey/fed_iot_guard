@@ -1,20 +1,20 @@
 from copy import deepcopy
+from types import SimpleNamespace
 from typing import Tuple, List, Dict
 
+import numpy as np
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds
-from architectures import SimpleAutoencoder, NormalizingModel
-from data import device_names, split_data
-from federated_util import federated_averaging
-from general_ml import set_models_sub_divs
-from metrics import BinaryClassificationResults
-from print_util import print_federation_round
-from unsupervised_data import get_all_unsupervised_dls
-import numpy as np
-from types import SimpleNamespace
+from src.anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds
+from src.architectures import SimpleAutoencoder, NormalizingModel
+from src.data import device_names, split_data
+from src.federated_util import federated_averaging
+from src.general_ml import set_models_sub_divs
+from src.metrics import BinaryClassificationResults
+from src.print_util import print_federation_round
+from src.unsupervised_data import get_all_unsupervised_dls
 
 
 def local_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \

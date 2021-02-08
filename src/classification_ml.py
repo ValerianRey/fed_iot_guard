@@ -3,8 +3,8 @@ import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from metrics import BinaryClassificationResults
-from print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
+from src.metrics import BinaryClassificationResults
+from src.print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
 
 
 def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:

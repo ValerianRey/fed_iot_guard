@@ -5,8 +5,8 @@ import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from metrics import BinaryClassificationResults
-from print_util import print_loss_autoencoder, print_rates, print_loss_autoencoder_header
+from src.metrics import BinaryClassificationResults
+from src.print_util import print_loss_autoencoder, print_rates, print_loss_autoencoder_header
 
 
 def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:
