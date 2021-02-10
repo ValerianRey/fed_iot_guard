@@ -12,37 +12,49 @@ from context_printer import ContextPrinter as Ctp
 
 from src.anomaly_detection_experiments import local_autoencoders, federated_autoencoders
 from src.classification_experiments import local_classifiers, federated_classifiers
-from src.data import get_all_data, split_data, split_data_current_fold
+from src.data import get_all_data, split_data, split_data_current_fold, get_configuration_split
 from src.saving import save_results, create_new_numbered_dir
+from src.supervised_data import get_supervised_initial_splitting
+from src.unsupervised_data import get_unsupervised_initial_splitting
 
 
-# Run the grid search of hyper-parameters for a single configuration and returns the best set of hyper-parameters.
-# train_val_data should not even contain the data of the unseen device. constant_args should contain the current configuration parameters.
-def run_grid_search_2(train_val_data: List[Dict[str, np.ndarray]], validation_function: Callable,
-                      constant_args: dict, varying_args: dict, n_folds: int = 1) -> Dict[str, list]:
+def run_grid_search_2(all_data: List[Dict[str, np.ndarray]], experiment: str, validation_function: Callable,
+                      constant_args: dict, varying_args: dict, configurations: List[Dict[str, list]], n_folds: int = 1) -> None:
+
+    # Create the path in which we store the results
+    base_path = 'grid_search_results/' + experiment + '/run_'
+    results_path = create_new_numbered_dir(base_path)
+
     product = list(itertools.product(*varying_args.values()))  # Compute the different sets of hyper-parameters to test in the grid search
-    local_results = {}  # To each set of varying parameters we associate the results for each fold (a list of results)
     args_dict = deepcopy(constant_args)
 
-    for i, experiment_args_tuple in enumerate(product):  # Grid search: we iterate over the sets of parameters to be tested
-        experiment_args = {key: arg for (key, arg) in zip(varying_args.keys(), experiment_args_tuple)}
-        args_dict.update(experiment_args)
-        Ctp.enter_section('Experiment [{}/{}] with args: '.format(i + 1, len(product)) + str(experiment_args), Color.WHITE)
-        args = SimpleNamespace(**args_dict)
-        if n_folds == 1:  # We do not use cross-validation
-            train_data, val_data = split_data(train_val_data, p_test=0.2, p_unused=0.0)
-            local_results[repr(experiment_args)] = [validation_function(train_data, val_data, args=args)]
-        else:
-            local_results[repr(experiment_args)] = []
-            for fold in range(n_folds):  # Cross validation: we iterate over the folds
-                Ctp.enter_section('Fold [{}/{}]'.format(fold + 1, n_folds), Color.GRAY)
-                train_data, val_data = split_data_current_fold(train_val_data, n_folds, fold)
-                local_results[repr(experiment_args)].append(validation_function(train_data, val_data, args=args))
+    clients_results = {}
+    for j, configuration in enumerate(configurations):  # Multiple configurations: we iterate over the possible configurations of the clients
+        Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
+        clients_devices_data, test_devices_data = get_configuration_split(all_data, configuration['clients_devices'], configuration['test_devices'])
+        data_splitting = get_supervised_initial_splitting if validation_function == local_classifiers else get_unsupervised_initial_splitting
+        clients_train_val, _, _ = data_splitting(clients_devices_data, test_devices_data, p_test=0.2, p_unused=0.01)
+        args_dict.update(configuration)
+        if repr(configuration['clients_devices']) not in clients_results.keys():
+            for i, experiment_args_tuple in enumerate(product):  # Grid search: we iterate over the sets of parameters to be tested
+                experiment_args = {key: arg for (key, arg) in zip(varying_args.keys(), experiment_args_tuple)}
+                args_dict.update(experiment_args)
+                Ctp.enter_section('Experiment [{}/{}] with args: '.format(i + 1, len(product)) + str(experiment_args), Color.WHITE)
+                args = SimpleNamespace(**args_dict)
+                if n_folds == 1:  # We do not use cross-validation
+                    train_data, val_data = split_data(clients_train_val, p_test=0.2, p_unused=0.0)
+                    result = validation_function(train_data, val_data, args=args)
+                    clients_results[repr(configuration)][repr(experiment_args)] = [result]
+                else:
+                    clients_results[repr(configuration)][repr(experiment_args)] = []
+                    for fold in range(n_folds):  # Cross validation: we iterate over the folds
+                        Ctp.enter_section('Fold [{}/{}]'.format(fold + 1, n_folds), Color.GRAY)
+                        train_data, val_data = split_data_current_fold(clients_train_val, n_folds, fold)
+                        result = validation_function(train_data, val_data, args=args)
+                        clients_results[repr(configuration)][repr(experiment_args)].append(result)
+                        Ctp.exit_section()
                 Ctp.exit_section()
-            Ctp.exit_section()
         Ctp.exit_section()
-
-    return local_results
 
 
 def run_grid_search(train_val_data: List[Dict[str, np.ndarray]], experiment: str, experiment_function: Callable,
@@ -185,8 +197,7 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
                                        'gamma_round': 0.5}
 
     # Loading the data
-    data = get_all_data()
-    train_val_data, test_data = split_data(data, p_test=0.2, p_unused=0.01)
+    all_data = get_all_data()
 
     if experiment == 'single_autoencoder':
         Ctp.set_max_depth(3)
@@ -240,7 +251,7 @@ def main(experiment: str = 'single_classifier', test: str = 'false'):
     if test:
         test_parameters(train_val_data, test_data, experiment, experiment_function, constant_args, configurations, n_random_reruns=1)
     else:
-        run_grid_search(train_val_data, experiment, experiment_function, constant_args, varying_args, configurations, n_folds=1)
+        run_grid_search_2(all_data, experiment, experiment_function, constant_args, varying_args, configurations, n_folds=1)
 
 
 if __name__ == "__main__":

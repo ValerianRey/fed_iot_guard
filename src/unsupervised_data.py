@@ -86,8 +86,9 @@ def get_all_train_opt_dls(train_data: List[Dict[str, np.ndarray]], opt_data: Lis
     return clients_dl_train, clients_dl_opt
 
 
-def get_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]], test_devices_data: List[Dict[str, np.ndarray]],
-                          p_test: float, p_unused: float) -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+def get_unsupervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]],
+                                       test_devices_data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) \
+        -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
 
     # Flatten each client's data: clients_data is now a list of dicts and new_devices_test is now a simple dict
     clients_data = [get_client_data_combined(client_devices_data) for client_devices_data in clients_devices_data]

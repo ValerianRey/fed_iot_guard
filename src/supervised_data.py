@@ -28,7 +28,6 @@ def get_dataset(data: List[Dict[str, np.ndarray]], multiclass: bool = False) -> 
 
 def get_client_dls(client_device_ids: List[int], train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]],
                    train_bs: int, test_bs: int) -> Tuple[DataLoader, DataLoader]:
-
     client_train_data = [train_data[device_id] for device_id in client_device_ids]
     client_test_data = [test_data[device_id] for device_id in client_device_ids]
     dataset_train = get_dataset(client_train_data)
@@ -39,9 +38,8 @@ def get_client_dls(client_device_ids: List[int], train_data: List[Dict[str, np.n
 
 
 def get_all_supervised_dls(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]],
-                           clients_devices: List[List[int]], test_devices: List[int], train_bs: int, test_bs: int)\
+                           clients_devices: List[List[int]], test_devices: List[int], train_bs: int, test_bs: int) \
         -> Tuple[List[DataLoader], List[DataLoader], DataLoader]:
-
     # Step 1: create the datasets and the dataloaders of the clients: 1 train and 1 test per client
     clients_dl_train, clients_dl_test = [], []
     for client_device_ids in clients_devices:
@@ -55,8 +53,9 @@ def get_all_supervised_dls(train_data: List[Dict[str, np.ndarray]], test_data: L
     return clients_dl_train, clients_dl_test, new_dl_test
 
 
-def get_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]], test_devices_data: List[Dict[str, np.ndarray]],
-                          p_test: float, p_unused: float) -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+def get_supervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]],
+                                     test_devices_data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) \
+        -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
 
     # Flatten each client's data: clients_data is now a list of dicts and new_devices_test is now a simple dict
     clients_data = [get_client_data_combined(client_devices_data) for client_devices_data in clients_devices_data]
