@@ -17,7 +17,7 @@ from src.print_util import print_federation_round
 from src.supervised_data import get_all_supervised_dls
 
 
-def local_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+def local_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,
@@ -51,7 +51,7 @@ def local_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dic
     return local_result, new_devices_result
 
 
-def federated_classifiers(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+def federated_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
     # Creating the dataloaders
     clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,

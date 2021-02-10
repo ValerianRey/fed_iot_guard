@@ -7,19 +7,41 @@ import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from src.anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds
+from src.anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, multivalidate_autoencoders
 from src.architectures import SimpleAutoencoder, NormalizingModel
 from src.data import device_names, split_data
 from src.federated_util import federated_averaging
 from src.general_ml import set_models_sub_divs
 from src.metrics import BinaryClassificationResults
 from src.print_util import print_federation_round
-from src.unsupervised_data import get_all_unsupervised_dls
+from src.unsupervised_data import get_all_unsupervised_dls, get_all_train_opt_dls
 
 
-def local_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+# Trains each client with its corresponding train data. The loss is evaluated on the opt data, and returned.
+def local_autoencoders_2(train_data: List[Dict[str, np.ndarray]], opt_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) -> float:
+    # Create the dataloaders
+    clients_dl_train, clients_dl_opt = get_all_train_opt_dls(train_data, opt_data, args.clients_devices, args.train_bs, args.test_bs)
+
+    # Initialize the models and compute the normalization values with each client's local training data
+    n_clients = len(args.clients_devices)
+    models = [NormalizingModel(SimpleAutoencoder(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
+                               sub=torch.zeros(args.n_features), div=torch.ones(args.n_features)) for _ in range(n_clients)]
+    set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
+
+    # Local training of the autoencoder
+    multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                             for i, client_devices in enumerate(args.clients_devices)], clients_dl_train, models)),
+                            args=args, main_title='Training the clients', color=Color.GREEN)
+
+    avg_loss = multivalidate_autoencoders(validations=list(zip(['Validating client {} on: '.format(i + 1) + device_names(client_devices)
+                                                                for i, client_devices in enumerate(args.clients_devices)],
+                                                               clients_dl_opt, models)), main_title='Validating the clients', color=Color.DARK_PURPLE)
+
+    return avg_loss
+
+
+def local_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
-
     # Split train data between actual train and opt
     train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
 
@@ -59,9 +81,8 @@ def local_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: Lis
     return local_result, new_devices_result
 
 
-def federated_autoencoders(train_opt_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]], args: SimpleNamespace) \
+def federated_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
-
     # Split train data between actual train and opt
     train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
 

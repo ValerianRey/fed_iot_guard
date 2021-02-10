@@ -6,17 +6,17 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from src.data import multiclass_labels
+from src.data import multiclass_labels, get_client_data_combined, split_data
 
 
-def get_target_tensor(key: str, arr: np.array, multiclass: bool = False) -> torch.Tensor:
+def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False) -> torch.Tensor:
     if multiclass:
         return torch.full((arr.shape[0], 1), multiclass_labels[key])
     else:
         return torch.full((arr.shape[0], 1), (0. if key == 'benign' else 1.))
 
 
-def get_dataset(data: List[Dict[str, np.array]], multiclass: bool = False) -> Dataset:
+def get_dataset(data: List[Dict[str, np.ndarray]], multiclass: bool = False) -> Dataset:
     data_list, target_list = [], []
     for device_data in data:
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
@@ -26,7 +26,7 @@ def get_dataset(data: List[Dict[str, np.array]], multiclass: bool = False) -> Da
     return dataset
 
 
-def get_client_dls(client_device_ids: List[int], train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]],
+def get_client_dls(client_device_ids: List[int], train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]],
                    train_bs: int, test_bs: int) -> Tuple[DataLoader, DataLoader]:
 
     client_train_data = [train_data[device_id] for device_id in client_device_ids]
@@ -38,7 +38,7 @@ def get_client_dls(client_device_ids: List[int], train_data: List[Dict[str, np.a
     return client_dl_train, client_dl_test
 
 
-def get_all_supervised_dls(train_data: List[Dict[str, np.array]], test_data: List[Dict[str, np.array]],
+def get_all_supervised_dls(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]],
                            clients_devices: List[List[int]], test_devices: List[int], train_bs: int, test_bs: int)\
         -> Tuple[List[DataLoader], List[DataLoader], DataLoader]:
 
@@ -53,3 +53,16 @@ def get_all_supervised_dls(train_data: List[Dict[str, np.array]], test_data: Lis
     _, new_dl_test = get_client_dls(test_devices, train_data, test_data, train_bs, test_bs)
 
     return clients_dl_train, clients_dl_test, new_dl_test
+
+
+def get_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]], test_devices_data: List[Dict[str, np.ndarray]],
+                          p_test: float, p_unused: float) -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+
+    # Flatten each client's data: clients_data is now a list of dicts and new_devices_test is now a simple dict
+    clients_data = [get_client_data_combined(client_devices_data) for client_devices_data in clients_devices_data]
+    new_devices_test = get_client_data_combined(test_devices_data)
+
+    # Split the clients' data between train/validation and test
+    clients_train_val, clients_test = split_data(clients_data, p_test=p_test, p_unused=p_unused)
+
+    return clients_train_val, clients_test, new_devices_test

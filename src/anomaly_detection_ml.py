@@ -156,3 +156,20 @@ def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Col
     print_rates(results)
     Ctp.exit_section()
     return results
+
+
+# this function will test each model on its associated dataloader, and will print the title for it
+def multivalidate_autoencoders(validations, main_title='Multiple optimizations of autoencoders', color=Color.NONE) -> BinaryClassificationResults:
+    Ctp.enter_section(main_title, color)
+    criterion = nn.MSELoss(reduction='none')
+    losses = []
+    for i, (title, dataloader, model) in enumerate(validations):
+        Ctp.print('[{}/{}] '.format(i + 1, len(validations)) + title, bold=True)
+        loss = autoencode(model, dataloader, criterion).mean()
+        losses.append(loss)
+        Ctp.print('Loss = ' + repr(loss))
+
+    avg_loss = sum(losses) / len(losses)
+    Ctp.print('Average loss = ' + repr(avg_loss))
+    Ctp.exit_section()
+    return avg_loss
