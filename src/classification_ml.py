@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 import torch.nn as nn
 from context_printer import Color
@@ -70,16 +72,14 @@ def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain c
 
 
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> BinaryClassificationResults:
+def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> List[BinaryClassificationResults]:
     Ctp.enter_section(main_title, color)
 
-    results = BinaryClassificationResults()
+    results = []
     for i, (title, dataloader, model) in enumerate(tests):
         Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title)
-        results += test_classifier(model, dataloader)
-        print_rates(results)
+        results.append(test_classifier(model, dataloader))
+        print_rates(results[-1])
 
-    Ctp.print('Average results')
-    print_rates(results)
     Ctp.exit_section()
     return results

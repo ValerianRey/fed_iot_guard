@@ -12,16 +12,15 @@ from src.classification_ml import multitrain_classifiers, multitest_classifiers
 from src.data import device_names
 from src.federated_util import federated_averaging
 from src.general_ml import set_models_sub_divs
-from src.metrics import BinaryClassificationResults
-from src.print_util import print_federation_round
-from src.supervised_data import get_all_supervised_dls
+from src.metrics import BinaryClassificationResults, compute_sum_results
+from src.print_util import print_federation_round, print_rates
+from src.supervised_data import get_all_supervised_dls, get_train_test_dls, get_new_dl_test
 
 
-def local_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
-        -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
+def local_classifiers_train_val(train_data: List[List[Dict[str, np.ndarray]]], val_data: List[List[Dict[str, np.ndarray]]], args: SimpleNamespace) \
+        -> List[BinaryClassificationResults]:
     # Creating the dataloaders
-    clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,
-                                                                            args.test_devices, args.train_bs, args.test_bs)
+    clients_dl_train, clients_dl_val = get_train_test_dls(train_data, val_data, args.train_bs, args.test_bs)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(args.clients_devices)
@@ -36,26 +35,64 @@ def local_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: List[D
                            args=args, main_title='Training the clients', color=Color.GREEN)
 
     # Local testing
-    local_result = multitest_classifiers(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
-                                                         for i, client_devices in enumerate(args.clients_devices)],
-                                                        clients_dl_test, models)),
-                                         main_title='Testing the clients on their own devices', color=Color.BLUE)
+    results = multitest_classifiers(tests=list(zip(['Validating client {} on: '.format(i + 1) + device_names(client_devices)
+                                                    for i, client_devices in enumerate(args.clients_devices)],
+                                                   clients_dl_val, models)),
+                                    main_title='Validating the clients on their own devices', color=Color.BLUE)
+    results_sum = compute_sum_results(results)
+    Ctp.print('Average results')
+    print_rates(results_sum)
+
+    return results
+
+
+def local_classifiers_train_test(train_data: List[List[Dict[str, np.ndarray]]], local_test_data: List[List[Dict[str, np.ndarray]]],
+                                 new_test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
+        -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
+    # Creating the dataloaders
+    clients_dl_train, clients_dl_test = get_train_test_dls(train_data, local_test_data, args.train_bs, args.test_bs)
+    new_dl_test = get_new_dl_test(new_test_data, args.test_bs)
+
+    # Initialize the models and compute the normalization values with each client's local training data
+    n_clients = len(args.clients_devices)
+    models = [NormalizingModel(BinaryClassifier(activation_function=args.activation_fn, hidden_layers=args.hidden_layers),
+                               sub=torch.zeros(args.n_features), div=torch.ones(args.n_features)) for _ in range(n_clients)]
+    set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
+
+    # Training
+    multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+                                            for i, client_devices in enumerate(args.clients_devices)],
+                                           clients_dl_train, models)),
+                           args=args, main_title='Training the clients', color=Color.GREEN)
+
+    # Local testing
+    results = multitest_classifiers(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
+                                                    for i, client_devices in enumerate(args.clients_devices)],
+                                                   clients_dl_test, models)),
+                                    main_title='Testing the clients on their own devices', color=Color.BLUE)
+    local_result = compute_sum_results(results)
+    Ctp.print('Average results')
+    print_rates(local_result)
 
     # New devices testing
-    new_devices_result = multitest_classifiers(
+    results = multitest_classifiers(
         tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(args.test_devices) for i in range(n_clients)],
                        [new_dl_test for _ in range(n_clients)], models)),
         main_title='Testing the clients on the new devices: ' + device_names(args.test_devices),
         color=Color.DARK_CYAN)
+    new_devices_result = compute_sum_results(results)
+    Ctp.print('Average results')
+    print_rates(new_devices_result)
 
     return local_result, new_devices_result
 
 
-def federated_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
+def federated_classifiers_train_test(train_data: List[List[Dict[str, np.ndarray]]], local_test_data: List[List[Dict[str, np.ndarray]]],
+                                     new_test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
     # Creating the dataloaders
-    clients_dl_train, clients_dl_test, new_dl_test = get_all_supervised_dls(train_data, test_data, args.clients_devices,
-                                                                            args.test_devices, args.train_bs, args.test_bs)
+    clients_dl_train, clients_dl_test = get_train_test_dls(train_data, local_test_data, args.train_bs, args.test_bs)
+    new_dl_test = get_new_dl_test(new_test_data, args.test_bs)
 
     # Initialization of a global model
     n_clients = len(args.clients_devices)
@@ -65,8 +102,6 @@ def federated_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: Li
     set_models_sub_divs(args, models, clients_dl_train, color=Color.RED)
 
     # Initialization of the results
-    # Since there is no way for the aggregator to know the results, it's only allowed to choose the last model
-    # but we keep all results to be able to report their evolution with respect to the federation round
     local_results, new_devices_results = [], []
 
     for federation_round in range(args.federation_rounds):
@@ -86,16 +121,25 @@ def federated_classifiers(train_data: List[Dict[str, np.ndarray]], test_data: Li
         models = [deepcopy(global_model) for _ in range(n_clients)]
 
         # Global model testing on each client's data
-        local_results.append(multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
-                                                                   for client_devices in args.clients_devices],
-                                                                  clients_dl_test, [global_model for _ in range(n_clients)])),
-                                                   main_title='Testing the global model on data from all clients', color=Color.PURPLE))
+        results = multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
+                                                        for client_devices in args.clients_devices],
+                                                       clients_dl_test, [global_model for _ in range(n_clients)])),
+                                        main_title='Testing the global model on data from all clients', color=Color.BLUE)
+        local_result = compute_sum_results(results)
+        local_results.append(local_result)
+        Ctp.print('Average results')
+        print_rates(local_result)
 
         # Global model testing on new devices
-        new_devices_results.append(
-            multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(args.test_devices)], [new_dl_test], [global_model])),
-                                  main_title='Testing the global model on the new devices: ' + device_names(args.test_devices),
-                                  color=Color.CYAN))
+        results = multitest_classifiers(
+            tests=list(zip(['Testing global model on: ' + device_names(args.test_devices)], [new_dl_test], [global_model])),
+            main_title='Testing the global model on the new devices: ' + device_names(args.test_devices),
+            color=Color.DARK_CYAN)
+        new_devices_result = compute_sum_results(results)
+        new_devices_results.append(new_devices_result)
+        Ctp.print('Average results')
+        print_rates(new_devices_result)
+
         Ctp.exit_section()
 
     return local_results, new_devices_results

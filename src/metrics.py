@@ -1,4 +1,5 @@
 import torch
+from typing import List
 
 
 class BinaryClassificationResults:
@@ -81,3 +82,10 @@ class BinaryClassificationResults:
 
     def to_json(self) -> dict:
         return {'tp': self.tp, 'tn': self.tn, 'fp': self.fp, 'fn': self.fn}
+
+
+def compute_sum_results(results: List[BinaryClassificationResults]) -> BinaryClassificationResults:
+    result_sum = BinaryClassificationResults()
+    for result in results:
+        result_sum += result
+    return result_sum

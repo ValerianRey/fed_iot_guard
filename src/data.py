@@ -74,7 +74,7 @@ def get_configuration_split(all_data: List[Dict[str, np.ndarray]], clients_devic
 def get_client_data_combined(client_devices_data: List[Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
     combined_dict = {}
     for client_device_data in client_devices_data:
-        for key, arr in client_device_data:
+        for key, arr in client_device_data.items():
             print(arr.shape)
             if key in combined_dict.keys():
                 combined_dict[key] = np.append(combined_dict[key], arr, axis=0)
@@ -84,21 +84,34 @@ def get_client_data_combined(client_devices_data: List[Dict[str, np.ndarray]]) -
     return combined_dict
 
 
-def split_data(data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]]]:
+def split_clients_data(data: List[List[Dict[str, np.ndarray]]], p_test: float, p_unused: float) \
+        -> Tuple[List[List[Dict[str, np.ndarray]]], List[List[Dict[str, np.ndarray]]]]:
+    train_data, test_data = [], []
+    for client_id, client_data in enumerate(data):
+        client_train_data, client_test_data = split_client_data(client_data, p_test=p_test, p_unused=p_unused)
+        train_data.append(client_train_data)
+        test_data.append(client_test_data)
+
+    return train_data, test_data
+
+
+def split_client_data(data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) \
+        -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]]]:
+
     p_train = 1 - p_test - p_unused
     train_data, test_data = [], []
     for device_id, device_data in enumerate(data):
         train_data.append({})
         test_data.append({})
         for key, array in device_data.items():
-            indexes = [0] + list(np.cumsum((len(array) * np.ndarray([p_train, p_unused, p_test])).astype(int)))
+            indexes = [0] + list(np.cumsum((len(array) * np.array([p_train, p_unused, p_test])).astype(int)))
             train_data[device_id][key] = array[indexes[0]:indexes[1]]
             test_data[device_id][key] = array[indexes[2]:indexes[3]]
 
     return train_data, test_data
 
 
-def split_data_current_fold(train_val_data: List[Dict[str, np.ndarray]], n_folds: int, fold: int) \
+def split_client_data_current_fold(train_val_data: List[Dict[str, np.ndarray]], n_folds: int, fold: int) \
         -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]]]:
 
     kf = KFold(n_splits=n_folds)
@@ -110,5 +123,18 @@ def split_data_current_fold(train_val_data: List[Dict[str, np.ndarray]], n_folds
             train_index, val_index = list(kf.split(array))[fold]
             train_data[device_id][key] = array[train_index]
             val_data[device_id][key] = array[val_index]
+
+    return train_data, val_data
+
+
+def split_clients_data_current_fold(train_val_data: List[List[Dict[str, np.ndarray]]], n_folds: int, fold: int) \
+        -> Tuple[List[List[Dict[str, np.ndarray]]], List[List[Dict[str, np.ndarray]]]]:
+
+    train_data, val_data = [], []
+
+    for client_id, client_data in enumerate(train_val_data):
+        client_train_data, client_val_data = split_client_data_current_fold(client_data, n_folds=n_folds, fold=fold)
+        train_data.append(client_train_data)
+        val_data.append(client_val_data)
 
     return train_data, val_data

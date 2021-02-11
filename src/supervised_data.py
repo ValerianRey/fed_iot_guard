@@ -6,7 +6,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from src.data import multiclass_labels, get_client_data_combined, split_data
+from src.data import multiclass_labels, split_clients_data
 
 
 def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False) -> torch.Tensor:
@@ -53,15 +53,31 @@ def get_all_supervised_dls(train_data: List[Dict[str, np.ndarray]], test_data: L
     return clients_dl_train, clients_dl_test, new_dl_test
 
 
-def get_supervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]],
-                                     test_devices_data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) \
-        -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+def get_train_test_dls(train_data: List[List[Dict[str, np.ndarray]]], test_data: List[List[Dict[str, np.ndarray]]], train_bs: int, test_bs: int,
+                       multiclass: bool = False) -> Tuple[List[DataLoader], List[DataLoader]]:
 
-    # Flatten each client's data: clients_data is now a list of dicts and new_devices_test is now a simple dict
-    clients_data = [get_client_data_combined(client_devices_data) for client_devices_data in clients_devices_data]
-    new_devices_test = get_client_data_combined(test_devices_data)
+    clients_dl_train, clients_dl_test = [], []
+    for client_train_data, client_val_data in zip(train_data, test_data):
+        dataset_train = get_dataset(client_train_data, multiclass=multiclass)
+        dataset_test = get_dataset(client_val_data, multiclass=multiclass)
+        client_dl_train = DataLoader(dataset_train, batch_size=train_bs, shuffle=True)
+        client_dl_test = DataLoader(dataset_test, batch_size=test_bs)
+        clients_dl_train.append(client_dl_train)
+        clients_dl_test.append(client_dl_test)
+
+    return clients_dl_train, clients_dl_test
+
+
+def get_new_dl_test(new_test_data: List[Dict[str, np.ndarray]], test_bs: int, multiclass: bool = False) -> DataLoader:
+    new_dataset_test = get_dataset(new_test_data, multiclass=multiclass)
+    new_dl_test = DataLoader(new_dataset_test, batch_size=test_bs)
+    return new_dl_test
+
+
+def get_supervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]], p_test: float, p_unused: float) \
+        -> Tuple[List[List[Dict[str, np.ndarray]]], List[List[Dict[str, np.ndarray]]]]:
 
     # Split the clients' data between train/validation and test
-    clients_train_val, clients_test = split_data(clients_data, p_test=p_test, p_unused=p_unused)
+    clients_train_val, clients_test = split_clients_data(clients_devices_data, p_test=p_test, p_unused=p_unused)
 
-    return clients_train_val, clients_test, new_devices_test
+    return clients_train_val, clients_test

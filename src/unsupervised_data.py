@@ -6,7 +6,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from src.data import mirai_attacks, gafgyt_attacks, get_client_data_combined, split_data
+from src.data import mirai_attacks, gafgyt_attacks, split_client_data
 
 
 def get_train_dataset(train_data: List[Dict[str, np.ndarray]]) -> Dataset:
@@ -86,23 +86,17 @@ def get_all_train_opt_dls(train_data: List[Dict[str, np.ndarray]], opt_data: Lis
     return clients_dl_train, clients_dl_opt
 
 
-def get_unsupervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]],
-                                       test_devices_data: List[Dict[str, np.ndarray]], p_test: float, p_unused: float) \
-        -> Tuple[List[Dict[str, np.ndarray]], List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+def get_unsupervised_initial_splitting(clients_devices_data: List[List[Dict[str, np.ndarray]]], p_test: float, p_unused: float) \
+        -> Tuple[List[List[Dict[str, np.ndarray]]], List[List[Dict[str, np.ndarray]]]]:
 
-    # Flatten each client's data: clients_data is now a list of dicts and new_devices_test is now a simple dict
-    clients_data = [get_client_data_combined(client_devices_data) for client_devices_data in clients_devices_data]
-    new_devices_test = get_client_data_combined(test_devices_data)
+    clients_train_val, clients_test = [], []
+    for client_devices_data in clients_devices_data:
+        # Separate the data of the clients between benign and attack
+        client_benign_data = [{'benign': device_data['benign']} for device_data in client_devices_data]
+        client_attack_data = [{key: device_data[key] for key in device_data.keys() if key != 'benign'} for device_data in client_devices_data]
+        client_train_val, client_benign_test = split_client_data(client_benign_data, p_test=p_test, p_unused=p_unused)
+        clients_train_val.append(client_train_val)
+        clients_test.append([{**device_benign_test, **device_attack_data}
+                             for device_benign_test, device_attack_data in zip(client_benign_test, client_attack_data)])
 
-    # Separate the data of the clients between benign and attack
-    clients_benign_data = [{'benign': client_data['benign']} for client_data in clients_data]
-    clients_attack_data = [{key: client_data[key] for key in client_data.keys() if key != 'benign'} for client_data in clients_data]
-
-    # Split the benign data between train/validation and test, leaving an unused set in between
-    clients_train_val, clients_benign_test = split_data(clients_benign_data, p_test=p_test, p_unused=p_unused)
-
-    # The local tests are made with the benign test sets and all attack sets
-    clients_test = [{**client_benign_test, **client_attack_data}
-                    for client_benign_test, client_attack_data in zip(clients_benign_test, clients_attack_data)]
-
-    return clients_train_val, clients_test, new_devices_test
+    return clients_train_val, clients_test

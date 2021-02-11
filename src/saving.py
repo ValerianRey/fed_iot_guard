@@ -26,6 +26,14 @@ def save_results(path: str, local_results: dict, new_devices_results: dict, args
         json.dump(args_dict, outfile, default=dumper, indent=2)
 
 
+def save_results_gs(path: str, local_results: dict, args_dict: dict) -> None:
+    # Save the results to a new unique file (file name based on current time)
+    with open(path + 'local_results.json', 'w') as outfile:
+        json.dump(local_results, outfile, default=dumper, indent=2)
+    with open(path + 'args_dict.json', 'w') as outfile:
+        json.dump(args_dict, outfile, default=dumper, indent=2)
+
+
 def create_new_numbered_dir(base_path: str) -> Optional[str]:
     for run_id in range(1000):
         path = base_path + repr(run_id) + '/'

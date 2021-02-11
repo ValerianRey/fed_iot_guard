@@ -9,7 +9,7 @@ from context_printer import ContextPrinter as Ctp
 
 from src.anomaly_detection_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, multivalidate_autoencoders
 from src.architectures import SimpleAutoencoder, NormalizingModel
-from src.data import device_names, split_data
+from src.data import device_names, split_client_data
 from src.federated_util import federated_averaging
 from src.general_ml import set_models_sub_divs
 from src.metrics import BinaryClassificationResults
@@ -43,7 +43,7 @@ def local_autoencoders_2(train_data: List[Dict[str, np.ndarray]], opt_data: List
 def local_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[BinaryClassificationResults, BinaryClassificationResults]:
     # Split train data between actual train and opt
-    train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
+    train_data, opt_data = split_client_data(train_opt_data, p_test=0.5, p_unused=0.0)
 
     # Create the dataloaders
     clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_all_unsupervised_dls(train_data, opt_data, test_data,
@@ -84,7 +84,7 @@ def local_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_data: L
 def federated_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_data: List[Dict[str, np.ndarray]], args: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResults], List[BinaryClassificationResults]]:
     # Split train data between actual train and opt
-    train_data, opt_data = split_data(train_opt_data, p_test=0.5, p_unused=0.0)
+    train_data, opt_data = split_client_data(train_opt_data, p_test=0.5, p_unused=0.0)
 
     # Create the dataloaders
     clients_dl_train, clients_dl_opt, clients_dls_test, new_dls_test = get_all_unsupervised_dls(train_data, opt_data, test_data,
@@ -130,14 +130,14 @@ def federated_autoencoders(train_opt_data: List[Dict[str, np.ndarray]], test_dat
                                                                     for client_devices in args.clients_devices],
                                                                    clients_dls_test, [global_model for _ in range(n_clients)],
                                                                    [global_threshold for _ in range(n_clients)])),
-                                                    main_title='Testing the global model on data from all clients', color=Color.PURPLE))
+                                                    main_title='Testing the global model on data from all clients', color=Color.BLUE))
 
         # Global model testing on new devices
         new_devices_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(args.test_devices)],
                                                                          [new_dls_test], [global_model], [global_threshold])),
                                                           main_title='Testing the global model on the new devices: ' + device_names(
                                                               args.test_devices),
-                                                          color=Color.CYAN))
+                                                          color=Color.DARK_CYAN))
         Ctp.exit_section()
 
     return local_results, new_devices_results
