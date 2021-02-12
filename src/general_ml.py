@@ -23,12 +23,15 @@ def get_sub_div(data: torch.Tensor, normalization: str) -> Tuple[torch.tensor, t
     return sub, div
 
 
+def set_model_sub_div(args: SimpleNamespace, model: torch.nn.Module, train_dl: DataLoader) -> None:
+    data = train_dl.dataset[:][0]
+    Ctp.print('Computing normalization with {} train samples'.format(len(data)))
+    sub, div = get_sub_div(data, normalization=args.normalization)
+    model.set_sub_div(sub, div)
+
+
 def set_models_sub_divs(args: SimpleNamespace, models: List[torch.nn.Module], clients_dl_train: List[DataLoader], color: Color = Color.NONE) -> None:
     Ctp.enter_section('Computing the normalization values for each client', color)
-    n_clients = len(clients_dl_train)
-    for i, (model, dl_train) in enumerate(zip(models, clients_dl_train)):
-        data = dl_train.dataset[:][0]
-        Ctp.print('[{}/{}] computing normalization with {} train samples'.format(i + 1, n_clients, len(data)))
-        sub, div = get_sub_div(data, normalization=args.normalization)
-        model.set_sub_div(sub, div)
+    for i, (model, train_dl) in enumerate(zip(models, clients_dl_train)):
+        set_model_sub_div(args, model, train_dl)
     Ctp.exit_section()

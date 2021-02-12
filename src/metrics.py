@@ -1,8 +1,9 @@
-import torch
 from typing import List
 
+import torch
 
-class BinaryClassificationResults:
+
+class BinaryClassificationResult:
     def __init__(self, tp: int = 0, tn: int = 0, fp: int = 0, fn: int = 0):
         self.tp = tp  # Number of true positives
         self.tn = tn  # Number of true negatives
@@ -10,7 +11,7 @@ class BinaryClassificationResults:
         self.fn = fn  # Number of false negatives
 
     def __add__(self, other):
-        results = BinaryClassificationResults(
+        results = BinaryClassificationResult(
             tp=self.tp + other.tp,
             tn=self.tn + other.tn,
             fp=self.fp + other.fp,
@@ -84,8 +85,8 @@ class BinaryClassificationResults:
         return {'tp': self.tp, 'tn': self.tn, 'fp': self.fp, 'fn': self.fn}
 
 
-def compute_sum_results(results: List[BinaryClassificationResults]) -> BinaryClassificationResults:
-    result_sum = BinaryClassificationResults()
+def compute_sum_results(results: List[BinaryClassificationResult]) -> BinaryClassificationResult:
+    result_sum = BinaryClassificationResult()
     for result in results:
         result_sum += result
     return result_sum

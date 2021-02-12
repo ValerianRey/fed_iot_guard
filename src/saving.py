@@ -4,8 +4,6 @@ from typing import Optional, Any, Union
 
 from context_printer import ContextPrinter as Ctp
 
-from src.metrics import BinaryClassificationResults
-
 
 def dumper(obj: Any) -> Union[dict, str]:
     if isinstance(obj, type):
@@ -42,9 +40,3 @@ def create_new_numbered_dir(base_path: str) -> Optional[str]:
             os.makedirs(path)
             return path
     return None
-
-
-def save_dummy_results(path: str) -> None:
-    dummy_results = {'a': [BinaryClassificationResults(tp=1, fp=5)]}
-    with open(path + 'dummy.json', 'w') as outfile:
-        json.dump(dummy_results, outfile, default=dumper)

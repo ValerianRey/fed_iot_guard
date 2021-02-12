@@ -5,20 +5,27 @@ import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from src.metrics import BinaryClassificationResults
-from src.print_util import print_loss_autoencoder, print_rates, print_loss_autoencoder_header
+from src.metrics import BinaryClassificationResult
+from src.print_util import print_autoencoder_loss_stats, print_rates, print_autoencoder_loss_header
 
 
-def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:
+def train_autoencoder(model, args, train_loader, lr_factor=1.0) -> None:
+    criterion = nn.MSELoss(reduction='none')
+    optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = param_group['lr'] * lr_factor
+
+    scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
+
     Ctp.enter_section(color=Color.BLACK)
 
     model.train()
     num_elements = len(train_loader.dataset)
     num_batches = len(train_loader)
     batch_size = train_loader.batch_size
-    print_loss_autoencoder_header(first_column='Epoch', print_lr=True)
+    print_autoencoder_loss_header(first_column='Epoch', print_lr=True)
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         losses = torch.zeros(num_elements)
         for i, (x,) in enumerate(train_loader):
             output = model(x)
@@ -36,7 +43,7 @@ def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, sch
 
             losses[start:end] = loss.mean(dim=1)
 
-        print_loss_autoencoder('[{}/{}]'.format(epoch + 1, num_epochs), losses, lr=optimizer.param_groups[0]['lr'])
+        print_autoencoder_loss_stats('[{}/{}]'.format(epoch + 1, args.epochs), losses, lr=optimizer.param_groups[0]['lr'])
         if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
             scheduler.step(losses.mean())
         else:
@@ -48,16 +55,17 @@ def train_autoencoder(model, num_epochs, train_loader, optimizer, criterion, sch
     Ctp.exit_section()
 
 
-def autoencode(model, test_loader, criterion) -> torch.Tensor:
+def compute_reconstruction_losses(model, dataloader) -> torch.Tensor:
     with torch.no_grad():
+        criterion = nn.MSELoss(reduction='none')
         model.eval()
-        num_elements = len(test_loader.dataset)
-        num_batches = len(test_loader)
-        batch_size = test_loader.batch_size
+        num_elements = len(dataloader.dataset)
+        num_batches = len(dataloader)
+        batch_size = dataloader.batch_size
 
         losses = torch.zeros(num_elements)
 
-        for i, (x,) in enumerate(test_loader):
+        for i, (x,) in enumerate(dataloader):
             output = model(x)
             loss = criterion(output, model.normalize(x))
 
@@ -71,16 +79,16 @@ def autoencode(model, test_loader, criterion) -> torch.Tensor:
         return losses
 
 
-def test_autoencoder(model, threshold, dataloaders, criterion) -> BinaryClassificationResults:
+def test_autoencoder(model, threshold, dataloaders) -> BinaryClassificationResult:
     Ctp.enter_section(color=Color.BLACK)
-    print_loss_autoencoder_header(print_positives=True)
-    results = BinaryClassificationResults()
+    print_autoencoder_loss_header(print_positives=True)
+    results = BinaryClassificationResult()
     for key, dataloader in dataloaders.items():
-        losses = autoencode(model, dataloader, criterion)
+        losses = compute_reconstruction_losses(model, dataloader)
         predictions = torch.gt(losses, threshold).int()
         current_results = count_scores(predictions, is_malicious=False if key == 'benign' else True)
         title = ' '.join(key.split('_')).title()  # Transforms for example the key "mirai_ack" into the title "Mirai Ack"
-        print_loss_autoencoder(title, losses, positives=current_results.tp + current_results.fp, n_samples=current_results.n_samples())
+        print_autoencoder_loss_stats(title, losses, positives=current_results.tp + current_results.fp, n_samples=current_results.n_samples())
         results += current_results
 
     print_rates(results)
@@ -91,17 +99,9 @@ def test_autoencoder(model, threshold, dataloaders, criterion) -> BinaryClassifi
 # this function will train each model on its associated dataloader, and will print the title for it
 def multitrain_autoencoders(trains, args, lr_factor=1.0, main_title='Multitrain autoencoders', color=Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
-
-    criterion = nn.MSELoss(reduction='none')
     for i, (title, dataloader, model) in enumerate(trains):
         Ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title, bold=True)
-        optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * lr_factor
-
-        scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
-
-        train_autoencoder(model, args.epochs, dataloader, optimizer, criterion, scheduler)
+        train_autoencoder(model, args, dataloader, lr_factor)
     Ctp.exit_section()
 
 
@@ -113,13 +113,12 @@ def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.
 
     Ctp.enter_section(main_title, color)
 
-    criterion = nn.MSELoss(reduction='none')
     thresholds = []
     for i, (title, dataloader, model) in enumerate(opts):
         Ctp.print('[{}/{}] '.format(i + 1, len(opts)) + title, bold=True)
-        print_loss_autoencoder_header()
-        losses = autoencode(model, dataloader, criterion)
-        print_loss_autoencoder('Benign (opt)', losses)
+        print_autoencoder_loss_header()
+        losses = compute_reconstruction_losses(model, dataloader)
+        print_autoencoder_loss_stats('Benign (opt)', losses)
         avg_loss_val = losses.mean()
         std_loss_val = losses.std()
         threshold = avg_loss_val + std_loss_val
@@ -129,10 +128,10 @@ def compute_thresholds(opts, main_title='Computing the thresholds', color=Color.
     return thresholds
 
 
-def count_scores(predictions, is_malicious) -> BinaryClassificationResults:
+def count_scores(predictions, is_malicious) -> BinaryClassificationResult:
     positive_predictions = predictions.sum().item()
     negative_predictions = len(predictions) - positive_predictions
-    results = BinaryClassificationResults()
+    results = BinaryClassificationResult()
     if is_malicious:
         results.add_tp(positive_predictions)
         results.add_fn(negative_predictions)
@@ -143,33 +142,15 @@ def count_scores(predictions, is_malicious) -> BinaryClassificationResults:
 
 
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Color.NONE) -> BinaryClassificationResults:
+def multitest_autoencoders(tests, main_title='Multitest autoencoders', color=Color.NONE) -> BinaryClassificationResult:
     Ctp.enter_section(main_title, color)
 
-    criterion = nn.MSELoss(reduction='none')
-    results = BinaryClassificationResults()
+    results = BinaryClassificationResult()
     for i, (title, dataloaders, model, threshold) in enumerate(tests):
         Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
-        results += test_autoencoder(model, threshold, dataloaders, criterion)
+        results += test_autoencoder(model, threshold, dataloaders)
 
     Ctp.print('Average results')
     print_rates(results)
     Ctp.exit_section()
     return results
-
-
-# this function will test each model on its associated dataloader, and will print the title for it
-def multivalidate_autoencoders(validations, main_title='Multiple optimizations of autoencoders', color=Color.NONE) -> BinaryClassificationResults:
-    Ctp.enter_section(main_title, color)
-    criterion = nn.MSELoss(reduction='none')
-    losses = []
-    for i, (title, dataloader, model) in enumerate(validations):
-        Ctp.print('[{}/{}] '.format(i + 1, len(validations)) + title, bold=True)
-        loss = autoencode(model, dataloader, criterion).mean()
-        losses.append(loss)
-        Ctp.print('Loss = ' + repr(loss))
-
-    avg_loss = sum(losses) / len(losses)
-    Ctp.print('Average loss = ' + repr(avg_loss))
-    Ctp.exit_section()
-    return avg_loss

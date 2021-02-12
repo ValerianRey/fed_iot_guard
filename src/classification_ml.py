@@ -5,19 +5,26 @@ import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from src.metrics import BinaryClassificationResults
+from src.metrics import BinaryClassificationResult
 from src.print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
 
 
-def train_classifier(model, num_epochs, train_loader, optimizer, criterion, scheduler) -> None:
+def train_classifier(model, args, train_loader, lr_factor=1.0) -> None:
+    criterion = nn.BCELoss()
+    optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = param_group['lr'] * lr_factor
+
+    scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
+
     Ctp.enter_section(color=Color.BLACK)
     print_train_classifier_header()
     model.train()
 
-    for epoch in range(num_epochs):
-        Ctp.enter_section(header='[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL))
+    for epoch in range(args.epochs):
+        Ctp.enter_section(header='[{}/{}]'.format(epoch + 1, args.num_epochs).ljust(Columns.SMALL))
         lr = optimizer.param_groups[0]['lr']
-        results = BinaryClassificationResults()
+        results = BinaryClassificationResult()
         for i, (data, label) in enumerate(train_loader):
             output = model(data)
             loss = criterion(output, label)
@@ -40,10 +47,10 @@ def train_classifier(model, num_epochs, train_loader, optimizer, criterion, sche
     Ctp.exit_section()
 
 
-def test_classifier(model, test_loader) -> BinaryClassificationResults:
+def test_classifier(model, test_loader) -> BinaryClassificationResult:
     with torch.no_grad():
         model.eval()
-        results = BinaryClassificationResults()
+        results = BinaryClassificationResult()
         for i, (data, label) in enumerate(test_loader):
             output = model(data)
 
@@ -57,22 +64,14 @@ def test_classifier(model, test_loader) -> BinaryClassificationResults:
 # lr_factor is used to multiply the lr that is contained in args (and that should remain constant)
 def multitrain_classifiers(trains, args, lr_factor=1.0, main_title='Multitrain classifiers', color=Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
-
-    criterion = nn.BCELoss()
     for i, (title, dataloader, model) in enumerate(trains):
         Ctp.print('[{}/{}] '.format(i + 1, len(trains)) + title, bold=True)
-        optimizer = args.optimizer(model.parameters(), **args.optimizer_params)
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = param_group['lr'] * lr_factor
-
-        scheduler = args.lr_scheduler(optimizer, **args.lr_scheduler_params)
-
-        train_classifier(model, args.epochs, dataloader, optimizer, criterion, scheduler)
+        train_classifier(model, args, dataloader, lr_factor)
     Ctp.exit_section()
 
 
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> List[BinaryClassificationResults]:
+def multitest_classifiers(tests, main_title='Multitest classifiers', color=Color.NONE) -> List[BinaryClassificationResult]:
     Ctp.enter_section(main_title, color)
 
     results = []
