@@ -1,5 +1,6 @@
-import torch
 from typing import List
+
+import torch
 
 
 def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:

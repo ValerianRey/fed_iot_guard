@@ -1,7 +1,7 @@
 import torch
 
 
-class BinaryClassificationResults:
+class BinaryClassificationResult:
     def __init__(self, tp: int = 0, tn: int = 0, fp: int = 0, fn: int = 0):
         self.tp = tp  # Number of true positives
         self.tn = tn  # Number of true negatives
@@ -9,13 +9,13 @@ class BinaryClassificationResults:
         self.fn = fn  # Number of false negatives
 
     def __add__(self, other):
-        results = BinaryClassificationResults(
+        result = BinaryClassificationResult(
             tp=self.tp + other.tp,
             tn=self.tn + other.tn,
             fp=self.fp + other.fp,
             fn=self.fn + other.fn,
         )
-        return results
+        return result
 
     def add_tp(self, val: int) -> None:
         self.tp += val
@@ -29,7 +29,7 @@ class BinaryClassificationResults:
     def add_fn(self, val: int) -> None:
         self.fn += val
 
-    # Update the results based on the pred tensor and on the label tensor
+    # Update the result based on the pred tensor and on the label tensor
     def update(self, pred: torch.Tensor, label: torch.Tensor) -> None:
         self.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum().item())
         self.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum().item())

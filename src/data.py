@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, Union
+from typing import Tuple, Dict, List, Callable
 
 import numpy as np
 import pandas as pd
@@ -36,12 +36,16 @@ multiclass_labels = {**{'benign': 0.},
                      **{'mirai_' + attack: float(i+1) for i, attack in enumerate(mirai_attacks)},
                      **{'gafgyt_' + attack: float(i+6) for i, attack in enumerate(gafgyt_attacks)}}
 
+DeviceData = Dict[str, np.ndarray]
+ClientData = List[DeviceData]
+FederationData = List[ClientData]
+
 
 def device_names(device_ids: List[int]) -> str:
     return ', '.join([all_devices[device_id] for device_id in device_ids])
 
 
-def get_device_data(device_id: int) -> Dict[str, np.array]:
+def get_device_data(device_id: int) -> DeviceData:
     Ctp.print('[{}/{}] Data from '.format(device_id + 1, len(all_devices)) + all_devices[device_id])
     device = all_devices[device_id]
     device_data = {'benign': pd.read_csv(benign_paths[device]).to_numpy()}
@@ -54,14 +58,37 @@ def get_device_data(device_id: int) -> Dict[str, np.array]:
     return device_data
 
 
-def get_all_data(color: Union[Color, str] = Color.NONE) -> List[Dict[str, np.array]]:
-    Ctp.enter_section('Reading data', color)
+def read_all_data() -> List[DeviceData]:
+    Ctp.enter_section('Reading data', Color.YELLOW)
     data = [get_device_data(device_id) for device_id in range(len(all_devices))]
     Ctp.exit_section()
     return data
 
 
-def split_data(data: List[Dict[str, np.array]], p_test: float, p_unused: float) -> Tuple[List[Dict[str, np.array]], List[Dict[str, np.array]]]:
+def get_client_data(all_data: List[DeviceData], client_devices: List[int]) -> ClientData:
+    return [all_data[device_id] for device_id in client_devices]
+
+
+# Returns the clients' devices' data (first element of the tuple) and the test devices' data (second element of the tuple)
+def get_configuration_data(all_data: List[DeviceData], clients_devices: List[List[int]], test_devices: List[int]) \
+        -> Tuple[FederationData, ClientData]:
+
+    clients_devices_data = [get_client_data(all_data, client_devices) for client_devices in clients_devices]
+    test_devices_data = get_client_data(all_data, test_devices)
+    return clients_devices_data, test_devices_data
+
+
+def split_clients_data(data: FederationData, p_test: float, p_unused: float) -> Tuple[FederationData, FederationData]:
+    train_data, test_data = [], []
+    for client_data in data:
+        client_train_data, client_test_data = split_client_data(client_data, p_test, p_unused)
+        train_data.append(client_train_data)
+        test_data.append(client_test_data)
+
+    return train_data, test_data
+
+
+def split_client_data(data: ClientData, p_test: float, p_unused: float) -> Tuple[ClientData, ClientData]:
     p_train = 1 - p_test - p_unused
     train_data, test_data = [], []
     for device_id, device_data in enumerate(data):
@@ -75,10 +102,10 @@ def split_data(data: List[Dict[str, np.array]], p_test: float, p_unused: float) 
     return train_data, test_data
 
 
-def split_data_current_fold(train_val_data: List[Dict[str, np.array]], n_folds: int, fold: int) \
-        -> Tuple[List[Dict[str, np.array]], List[Dict[str, np.array]]]:
+def split_client_data_current_fold(train_val_data: ClientData, n_splits: int, fold: int) \
+        -> Tuple[ClientData, ClientData]:
 
-    kf = KFold(n_splits=n_folds)
+    kf = KFold(n_splits=n_splits)
     train_data, val_data = [], []
     for device_id, device_data in enumerate(train_val_data):
         train_data.append({})
@@ -91,4 +118,12 @@ def split_data_current_fold(train_val_data: List[Dict[str, np.array]], n_folds: 
     return train_data, val_data
 
 
+def get_initial_splitting(splitting_function: Callable, clients_data: FederationData, p_test: float, p_unused: float) \
+        -> Tuple[FederationData, FederationData]:
+    clients_train_val, clients_test = [], []
+    for client_data in clients_data:
+        client_train_val, client_test = splitting_function(client_data, p_test=p_test, p_unused=p_unused)
+        clients_train_val.append(client_train_val)
+        clients_test.append(client_test)
 
+    return clients_train_val, clients_test
