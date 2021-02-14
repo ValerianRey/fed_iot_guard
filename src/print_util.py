@@ -34,8 +34,10 @@ def print_train_classifier_header() -> None:
               + '| LR'.ljust(Columns.MEDIUM), bold=True)
 
 
-def print_train_classifier(batch: int, num_batches: int, result: BinaryClassificationResult, lr: float, persistent: bool = False) -> None:
-    Ctp.print('| [{}/{}]'.format(batch, num_batches).ljust(Columns.MEDIUM)
+def print_train_classifier(epoch: int, num_epochs: int, batch: int, num_batches: int,
+                           result: BinaryClassificationResult, lr: float, persistent: bool = False) -> None:
+    Ctp.print('[{}/{}]'.format(epoch + 1, num_epochs).ljust(Columns.SMALL)
+              + '| [{}/{}]'.format(batch + 1, num_batches).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.tpr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.tnr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.acc()).ljust(Columns.MEDIUM)

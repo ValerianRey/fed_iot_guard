@@ -39,21 +39,21 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
-    autoencoder_opt_default_params = {'epochs': 2,  # 50
+    autoencoder_opt_default_params = {'epochs': 50,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 0,  # 4
+    classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 5, 'gamma_round': 0.5}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75}
 
     # Loading the data
     all_data = read_all_data()
@@ -69,19 +69,20 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
         configurations = decentralized_configurations
     else:
         raise ValueError
+    name = setup + '_' + experiment
 
     if experiment == 'autoencoder':
         constant_params = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
         splitting_function = get_client_unsupervised_initial_splitting
-
         if test:
             if federated:
                 constant_params.update(federation_params)
                 test_function = federated_autoencoders_train_test
+                name += '_federated'
             else:
                 test_function = local_autoencoders_train_test
 
-            test_hyperparameters(all_data, experiment, test_function, splitting_function, constant_params, configurations,
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
@@ -97,6 +98,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             if federated:
                 constant_params.update(federation_params)
                 test_function = federated_classifiers_train_test
+                name += '_federated'
             else:
                 test_function = local_classifiers_train_test
 
@@ -145,13 +147,4 @@ if __name__ == "__main__":
 
     main(args.experiment, args.setup, args.federated, args.test)
 
-# TODO: fix ctp depth. For n_splits > 1, need 1 more depth
-#  for n_splits = 1:
-#  single_autoencoder_gs => depth 3
-
-
-# TODO: (re)implement notebook to analyse grid search results and rerun all notebooks
-
-# TODO: wipe all results folders
-
-# TODO: fix context printing
+# TODO: (re)implement notebook to analyse grid search results

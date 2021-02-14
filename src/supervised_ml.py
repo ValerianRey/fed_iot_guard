@@ -1,5 +1,5 @@
-from typing import List, Union, Tuple
 from types import SimpleNamespace
+from typing import List, Union, Tuple
 
 import torch
 import torch.nn as nn
@@ -8,7 +8,7 @@ from context_printer import ContextPrinter as Ctp
 from torch.utils.data import DataLoader
 
 from metrics import BinaryClassificationResult
-from print_util import print_train_classifier, print_train_classifier_header, print_rates, Columns
+from print_util import print_train_classifier, print_train_classifier_header, print_rates
 
 
 def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: DataLoader, lr_factor: float = 1.0) -> None:
@@ -23,7 +23,6 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
     model.train()
 
     for epoch in range(params.epochs):
-        Ctp.enter_section(header='[{}/{}]'.format(epoch + 1, params.num_epochs).ljust(Columns.SMALL))
         lr = optimizer.param_groups[0]['lr']
         result = BinaryClassificationResult()
         for i, (data, label) in enumerate(train_loader):
@@ -37,14 +36,13 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
             result.update(pred, label)
 
             if i % 1000 == 0:
-                print_train_classifier(i, len(train_loader), result, lr, persistent=False)
+                print_train_classifier(epoch, params.epochs, i, len(train_loader), result, lr, persistent=False)
 
-        print_train_classifier(len(train_loader), len(train_loader), result, lr, persistent=True)
+        print_train_classifier(params.epochs - 1, params.epochs, len(train_loader) - 1, len(train_loader), result, lr, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
-        Ctp.exit_section()
 
 
 def test_classifier(model: nn.Module, test_loader: DataLoader) -> BinaryClassificationResult:
@@ -78,11 +76,10 @@ def multitest_classifiers(tests: List[Tuple[str, DataLoader, nn.Module]], main_t
     Ctp.enter_section(main_title, color)
     result = BinaryClassificationResult()
     for i, (title, dataloader, model) in enumerate(tests):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(tests)) + title, color=Color.NONE, header='      ')
+        Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
         current_result = test_classifier(model, dataloader)
         result += current_result
         print_rates(current_result)
-        Ctp.exit_section()
     Ctp.exit_section()
     Ctp.print('Average result')
     print_rates(result)

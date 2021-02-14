@@ -27,8 +27,9 @@ def local_classifier_train_val(train_data: ClientData, val_data: ClientData, par
     set_model_sub_div(params.normalization, model, train_dl)
 
     # Local training
-    Ctp.print('Training')
+    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.GREEN)
     train_classifier(model, params, train_dl)
+    Ctp.exit_section()
 
     # Local validation
     Ctp.print('Validating')

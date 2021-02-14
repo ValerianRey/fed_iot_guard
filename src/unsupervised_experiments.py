@@ -28,15 +28,14 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
     set_model_sub_div(params.normalization, model, train_dl)
 
     # Local training
-    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.BLACK)
+    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.GREEN)
     train_autoencoder(model, params, train_dl)
     Ctp.exit_section()
 
     # Local validation
-    Ctp.print('Validating')
     losses = compute_reconstruction_losses(model, val_dl)
     loss = (sum(losses) / len(losses)).item()
-    Ctp.print("Loss: {:.5f}".format(loss))
+    Ctp.print("Validation loss: {:.5f}".format(loss))
 
     return loss
 
