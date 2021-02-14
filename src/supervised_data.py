@@ -6,7 +6,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from src.data import multiclass_labels, ClientData, FederationData, split_client_data
+from data import multiclass_labels, ClientData, FederationData, split_client_data
 
 
 def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False) -> torch.Tensor:

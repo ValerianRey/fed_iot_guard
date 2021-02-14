@@ -102,10 +102,10 @@ def split_client_data(data: ClientData, p_test: float, p_unused: float) -> Tuple
     return train_data, test_data
 
 
-def split_client_data_current_fold(train_val_data: ClientData, n_folds: int, fold: int) \
+def split_client_data_current_fold(train_val_data: ClientData, n_splits: int, fold: int) \
         -> Tuple[ClientData, ClientData]:
 
-    kf = KFold(n_splits=n_folds)
+    kf = KFold(n_splits=n_splits)
     train_data, val_data = [], []
     for device_id, device_data in enumerate(train_val_data):
         train_data.append({})

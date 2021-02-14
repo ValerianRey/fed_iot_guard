@@ -5,7 +5,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from src.data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData
+from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData
 
 
 def get_benign_dataset(train_data: ClientData) -> Dataset:

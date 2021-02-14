@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 
 
@@ -11,13 +9,13 @@ class BinaryClassificationResult:
         self.fn = fn  # Number of false negatives
 
     def __add__(self, other):
-        results = BinaryClassificationResult(
+        result = BinaryClassificationResult(
             tp=self.tp + other.tp,
             tn=self.tn + other.tn,
             fp=self.fp + other.fp,
             fn=self.fn + other.fn,
         )
-        return results
+        return result
 
     def add_tp(self, val: int) -> None:
         self.tp += val
@@ -31,7 +29,7 @@ class BinaryClassificationResult:
     def add_fn(self, val: int) -> None:
         self.fn += val
 
-    # Update the results based on the pred tensor and on the label tensor
+    # Update the result based on the pred tensor and on the label tensor
     def update(self, pred: torch.Tensor, label: torch.Tensor) -> None:
         self.add_tp(torch.logical_and(torch.eq(pred, label), label.bool()).int().sum().item())
         self.add_tn(torch.logical_and(torch.eq(pred, label), torch.logical_not(label.bool())).int().sum().item())
@@ -83,10 +81,3 @@ class BinaryClassificationResult:
 
     def to_json(self) -> dict:
         return {'tp': self.tp, 'tn': self.tn, 'fp': self.fp, 'fn': self.fn}
-
-
-def compute_sum_results(results: List[BinaryClassificationResult]) -> BinaryClassificationResult:
-    result_sum = BinaryClassificationResult()
-    for result in results:
-        result_sum += result
-    return result_sum
