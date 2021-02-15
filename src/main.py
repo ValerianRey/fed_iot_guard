@@ -87,7 +87,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
                               'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 10, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
-            run_grid_search(all_data, experiment, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations,
+            run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations,
                             p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
 
     elif experiment == 'classifier':
@@ -102,12 +102,12 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             else:
                 test_function = local_classifiers_train_test
 
-            test_hyperparameters(all_data, experiment, test_function, splitting_function, constant_params, configurations,
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
-            run_grid_search(all_data, experiment, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations,
+            run_grid_search(all_data, name, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations,
                             p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
     else:
         raise ValueError
