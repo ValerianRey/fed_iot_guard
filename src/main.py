@@ -82,10 +82,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             else:
                 test_function = local_autoencoders_train_test
 
-            configurations_params = [constant_params for _ in range(len(configurations))]
-            # set the hyper-parameters for each configuration
+            configurations_params = [{} for _ in range(len(configurations))]
+            # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, configurations_params, configurations,
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
@@ -105,10 +105,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             else:
                 test_function = local_classifiers_train_test
 
-            configurations_params = [constant_params for _ in range(len(configurations))]
-            # set the hyper-parameters for each configuration
+            configurations_params = [{} for _ in range(len(configurations))]
+            # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, configurations_params, configurations,
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
