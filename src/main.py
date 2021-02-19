@@ -86,7 +86,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
-                              'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 10, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
+                              'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
             run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations,
                             p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
 
@@ -148,3 +148,5 @@ if __name__ == "__main__":
     main(args.experiment, args.setup, args.federated, args.test)
 
 # TODO: (re)implement notebook to analyse grid search results
+
+# TODO: allow to test with a set of hparams per configuration
