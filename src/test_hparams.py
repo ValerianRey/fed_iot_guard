@@ -6,7 +6,7 @@ from context_printer import ContextPrinter as Ctp, Color
 
 from data import FederationData, ClientData, DeviceData, get_configuration_data, get_initial_splitting
 from metrics import BinaryClassificationResult
-from saving import create_new_numbered_dir, save_results
+from saving import create_new_numbered_dir, save_results_test
 
 
 # Computes the results of multiple random reruns of the same experiment
@@ -26,20 +26,21 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
 
 # This function is used to test the performance of a model with a given set of hyper-parameters on the test set
 def test_hyperparameters(all_data: List[DeviceData], experiment: str, experiment_function: Callable, splitting_function: Callable,
-                         constant_params: dict, configurations: List[Dict[str, list]],
+                         configurations_params: List[dict], configurations: List[Dict[str, list]],
                          p_test: float, p_unused: float, n_random_reruns: int = 5) -> None:
     # Create the path in which we store the results
     base_path = 'test_results/' + experiment + '/run_'
     results_path = create_new_numbered_dir(base_path)
 
-    params_dict = deepcopy(constant_params)
+    params_dicts = deepcopy(configurations_params)
     local_results, new_devices_results = {}, {}
 
-    for j, configuration in enumerate(configurations):  # Multiple configurations: we iterate over the possible configurations of the clients
+    for j, (configuration, configuration_params) in enumerate(zip(configurations, params_dicts)):
+        # Multiple configurations: we iterate over the possible configurations of the clients. Each configuration has its hyper-parameters
         clients_devices_data, test_devices_data = get_configuration_data(all_data, configuration['clients_devices'], configuration['test_devices'])
         clients_train_val, clients_test = get_initial_splitting(splitting_function, clients_devices_data, p_test=p_test, p_unused=p_unused)
-        params_dict.update(configuration)
-        params = SimpleNamespace(**params_dict)
+        configuration_params.update(configuration)  # Update the config-specific hyper-parameters with the dict containing the configuration setup
+        params = SimpleNamespace(**configuration_params)
         Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
         local_results[repr(configuration)], new_devices_results[repr(configuration)] = compute_rerun_results(clients_train_val, clients_test,
                                                                                                              test_devices_data, experiment_function,
@@ -47,4 +48,4 @@ def test_hyperparameters(all_data: List[DeviceData], experiment: str, experiment
         Ctp.exit_section()
 
     # We save the results in a json file
-    save_results(results_path, local_results, new_devices_results, constant_params)
+    save_results_test(results_path, local_results, new_devices_results, configurations_params)

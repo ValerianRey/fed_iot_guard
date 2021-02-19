@@ -46,7 +46,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 4,
+    classifier_opt_default_params = {'epochs': 0,  # 4
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
@@ -82,7 +82,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             else:
                 test_function = local_autoencoders_train_test
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations,
+            configurations_params = [constant_params for _ in range(len(configurations))]
+            # set the hyper-parameters for each configuration
+
+            test_hyperparameters(all_data, name, test_function, splitting_function, configurations_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
@@ -102,7 +105,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             else:
                 test_function = local_classifiers_train_test
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations,
+            configurations_params = [constant_params for _ in range(len(configurations))]
+            # set the hyper-parameters for each configuration
+
+            test_hyperparameters(all_data, name, test_function, splitting_function, configurations_params, configurations,
                                  p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
@@ -148,5 +154,3 @@ if __name__ == "__main__":
     main(args.experiment, args.setup, args.federated, args.test)
 
 # TODO: (re)implement notebook to analyse grid search results
-
-# TODO: allow to test with a set of hparams per configuration
