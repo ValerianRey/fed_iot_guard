@@ -152,7 +152,3 @@ if __name__ == "__main__":
         Ctp.set_max_depth(args.max_depth)  # Set the max depth at which we print in the console
 
     main(args.experiment, args.setup, args.federated, args.test)
-
-# TODO: (re)implement notebook to analyse grid search results:
-#  try out every gs results with dummy results
-
