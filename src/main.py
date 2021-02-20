@@ -39,14 +39,14 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
-    autoencoder_opt_default_params = {'epochs': 0,  # 50
+    autoencoder_opt_default_params = {'epochs': 50,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 0,  # 4
+    classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
