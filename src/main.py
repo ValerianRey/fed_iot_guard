@@ -46,7 +46,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 4,
+    classifier_opt_default_params = {'epochs': 0,  # 4
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
@@ -154,6 +154,5 @@ if __name__ == "__main__":
     main(args.experiment, args.setup, args.federated, args.test)
 
 # TODO: (re)implement notebook to analyse grid search results:
-#  try out test results autoencoder decentralized federated and non-federated with dummy results
-#  try out every gs results
+#  try out every gs results with dummy results
 

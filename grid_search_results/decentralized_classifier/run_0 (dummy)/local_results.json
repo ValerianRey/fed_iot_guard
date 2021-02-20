@@ -1,0 +1,236 @@
+{
+  "[[1], [2], [3], [4], [5], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 693553,
+      "tn": 84368,
+      "fp": 35640,
+      "fn": 618896
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 681859,
+      "tn": 57221,
+      "fp": 62787,
+      "fn": 630590
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 174989,
+      "tn": 96661,
+      "fp": 23347,
+      "fn": 1137460
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 679644,
+      "tn": 38501,
+      "fp": 81507,
+      "fn": 632805
+    }
+  },
+  "[[0], [2], [3], [4], [5], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 505025,
+      "tn": 95992,
+      "fp": 32651,
+      "fn": 842024
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 486967,
+      "tn": 68804,
+      "fp": 59839,
+      "fn": 860082
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 93566,
+      "fp": 35077,
+      "fn": 989176
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 909233,
+      "tn": 35394,
+      "fp": 93249,
+      "fn": 437816
+    }
+  },
+  "[[0], [1], [3], [4], [5], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 700010,
+      "tn": 86734,
+      "fp": 35750,
+      "fn": 767044
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 607521,
+      "tn": 66051,
+      "fp": 56433,
+      "fn": 859533
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 87407,
+      "fp": 35077,
+      "fn": 1109181
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 909233,
+      "tn": 29235,
+      "fp": 93249,
+      "fn": 557821
+    }
+  },
+  "[[0], [1], [2], [4], [5], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 687137,
+      "tn": 56933,
+      "fp": 33286,
+      "fn": 636051
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 463108,
+      "tn": 68340,
+      "fp": 21879,
+      "fn": 860080
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 55142,
+      "fp": 35077,
+      "fn": 965315
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 690383,
+      "tn": 38501,
+      "fp": 51718,
+      "fn": 632805
+    }
+  },
+  "[[0], [1], [2], [3], [5], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 518451,
+      "tn": 95999,
+      "fp": 21021,
+      "fn": 842026
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 681944,
+      "tn": 54096,
+      "fp": 62924,
+      "fn": 678533
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 81943,
+      "fp": 35077,
+      "fn": 1002604
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 727672,
+      "tn": 38501,
+      "fp": 78519,
+      "fn": 632805
+    }
+  },
+  "[[0], [1], [2], [3], [4], [6], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 700012,
+      "tn": 72653,
+      "fp": 35750,
+      "fn": 667037
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 681933,
+      "tn": 46329,
+      "fp": 62074,
+      "fn": 685116
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 182884,
+      "tn": 96673,
+      "fp": 11730,
+      "fn": 1184165
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 909233,
+      "tn": 15154,
+      "fp": 93249,
+      "fn": 457816
+    }
+  },
+  "[[0], [1], [2], [3], [4], [5], [7], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 699859,
+      "tn": 83648,
+      "fp": 35743,
+      "fn": 765613
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 681929,
+      "tn": 56582,
+      "fp": 62809,
+      "fn": 783543
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 84314,
+      "fp": 35077,
+      "fn": 1107599
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 832667,
+      "tn": 38501,
+      "fp": 80890,
+      "fn": 632805
+    }
+  },
+  "[[0], [1], [2], [3], [4], [5], [6], [8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 578348,
+      "tn": 95889,
+      "fp": 24821,
+      "fn": 770192
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 488458,
+      "tn": 68750,
+      "fp": 51960,
+      "fn": 860082
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 85633,
+      "fp": 35077,
+      "fn": 990667
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 715735,
+      "tn": 38501,
+      "fp": 82209,
+      "fn": 632805
+    }
+  },
+  "[[0], [1], [2], [3], [4], [5], [6], [7]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 517701,
+      "tn": 95784,
+      "fp": 31338,
+      "fn": 827325
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 681929,
+      "tn": 64259,
+      "fp": 62863,
+      "fn": 663097
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 357873,
+      "tn": 92045,
+      "fp": 35077,
+      "fn": 987153
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 900064,
+      "tn": 35720,
+      "fp": 91402,
+      "fn": 444962
+    }
+  }
+}

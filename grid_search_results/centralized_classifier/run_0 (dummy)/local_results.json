@@ -1,0 +1,236 @@
+{
+  "[[1, 2, 3, 4, 5, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 681596,
+      "tn": 88489,
+      "fp": 31519,
+      "fn": 630853
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1312449,
+      "tn": 9548,
+      "fp": 110460,
+      "fn": 0
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 120008,
+      "fp": 0,
+      "fn": 1312449
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 120008,
+      "fp": 0,
+      "fn": 1312449
+    }
+  },
+  "[[0, 2, 3, 4, 5, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1344080,
+      "tn": 89802,
+      "fp": 38841,
+      "fn": 2969
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 128090,
+      "fp": 553,
+      "fn": 1347049
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 128643,
+      "fp": 0,
+      "fn": 1347049
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 128643,
+      "fp": 0,
+      "fn": 1347049
+    }
+  },
+  "[[0, 1, 3, 4, 5, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 654227,
+      "tn": 43183,
+      "fp": 79301,
+      "fn": 812827
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 122484,
+      "fp": 0,
+      "fn": 1467054
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1467043,
+      "tn": 364,
+      "fp": 122120,
+      "fn": 11
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1467054,
+      "tn": 0,
+      "fp": 122484,
+      "fn": 0
+    }
+  },
+  "[[0, 1, 2, 4, 5, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1322811,
+      "tn": 4213,
+      "fp": 86006,
+      "fn": 377
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 145,
+      "tn": 89503,
+      "fp": 716,
+      "fn": 1323043
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1323188,
+      "tn": 0,
+      "fp": 90219,
+      "fn": 0
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1323188,
+      "tn": 0,
+      "fp": 90219,
+      "fn": 0
+    }
+  },
+  "[[0, 1, 2, 3, 5, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1360433,
+      "tn": 106,
+      "fp": 116914,
+      "fn": 44
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 117020,
+      "fp": 0,
+      "fn": 1360477
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1360477,
+      "tn": 16,
+      "fp": 117004,
+      "fn": 0
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 117020,
+      "fp": 0,
+      "fn": 1360477
+    }
+  },
+  "[[0, 1, 2, 3, 4, 6, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 1629,
+      "tn": 96677,
+      "fp": 11726,
+      "fn": 1365420
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1342678,
+      "tn": 15965,
+      "fp": 92438,
+      "fn": 24371
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 108403,
+      "fp": 0,
+      "fn": 1367049
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1367049,
+      "tn": 0,
+      "fp": 108403,
+      "fn": 0
+    }
+  },
+  "[[0, 1, 2, 3, 4, 5, 7, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 947515,
+      "tn": 16519,
+      "fp": 102872,
+      "fn": 517957
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1465375,
+      "tn": 368,
+      "fp": 119023,
+      "fn": 97
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 119391,
+      "fp": 0,
+      "fn": 1465472
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1465472,
+      "tn": 0,
+      "fp": 119391,
+      "fn": 0
+    }
+  },
+  "[[0, 1, 2, 3, 4, 5, 6, 8]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 931892,
+      "tn": 6733,
+      "fp": 113977,
+      "fn": 416648
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 136,
+      "tn": 119301,
+      "fp": 1409,
+      "fn": 1348404
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 120710,
+      "fp": 0,
+      "fn": 1348540
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 1348540,
+      "tn": 0,
+      "fp": 120710,
+      "fn": 0
+    }
+  },
+  "[[0, 1, 2, 3, 4, 5, 6, 7]]": {
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 639298,
+      "tn": 105652,
+      "fp": 21470,
+      "fn": 705728
+    },
+    "{'normalization': '0-mean 1-var', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 914465,
+      "tn": 48783,
+      "fp": 78339,
+      "fn": 430561
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": {
+      "tp": 0,
+      "tn": 127122,
+      "fp": 0,
+      "fn": 1345026
+    },
+    "{'normalization': 'min-max', 'optimizer_params': {'lr': 1.0, 'weight_decay': 5e-05}}": {
+      "tp": 0,
+      "tn": 127122,
+      "fp": 0,
+      "fn": 1345026
+    }
+  }
+}
