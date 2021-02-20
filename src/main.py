@@ -22,7 +22,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'normalization': 'min-max',
                      'test_bs': 4096}
 
-    autoencoder_params = {'hidden_layers': [58, 29, 58],
+    autoencoder_params = {'hidden_layers': [29],
                           'activation_fn': torch.nn.ELU,
                           'p_threshold': 0.5}  # The proportion of benign data that we use to compute the threshold
 
@@ -46,7 +46,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 0,  # 4
+    classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
