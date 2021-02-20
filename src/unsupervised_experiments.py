@@ -42,7 +42,7 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                   params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
-    # Split train data between actual train and opt
+    # Split train data between actual train and the set that will be used to search the threshold
     train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
 
     # Creating the dataloaders

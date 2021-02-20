@@ -39,7 +39,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
-    autoencoder_opt_default_params = {'epochs': 50,
+    autoencoder_opt_default_params = {'epochs': 0,  # 50
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
@@ -53,7 +53,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75}
+    federation_params = {'federation_rounds': 2, 'gamma_round': 0.75}
 
     # Loading the data
     all_data = read_all_data()
@@ -153,4 +153,7 @@ if __name__ == "__main__":
 
     main(args.experiment, args.setup, args.federated, args.test)
 
-# TODO: (re)implement notebook to analyse grid search results
+# TODO: (re)implement notebook to analyse grid search results:
+#  try out test results autoencoder decentralized federated and non-federated with dummy results
+#  try out every gs results
+
