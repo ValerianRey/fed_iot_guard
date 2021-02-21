@@ -23,13 +23,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'test_bs': 4096,
                      'cuda': torch.cuda.is_available()}
 
-    common_params['cuda'] = False
-
     if common_params['cuda']:
         Ctp.print('Using CUDA')
     else:
         Ctp.print('Using CPU')
-
 
     autoencoder_params = {'hidden_layers': [29],
                           'activation_fn': torch.nn.ELU,
