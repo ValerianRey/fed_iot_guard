@@ -20,7 +20,16 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
-                     'test_bs': 4096}
+                     'test_bs': 4096,
+                     'cuda': torch.cuda.is_available()}
+
+    common_params['cuda'] = False
+
+    if common_params['cuda']:
+        Ctp.print('Using CUDA')
+    else:
+        Ctp.print('Using CPU')
+
 
     autoencoder_params = {'hidden_layers': [29],
                           'activation_fn': torch.nn.ELU,
@@ -53,7 +62,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 2, 'gamma_round': 0.75}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75}
 
     # Loading the data
     all_data = read_all_data()

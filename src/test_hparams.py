@@ -1,6 +1,7 @@
 from copy import deepcopy
 from types import SimpleNamespace
 from typing import Callable, Tuple, List, Dict
+from time import time
 
 from context_printer import ContextPrinter as Ctp, Color
 
@@ -17,9 +18,11 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
     new_devices_results = []
     for run_id in range(n_random_reruns):  # Multiple reruns: we run the same experiment multiple times to get better confidence in the results
         Ctp.enter_section('Run [{}/{}]'.format(run_id + 1, n_random_reruns), Color.GRAY)
+        start_time = time()
         local_result, new_devices_result = experiment_function(clients_train_val, clients_test, test_devices_data, params=params)
         local_results.append(local_result)
         new_devices_results.append(new_devices_result)
+        Ctp.print("Elapsed time: {:.1f} seconds".format(time() - start_time))
         Ctp.exit_section()
     return local_results, new_devices_results
 

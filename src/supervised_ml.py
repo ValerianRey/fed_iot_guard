@@ -38,7 +38,7 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
             if i % 1000 == 0:
                 print_train_classifier(epoch, params.epochs, i, len(train_loader), result, lr, persistent=False)
 
-        print_train_classifier(params.epochs - 1, params.epochs, len(train_loader) - 1, len(train_loader), result, lr, persistent=True)
+        print_train_classifier(epoch, params.epochs, len(train_loader) - 1, len(train_loader), result, lr, persistent=True)
 
         scheduler.step()
         if optimizer.param_groups[0]['lr'] <= 1e-3:

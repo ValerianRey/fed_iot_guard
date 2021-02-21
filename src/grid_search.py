@@ -1,5 +1,6 @@
 import itertools
 from copy import deepcopy
+from time import time
 from types import SimpleNamespace
 from typing import List, Dict, Set, Callable, Union, Optional
 
@@ -70,6 +71,7 @@ def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_func
         clients_results[repr(client_devices)] = {}
 
         for j, experiment_params_tuple in enumerate(params_product):  # Grid search: we iterate over the sets of parameters to be tested
+            start_time = time()
             experiment_params = {key: arg for (key, arg) in zip(varying_params.keys(), experiment_params_tuple)}
             params_dict.update(experiment_params)
             Ctp.enter_section('Experiment [{}/{}] with params: '.format(j + 1, len(params_product)) + str(experiment_params), Color.NONE)
@@ -79,6 +81,7 @@ def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_func
             else:  # Cross validation: we sum the results over the folds
                 result = compute_cv_result(train_val_data, experiment_function, params, n_splits)
             clients_results[repr(client_devices)][repr(experiment_params)] = result
+            Ctp.print("Elapsed time: {:.1f} seconds".format(time() - start_time))
             Ctp.exit_section()
         Ctp.exit_section()
 

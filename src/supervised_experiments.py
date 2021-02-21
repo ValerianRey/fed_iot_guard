@@ -18,12 +18,16 @@ from supervised_ml import multitrain_classifiers, multitest_classifiers, train_c
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
     # Creating the dataloaders
-    train_dl = get_train_dl(train_data, params.train_bs)
-    val_dl = get_test_dl(val_data, params.test_bs)
+    train_dl = get_train_dl(train_data, params.train_bs, params.cuda)
+    val_dl = get_test_dl(val_data, params.test_bs, params.cuda)
 
     # Initialize the model and compute the normalization values with the client's local training data
     model = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
                              sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+
+    if params.cuda:
+        model = model.cuda()
+
     set_model_sub_div(params.normalization, model, train_dl)
 
     # Local training
@@ -43,13 +47,17 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
                                  new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs)
-    new_test_dl = get_test_dl(new_test_data, params.test_bs)
+    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
     models = [NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
                                sub=torch.zeros(params.n_features), div=torch.ones(params.n_features)) for _ in range(n_clients)]
+
+    if params.cuda:
+        models = [model.cuda() for model in models]
+
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 
     # Training
@@ -78,13 +86,17 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                      new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs)
-    new_test_dl = get_test_dl(new_test_data, params.test_bs)
+    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
 
     # Initialization of a global model
     n_clients = len(params.clients_devices)
     global_model = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
                                     sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+
+    if params.cuda:
+        global_model = global_model.cuda()
+
     models = [deepcopy(global_model) for _ in range(n_clients)]
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 

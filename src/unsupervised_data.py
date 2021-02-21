@@ -8,49 +8,53 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData
 
 
-def get_benign_dataset(train_data: ClientData) -> Dataset:
+def get_benign_dataset(train_data: ClientData, cuda: bool = False) -> Dataset:
     data_list = [torch.tensor(device_data['benign']).float() for device_data in train_data]
+    if cuda:
+        data_list = [tensor.cuda() for tensor in data_list]
     dataset = TensorDataset(torch.cat(data_list, dim=0))
     return dataset
 
 
-def get_test_datasets(test_data: ClientData) -> Dict[str, Dataset]:
+def get_test_datasets(test_data: ClientData, cuda: bool = False) -> Dict[str, Dataset]:
     data_dict = {**{'benign': []},
                  **{'mirai_' + attack: [] for attack in mirai_attacks},
                  **{'gafgyt_' + attack: [] for attack in gafgyt_attacks}}
 
     for device_data in test_data:
         for key, arr in device_data.items():
-            data_dict[key].append(torch.tensor(arr).float())
+            data_tensor = torch.tensor(arr).float()
+            if cuda:
+                data_tensor = data_tensor.cuda()
+            data_dict[key].append(data_tensor)
 
     datasets_test = {key: TensorDataset(torch.cat(data_dict[key], dim=0)) for key in data_dict.keys() if len(data_dict[key]) > 0}
     return datasets_test
 
 
-def get_train_dl(client_train_data: ClientData, train_bs: int) -> DataLoader:
-    dataset_train = get_benign_dataset(client_train_data)
+def get_train_dl(client_train_data: ClientData, train_bs: int, cuda: bool = False) -> DataLoader:
+    dataset_train = get_benign_dataset(client_train_data, cuda=cuda)
     train_dl = DataLoader(dataset_train, batch_size=train_bs, shuffle=True)
     return train_dl
 
 
-def get_val_dl(client_val_data: ClientData, test_bs: int) -> DataLoader:
-    dataset_val = get_benign_dataset(client_val_data)
+def get_val_dl(client_val_data: ClientData, test_bs: int, cuda: bool = False) -> DataLoader:
+    dataset_val = get_benign_dataset(client_val_data, cuda=cuda)
     val_dl = DataLoader(dataset_val, batch_size=test_bs)
     return val_dl
 
 
-def get_test_dls_dict(client_test_data: ClientData, test_bs: int) -> Dict[str, DataLoader]:
-    datasets = get_test_datasets(client_test_data)
+def get_test_dls_dict(client_test_data: ClientData, test_bs: int, cuda: bool = False) -> Dict[str, DataLoader]:
+    datasets = get_test_datasets(client_test_data, cuda=cuda)
     test_dls = {key: DataLoader(dataset, batch_size=test_bs) for key, dataset in datasets.items()}
     return test_dls
 
 
-def get_train_val_test_dls(train_data: FederationData, val_data: FederationData, local_test_data: FederationData, train_bs: int, test_bs: int) \
-        -> Tuple[List[DataLoader], List[DataLoader], List[Dict[str, DataLoader]]]:
-
-    clients_dl_train = [get_train_dl(client_train_data, train_bs) for client_train_data in train_data]
-    clients_dl_val = [get_val_dl(client_val_data, test_bs) for client_val_data in val_data]
-    clients_dls_test = [get_test_dls_dict(client_test_data, test_bs) for client_test_data in local_test_data]
+def get_train_val_test_dls(train_data: FederationData, val_data: FederationData, local_test_data: FederationData, train_bs: int, test_bs: int,
+                           cuda: bool = False) -> Tuple[List[DataLoader], List[DataLoader], List[Dict[str, DataLoader]]]:
+    clients_dl_train = [get_train_dl(client_train_data, train_bs, cuda=cuda) for client_train_data in train_data]
+    clients_dl_val = [get_val_dl(client_val_data, test_bs, cuda=cuda) for client_val_data in val_data]
+    clients_dls_test = [get_test_dls_dict(client_test_data, test_bs, cuda=cuda) for client_test_data in local_test_data]
 
     return clients_dl_train, clients_dl_val, clients_dls_test
 
