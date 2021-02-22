@@ -127,7 +127,9 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
 
         # Federated averaging
         federated_averaging(global_model, models)
+        Ctp.print('Thresholds: ' + sum(['{:.6f} - '.format(threshold.item()) for threshold in thresholds]))
         global_threshold = sum(thresholds) / len(thresholds)
+        Ctp.print('Global threshold: {:.6f}'.format(global_threshold.item()))
 
         # Distribute the global model back to each client
         models = [deepcopy(global_model) for _ in range(n_clients)]
