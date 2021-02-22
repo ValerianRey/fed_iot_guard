@@ -11,7 +11,7 @@ from supervised_experiments import local_classifiers_train_test, federated_class
 from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
 from unsupervised_experiments import local_autoencoder_train_val, local_autoencoders_train_test, federated_autoencoders_train_test
-from federated_util import federated_averaging
+from federated_util import federated_averaging, federated_median
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):
