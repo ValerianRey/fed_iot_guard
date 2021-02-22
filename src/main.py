@@ -21,7 +21,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
                      'test_bs': 4096,
-                     'cuda': False}
+                     'cuda': False}  # It looks like cuda is slower than CPU for me so I enforce using the CPU
 
     if common_params['cuda']:
         Ctp.print('Using CUDA')
