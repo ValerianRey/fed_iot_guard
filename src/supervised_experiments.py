@@ -114,7 +114,7 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                main_title='Training the clients', color=Color.GREEN)
 
         # Federated averaging
-        federated_averaging(global_model, models)
+        params.aggregation_function(global_model, models)
 
         # Distribute the global model back to each client
         models = [deepcopy(global_model) for _ in range(n_clients)]

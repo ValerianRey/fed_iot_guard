@@ -11,6 +11,7 @@ from supervised_experiments import local_classifiers_train_test, federated_class
 from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
 from unsupervised_experiments import local_autoencoder_train_val, local_autoencoders_train_test, federated_autoencoders_train_test
+from federated_util import federated_averaging
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):
@@ -59,7 +60,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_averaging}
 
     # Loading the data
     all_data = read_all_data()

@@ -36,6 +36,13 @@ class SimpleAutoencoder(nn.Module):
         return self.seq(x)
 
 
+class Threshold(nn.Module):
+    # This class is only a wrapper around the threshold that allows to use directly the federated aggregation on it.
+    def __init__(self, threshold: torch.Tensor):
+        super(Threshold, self).__init__()
+        self.threshold = nn.Parameter(threshold, requires_grad=False)
+
+
 class BinaryClassifier(nn.Module):
     def __init__(self, activation_function: nn.Module, hidden_layers: List[int], verbose: bool = False) -> None:
         super(BinaryClassifier, self).__init__()

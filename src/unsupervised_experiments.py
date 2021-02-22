@@ -6,9 +6,8 @@ import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from architectures import SimpleAutoencoder, NormalizingModel
+from architectures import SimpleAutoencoder, NormalizingModel, Threshold
 from data import device_names, split_clients_data, ClientData, FederationData
-from federated_util import federated_averaging
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
@@ -100,6 +99,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
     n_clients = len(params.clients_devices)
     global_model = NormalizingModel(SimpleAutoencoder(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
                                     sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+    global_threshold = Threshold(torch.tensor(0.))
 
     if params.cuda:
         global_model = global_model.cuda()
@@ -126,9 +126,9 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated averaging
-        federated_averaging(global_model, models)
-        global_threshold = sum(thresholds) / len(thresholds)
-        Ctp.print('Global threshold: {:.6f}'.format(global_threshold.item()))
+        params.aggregation_function(global_model, models)
+        params.aggregation_function(global_threshold, thresholds)
+        Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
 
         # Distribute the global model back to each client
         models = [deepcopy(global_model) for _ in range(n_clients)]

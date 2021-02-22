@@ -1,12 +1,13 @@
-from typing import List, Dict, Tuple, Union
 from types import SimpleNamespace
+from typing import List, Dict, Tuple, Union
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+from torch.utils.data import DataLoader
 
+from architectures import Threshold
 from metrics import BinaryClassificationResult
 from print_util import print_autoencoder_loss_stats, print_rates, print_autoencoder_loss_header
 
@@ -77,12 +78,12 @@ def compute_reconstruction_losses(model: nn.Module, dataloader) -> torch.Tensor:
         return losses
 
 
-def test_autoencoder(model: nn.Module, threshold: float, dataloaders: Dict[str, DataLoader]) -> BinaryClassificationResult:
+def test_autoencoder(model: nn.Module, threshold: Threshold, dataloaders: Dict[str, DataLoader]) -> BinaryClassificationResult:
     print_autoencoder_loss_header(print_positives=True)
     result = BinaryClassificationResult()
     for key, dataloader in dataloaders.items():
         losses = compute_reconstruction_losses(model, dataloader)
-        predictions = torch.gt(losses, threshold).int()
+        predictions = torch.gt(losses, threshold.threshold).int()
         current_results = count_scores(predictions, is_malicious=False if key == 'benign' else True)
         title = ' '.join(key.split('_')).title()  # Transforms for example the key "mirai_ack" into the title "Mirai Ack"
         print_autoencoder_loss_stats(title, losses, positives=current_results.tp + current_results.fp, n_samples=current_results.n_samples())
@@ -105,7 +106,7 @@ def multitrain_autoencoders(trains: List[Tuple[str, DataLoader, nn.Module]], par
 # opts should be a list of tuples (title, dataloader_benign_opt, model)
 # this function will test each model on its associated dataloader, and will find the correct threshold for them
 def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title: str = 'Computing the thresholds',
-                       color: Union[str, Color] = Color.NONE) -> List[torch.tensor]:
+                       color: Union[str, Color] = Color.NONE) -> List[Threshold]:
 
     Ctp.enter_section(main_title, color)
 
@@ -117,9 +118,9 @@ def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title
         print_autoencoder_loss_stats('Benign (opt)', losses)
         avg_loss_val = losses.mean()
         std_loss_val = losses.std()
-        threshold = avg_loss_val + std_loss_val
+        threshold = Threshold(avg_loss_val + std_loss_val)
         thresholds.append(threshold)
-        Ctp.print('The threshold is {:.4f}'.format(threshold.item()))
+        Ctp.print('The threshold is {:.4f}'.format(threshold.threshold.item()))
         Ctp.exit_section()
 
     Ctp.exit_section()
@@ -140,7 +141,7 @@ def count_scores(predictions: torch.Tensor, is_malicious: bool) -> BinaryClassif
 
 
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Module, float]], main_title: str = 'Multitest autoencoders',
+def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Module, Threshold]], main_title: str = 'Multitest autoencoders',
                            color: Union[str, Color] = Color.NONE) -> BinaryClassificationResult:
     Ctp.enter_section(main_title, color)
 
