@@ -1,17 +1,16 @@
 from argparse import ArgumentParser
 
-import torch
 import torch.utils.data
 from context_printer import ContextPrinter as Ctp
 
 from data import read_all_data, all_devices
+from federated_util import *
 from grid_search import run_grid_search
 from supervised_data import get_client_supervised_initial_splitting
 from supervised_experiments import local_classifiers_train_test, federated_classifiers_train_test, local_classifier_train_val
 from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
 from unsupervised_experiments import local_autoencoder_train_val, local_autoencoders_train_test, federated_autoencoders_train_test
-from federated_util import federated_averaging, federated_median, federated_trimmed_mean_1, federated_trimmed_mean_2
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):

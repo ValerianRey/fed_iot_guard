@@ -8,7 +8,6 @@ from context_printer import ContextPrinter as Ctp
 
 from architectures import BinaryClassifier, NormalizingModel
 from data import ClientData, FederationData, device_names
-from federated_util import federated_averaging
 from metrics import BinaryClassificationResult
 from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates

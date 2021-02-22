@@ -48,7 +48,8 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
 
     # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data,
+                                                                      params.train_bs, params.test_bs, params.cuda)
     new_test_dl_dicts = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
 
     # Initialize the models and compute the normalization values with each client's local training data
@@ -92,7 +93,8 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
     train_val_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
 
     # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_val_data, val_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_val_data, val_data, local_test_data,
+                                                                      params.train_bs, params.test_bs, params.cuda)
     new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
 
     # Initialization of a global model
