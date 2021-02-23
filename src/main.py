@@ -21,6 +21,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
                      'test_bs': 4096,
+                     'p_test': 0.2,
+                     'p_unused': 0.01,
+                     'p_val': 0.3,
+                     'n_splits': 1,
+                     'n_random_reruns': 1,
                      'cuda': False}  # It looks like cuda is slower than CPU for me so I enforce using the CPU
 
     if common_params['cuda']:
@@ -45,12 +50,12 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
-    autoencoder_opt_default_params = {'epochs': 50,
+    autoencoder_opt_default_params = {'epochs': 400,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
-                                      'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
+                                      'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
@@ -63,11 +68,6 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     # Loading the data
     all_data = read_all_data()
-    p_test = 0.2
-    p_unused = 0.01
-    p_val = 0.3
-    n_splits = 1
-    n_random_reruns = 1
 
     if setup == 'centralized':
         configurations = centralized_configurations
@@ -91,13 +91,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             configurations_params = [{} for _ in range(len(configurations))]
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
-                                 p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
-                              'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
-            run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations,
-                            p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
+            varying_params = {'hidden_layers': [[], [11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29],
+                                                [58, 29, 58], [86, 58, 38, 29, 38, 58, 86], [58], [86], [115]]}
+            run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations)
 
     elif experiment == 'classifier':
         constant_params = {**common_params, **classifier_params, **classifier_opt_default_params}
@@ -114,13 +112,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             configurations_params = [{} for _ in range(len(configurations))]
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
-                                 p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
+            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations)
         else:
             varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
-            run_grid_search(all_data, name, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations,
-                            p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
+            run_grid_search(all_data, name, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations)
     else:
         raise ValueError
 

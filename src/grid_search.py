@@ -45,11 +45,7 @@ def compute_single_split_result(train_val_data: ClientData, experiment_function:
 
 
 def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_function: Callable,
-                    splitting_function: Callable, constant_params: dict, varying_params: dict, configurations: List[Dict[str, list]],
-                    p_test: float, p_unused: float, n_splits: int, p_val: Optional[float] = None) -> None:
-    if n_splits == 1 and p_val is None:
-        raise ValueError('p_val should be specified when not using cross-validation')
-
+                    splitting_function: Callable, constant_params: dict, varying_params: dict, configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
     base_path = 'grid_search_results/' + experiment + '/run_'
     results_path = create_new_numbered_dir(base_path)
@@ -59,6 +55,9 @@ def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_func
 
     params_dict = deepcopy(constant_params)
 
+    if params_dict['n_splits'] == 1 and params_dict['p_val'] is None:
+        raise ValueError('p_val should be specified when not using cross-validation')
+
     # First we compute the set of unique clients in the configurations, and we compute the grid search results for each client.
     # This way we do not make extra computations if the same client appears in several configurations
     all_clients_devices = get_all_clients_devices(configurations)
@@ -67,7 +66,7 @@ def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_func
         client_devices = list(client_devices_tuple)
         Ctp.enter_section('Client [{}/{}] with devices: '.format(i + 1, len(all_clients_devices)) + device_names(client_devices), Color.WHITE)
         client_data = get_client_data(all_data, client_devices)
-        train_val_data, _ = splitting_function(client_data, p_test=p_test, p_unused=p_unused)
+        train_val_data, _ = splitting_function(client_data, p_test=params_dict['p_test'], p_unused=params_dict['p_unused'])
         clients_results[repr(client_devices)] = {}
 
         for j, experiment_params_tuple in enumerate(params_product):  # Grid search: we iterate over the sets of parameters to be tested
@@ -76,10 +75,10 @@ def run_grid_search(all_data: List[DeviceData], experiment: str, experiment_func
             params_dict.update(experiment_params)
             Ctp.enter_section('Experiment [{}/{}] with params: '.format(j + 1, len(params_product)) + str(experiment_params), Color.NONE)
             params = SimpleNamespace(**params_dict)
-            if n_splits == 1:  # We do not use cross-validation
-                result = compute_single_split_result(train_val_data, experiment_function, params, p_val)
+            if params_dict['n_splits'] == 1:  # We do not use cross-validation
+                result = compute_single_split_result(train_val_data, experiment_function, params, params_dict['p_val'])
             else:  # Cross validation: we sum the results over the folds
-                result = compute_cv_result(train_val_data, experiment_function, params, n_splits)
+                result = compute_cv_result(train_val_data, experiment_function, params, params_dict['n_splits'])
             clients_results[repr(client_devices)][repr(experiment_params)] = result
             Ctp.print("Elapsed time: {:.1f} seconds".format(time() - start_time))
             Ctp.exit_section()
