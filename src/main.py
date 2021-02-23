@@ -64,7 +64,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_1}
+    federation_params = {'federation_rounds': 30, 'gamma_round': 0.8, 'aggregation_function': federated_trimmed_mean_1}
 
     # Loading the data
     all_data = read_all_data()
@@ -93,8 +93,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
             test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[], [11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29],
-                                                [58, 29, 58], [86, 58, 38, 29, 38, 58, 86], [58], [86], [115]]}
+            varying_params = {'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29],
+                                                [58, 29, 58], [86, 58, 38, 29, 38, 58, 86], [38]],
+                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
+                                                   {'lr': 1.0, 'weight_decay': 1e-5},
+                                                   {'lr': 1.0, 'weight_decay': 1e-4}]}
             run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations)
 
     elif experiment == 'classifier':
@@ -114,8 +117,10 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
             test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
-                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
+            varying_params = {'hidden_layers': [[], [50], [50, 10], [50, 10, 5]],
+                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
+                                                   {'lr': 1.0, 'weight_decay': 1e-5},
+                                                   {'lr': 1.0, 'weight_decay': 1e-4}]}
             run_grid_search(all_data, name, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations)
     else:
         raise ValueError
