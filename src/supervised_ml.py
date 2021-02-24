@@ -1,5 +1,6 @@
+from copy import deepcopy
 from types import SimpleNamespace
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Set
 
 import torch
 import torch.nn as nn
@@ -64,9 +65,10 @@ def multitrain_classifiers(trains: List[Tuple[str, DataLoader, nn.Module]], para
                            main_title: str = 'Multitrain classifiers', color: Union[str, Color] = Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
     for i, (title, dataloader, model) in enumerate(trains):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title, color=Color.NONE, header='      ')
-        train_classifier(model, params, dataloader, lr_factor)
-        Ctp.exit_section()
+            Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title, color=Color.NONE, header='      ')
+            train_classifier(model, params, dataloader, lr_factor)
+            Ctp.exit_section()
+
     Ctp.exit_section()
 
 

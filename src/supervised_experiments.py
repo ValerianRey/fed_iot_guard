@@ -13,6 +13,7 @@ from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates
 from supervised_data import get_train_test_dls, get_train_dl, get_test_dl
 from supervised_ml import multitrain_classifiers, multitest_classifiers, train_classifier, test_classifier
+from federated_util import model_poisoning
 
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
@@ -46,7 +47,8 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
                                  new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
+                                                   malicious_clients=set(), cuda=params.cuda)
     new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
 
     # Initialize the models and compute the normalization values with each client's local training data
@@ -85,7 +87,10 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                      new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs, params.cuda)
+    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
+                                                   malicious_clients=params.malicious_clients, cuda=params.cuda,
+                                                   poisoning=params.poisoning, p_poison=params.p_poison)
+
     new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
 
     # Initialization of a global model
@@ -111,6 +116,9 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                                train_dls, models)),
                                params=params, lr_factor=(params.gamma_round ** federation_round),
                                main_title='Training the clients', color=Color.GREEN)
+
+        model_poisoning(params.malicious_clients, params.model_update_factor, malicious_clients_models=models[params.malicious_clients],
+                        original_model=global_model)
 
         # Federated averaging
         params.aggregation_function(global_model, models)

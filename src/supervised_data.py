@@ -1,27 +1,44 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Set
 
 import numpy as np
 import torch
 import torch.utils
 import torch.utils.data
+from context_printer import ContextPrinter as Ctp
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 from data import multiclass_labels, ClientData, FederationData, split_client_data
 
 
-def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False) -> torch.Tensor:
+def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False,
+                      poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> torch.Tensor:
     if multiclass:
+        if poisoning is not None:
+            raise NotImplementedError('Poisoning not implemented for multiclass data')
         return torch.full((arr.shape[0], 1), multiclass_labels[key])
     else:
-        return torch.full((arr.shape[0], 1), (0. if key == 'benign' else 1.))
+        target = torch.full((arr.shape[0], 1), (0. if key == 'benign' else 1.))
+        if poisoning is not None:
+            if poisoning == 'all_labels_flipping' \
+                    or (poisoning == 'benign_labels_flipping' and key == 'benign') \
+                    or (poisoning == 'attack_labels_flipping' and key != 'benign'):
+                if p_poison is None:
+                    raise ValueError('p_poison should be indicated for label flipping attack')
+                n_poisoned = int(p_poison * len(target))
+                poisoned_indices = np.random.choice(len(target), n_poisoned, replace=False)
+                # We turn 0 into 1 and 1 into 0 by subtracting 1 and raising to the power of 2
+                target[poisoned_indices] = torch.pow(target[poisoned_indices] - 1., 2)
+
+        return target
 
 
-def get_dataset(data: ClientData, cuda: bool = False, multiclass: bool = False) -> Dataset:
+def get_dataset(data: ClientData, cuda: bool = False, multiclass: bool = False,
+                poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Dataset:
     data_list, target_list = [], []
     for device_data in data:
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
             data_tensor = torch.tensor(arr).float()
-            target_tensor = get_target_tensor(key, arr, multiclass=multiclass)
+            target_tensor = get_target_tensor(key, arr, multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)
             if cuda:
                 data_tensor = data_tensor.cuda()
                 target_tensor = target_tensor.cuda()
@@ -31,8 +48,9 @@ def get_dataset(data: ClientData, cuda: bool = False, multiclass: bool = False) 
     return dataset
 
 
-def get_train_dl(client_train_data: ClientData, train_bs: int, cuda: bool = False, multiclass: bool = False) -> DataLoader:
-    dataset_train = get_dataset(client_train_data, cuda=cuda, multiclass=multiclass)
+def get_train_dl(client_train_data: ClientData, train_bs: int, cuda: bool = False, multiclass: bool = False,
+                 poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> DataLoader:
+    dataset_train = get_dataset(client_train_data, cuda=cuda, multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)
     train_dl = DataLoader(dataset_train, batch_size=train_bs, shuffle=True)
     return train_dl
 
@@ -43,10 +61,15 @@ def get_test_dl(client_test_data: ClientData, test_bs: int, cuda: bool = False, 
     return test_dl
 
 
-def get_train_test_dls(train_data: FederationData, test_data: FederationData, train_bs: int, test_bs: int,
-                       cuda: bool = False, multiclass: bool = False) -> Tuple[List[DataLoader], List[DataLoader]]:
+def get_train_test_dls(train_data: FederationData, test_data: FederationData, train_bs: int, test_bs: int, malicious_clients: Set[int],
+                       cuda: bool = False, multiclass: bool = False,
+                       poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Tuple[List[DataLoader], List[DataLoader]]:
 
-    train_dls = [get_train_dl(client_train_data, train_bs, cuda=cuda, multiclass=multiclass) for client_train_data in train_data]
+    train_dls = [get_train_dl(client_train_data, train_bs, cuda=cuda, multiclass=multiclass,
+                              poisoning=(poisoning if client_id in malicious_clients else None),
+                              p_poison=(p_poison if client_id in malicious_clients else None))
+                 for client_id, client_train_data in enumerate(train_data)]
+
     test_dls = [get_test_dl(client_test_data, test_bs, cuda=cuda, multiclass=multiclass) for client_test_data in test_data]
     return train_dls, test_dls
 

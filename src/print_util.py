@@ -18,8 +18,8 @@ def print_federation_round(federation_round: int, n_rounds: int) -> None:
 
 
 def print_rates(result: BinaryClassificationResult) -> None:
-    Ctp.print('TPR: {:.5f} - TNR: {:.5f} - Accuracy: {:.5f} - Recall: {:.5f} - Precision: {:.5f} - F1-Score: {:.5f}'
-              .format(result.tpr(), result.tnr(), result.acc(), result.recall(), result.precision(), result.f1()))
+    Ctp.print('TPR: {:.3f}% - TNR: {:.3f}% - Accuracy: {:.3f}% - Precision: {:.3f}% - F1-Score: {:.3f}%'
+              .format(result.tpr() * 100, result.tnr() * 100, result.acc() * 100, result.precision() * 100, result.f1() * 100))
 
 
 def print_train_classifier_header() -> None:
