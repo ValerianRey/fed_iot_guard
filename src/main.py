@@ -55,19 +55,19 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 4,
-                                     'train_bs': 64,
+    classifier_opt_default_params = {'epochs': 1,  # 4
+                                     'train_bs': 256,  # 64
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 30, 'gamma_round': 0.8, 'aggregation_function': federated_averaging}
+    federation_params = {'federation_rounds': 30, 'gamma_round': 0.8, 'aggregation_function': federated_median}
 
     # poisonings: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
     # (only applies to the malicious clients; for honest clients this factor is always 1)
-    poisoning_params = {'n_malicious': 3, 'poisoning': 'all_labels_flipping', 'p_poison': 1.0, 'model_update_factor': 1.0}
+    poisoning_params = {'n_malicious': 1, 'poisoning': None, 'p_poison': None, 'model_update_factor': 1.0, 'cancel_attack': True}
 
     # Loading the data
     all_data = read_all_data()

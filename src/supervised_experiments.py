@@ -13,7 +13,7 @@ from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates
 from supervised_data import get_train_test_dls, get_train_dl, get_test_dl
 from supervised_ml import multitrain_classifiers, multitest_classifiers, train_classifier, test_classifier
-from federated_util import model_poisoning
+from federated_util import model_update_scaling, model_canceling_attack
 
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
@@ -117,8 +117,15 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                params=params, lr_factor=(params.gamma_round ** federation_round),
                                main_title='Training the clients', color=Color.GREEN)
 
-        model_poisoning(params.malicious_clients, params.model_update_factor, malicious_clients_models=models[params.malicious_clients],
-                        original_model=global_model)
+        malicious_clients_models = [model for client_id, model in enumerate(models) if client_id in params.malicious_clients]
+        n_honest = len(models) - len(malicious_clients_models)
+
+        # Model canceling attack
+        if params.cancel_attack:
+            model_canceling_attack(global_model=global_model, malicious_clients_models=malicious_clients_models, n_honest=n_honest)
+
+        # Rescale the model updates of the malicious clients (if any)
+        model_update_scaling(global_model=global_model, malicious_clients_models=malicious_clients_models, factor=params.model_update_factor)
 
         # Federated averaging
         params.aggregation_function(global_model, models)

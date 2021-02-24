@@ -1,6 +1,7 @@
 from typing import List
 
 import torch
+from context_printer import ContextPrinter as Ctp
 
 
 def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
@@ -42,14 +43,22 @@ def __federated_trimmed_mean(global_model: torch.nn.Module, models: List[torch.n
         global_model.load_state_dict(state_dict_result)
 
 
-def model_poisoning(malicious_clients, model_update_factor, malicious_clients_models, original_model) -> None:
+def model_update_scaling(global_model: torch.nn.Module, malicious_clients_models: List[torch.nn.Module], factor: float) -> None:
     with torch.no_grad():
         for model in malicious_clients_models:
             new_state_dict = {}
-            for key, original_param in original_model.state_dict().items():
-                param_delta = original_param - model.state_dict()[key]
-                param_delta = param_delta * model_update_factor
+            for key, original_param in global_model.state_dict().items():
+                param_delta = model.state_dict()[key] - original_param
+                param_delta = param_delta * factor
                 new_state_dict.update({key: original_param + param_delta})
             model.load_state_dict(new_state_dict)
 
-    # TODO: implement model canceling attack
+
+def model_canceling_attack(global_model: torch.nn.Module, malicious_clients_models: List[torch.nn.Module], n_honest: int) -> None:
+    factor = - n_honest / len(malicious_clients_models)
+    with torch.no_grad():
+        for model in malicious_clients_models:
+            new_state_dict = {}
+            for key, original_param in global_model.state_dict().items():
+                new_state_dict.update({key: original_param * factor})
+            model.load_state_dict(new_state_dict)
