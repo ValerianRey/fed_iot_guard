@@ -61,7 +61,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 30, 'gamma_round': 0.8, 'aggregation_function': federated_median}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.8, 'aggregation_function': federated_averaging}
 
     # poisonings: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied

@@ -18,7 +18,7 @@ def print_federation_round(federation_round: int, n_rounds: int) -> None:
 
 
 def print_rates(result: BinaryClassificationResult) -> None:
-    Ctp.print('TPR: {:.3f}% - TNR: {:.3f}% - Accuracy: {:.3f}% - Precision: {:.3f}% - F1-Score: {:.3f}%'
+    Ctp.print('TPR: {:.2f}% - TNR: {:.2f}% - Accuracy: {:.2f}% - Precision: {:.2f}% - F1-Score: {:.2f}%'
               .format(result.tpr() * 100, result.tnr() * 100, result.acc() * 100, result.precision() * 100, result.f1() * 100))
 
 
