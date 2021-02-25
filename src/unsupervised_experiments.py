@@ -11,7 +11,7 @@ from data import device_names, split_clients_data, ClientData, FederationData
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
-from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_val_test_dls
+from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_val_test_dls, restrict_new_device_benign_data
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
     compute_reconstruction_losses
 
@@ -42,15 +42,27 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
     return loss
 
 
-def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
-                                  params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
+def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
     # Split train data between actual train and the set that will be used to search the threshold
     train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
+
+    # We restrict the new device's benign data so that it has on average
+    # the same proportion of benign data used during testing as the training devices
+    restrict_new_device_benign_data(new_test_data, params.p_test)
 
     # Creating the dataloaders
     train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data,
                                                                       params.train_bs, params.test_bs, params.cuda)
-    new_test_dl_dicts = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
+
+    return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
+
+
+def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
+                                  params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
+
+    # Prepare the dataloaders
+    train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
@@ -81,7 +93,7 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     # New devices testing
     new_devices_result = multitest_autoencoders(
         tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(params.test_devices) for i in range(n_clients)],
-                       [new_test_dl_dicts for _ in range(n_clients)], models, thresholds)),
+                       [new_test_dls_dict for _ in range(n_clients)], models, thresholds)),
         main_title='Testing the clients on the new devices: ' + device_names(params.test_devices), color=Color.DARK_CYAN)
 
     return local_result, new_devices_result
@@ -89,13 +101,8 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
 
 def federated_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                       params: SimpleNamespace) -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
-    # Split train data between actual train and opt
-    train_val_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
-
-    # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_val_data, val_data, local_test_data,
-                                                                      params.train_bs, params.test_bs, params.cuda)
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
+    # Prepare the dataloaders
+    train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialization of a global model
     n_clients = len(params.clients_devices)

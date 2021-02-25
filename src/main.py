@@ -1,16 +1,13 @@
 from argparse import ArgumentParser
 
 import torch.utils.data
-from context_printer import ContextPrinter as Ctp
 
 from data import read_all_data, all_devices
 from federated_util import *
 from grid_search import run_grid_search
 from supervised_data import get_client_supervised_initial_splitting
-from supervised_experiments import local_classifiers_train_test, federated_classifiers_train_test, local_classifier_train_val
 from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
-from unsupervised_experiments import local_autoencoder_train_val, local_autoencoders_train_test, federated_autoencoders_train_test
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):
@@ -21,6 +18,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
                      'test_bs': 4096,
+                     'p_test': 0.2,
+                     'p_unused': 0.01,
+                     'p_val': 0.3,
+                     'n_splits': 1,
+                     'n_random_reruns': 1,
                      'cuda': False}  # It looks like cuda is slower than CPU for me so I enforce using the CPU
 
     if common_params['cuda']:
@@ -52,22 +54,22 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 4,
-                                     'train_bs': 64,
+    classifier_opt_default_params = {'epochs': 1,  # 4
+                                     'train_bs': 256,  # 64
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 30, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_1}
+    federation_params = {'federation_rounds': 30, 'gamma_round': 0.8, 'aggregation_function': federated_median}
+
+    # poisonings: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
+    # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
+    # (only applies to the malicious clients; for honest clients this factor is always 1)
+    poisoning_params = {'n_malicious': 1, 'poisoning': None, 'p_poison': None, 'model_update_factor': 1.0, 'cancel_attack': True}
 
     # Loading the data
     all_data = read_all_data()
-    p_test = 0.2
-    p_unused = 0.01
-    p_val = 0.3
-    n_splits = 1
-    n_random_reruns = 1
 
     if setup == 'centralized':
         configurations = centralized_configurations
@@ -75,7 +77,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
         configurations = decentralized_configurations
     else:
         raise ValueError
-    name = setup + '_' + experiment
+
+    Ctp.print(configurations)
 
     if experiment == 'autoencoder':
         constant_params = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
@@ -83,44 +86,37 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
         if test:
             if federated:
                 constant_params.update(federation_params)
-                test_function = federated_autoencoders_train_test
-                name += '_federated'
-            else:
-                test_function = local_autoencoders_train_test
 
             configurations_params = [{} for _ in range(len(configurations))]
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
-                                 p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
+            test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
-                              'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]]}
-            run_grid_search(all_data, name, local_autoencoder_train_val, splitting_function, constant_params, varying_params, configurations,
-                            p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
+            varying_params = {'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29],
+                                                [58, 29, 58], [86, 58, 38, 29, 38, 58, 86], [38]],
+                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
+                                                   {'lr': 1.0, 'weight_decay': 1e-5},
+                                                   {'lr': 1.0, 'weight_decay': 1e-4}]}
+            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
 
     elif experiment == 'classifier':
-        constant_params = {**common_params, **classifier_params, **classifier_opt_default_params}
+        constant_params = {**common_params, **classifier_params, **classifier_opt_default_params, **poisoning_params}
         splitting_function = get_client_supervised_initial_splitting
 
         if test:
             if federated:
                 constant_params.update(federation_params)
-                test_function = federated_classifiers_train_test
-                name += '_federated'
-            else:
-                test_function = local_classifiers_train_test
 
             configurations_params = [{} for _ in range(len(configurations))]
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
-            test_hyperparameters(all_data, name, test_function, splitting_function, constant_params, configurations_params, configurations,
-                                 p_test=p_test, p_unused=p_unused, n_random_reruns=n_random_reruns)
+            test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'normalization': ['0-mean 1-var', 'min-max'],
-                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 1e-5}, {'lr': 1.0, 'weight_decay': 5 * 1e-5}]}
-            run_grid_search(all_data, name, local_classifier_train_val, splitting_function, constant_params, varying_params, configurations,
-                            p_test=p_test, p_unused=p_unused, n_splits=n_splits, p_val=p_val)
+            varying_params = {'hidden_layers': [[], [50], [50, 10], [50, 10, 5]],
+                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
+                                                   {'lr': 1.0, 'weight_decay': 1e-5},
+                                                   {'lr': 1.0, 'weight_decay': 1e-4}]}
+            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
     else:
         raise ValueError
 
