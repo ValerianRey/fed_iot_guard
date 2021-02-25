@@ -1,0 +1,23 @@
+{
+  "n_features": 115,
+  "normalization": "min-max",
+  "test_bs": 4096,
+  "cuda": false,
+  "hidden_layers": [],
+  "activation_fn": "ELU",
+  "p_threshold": 0.5,
+  "epochs": 400,
+  "train_bs": 64,
+  "optimizer": "Adadelta",
+  "optimizer_params": {
+    "lr": 1.0,
+    "weight_decay": 5e-05
+  },
+  "lr_scheduler": "ReduceLROnPlateau",
+  "lr_scheduler_params": {
+    "patience": 3,
+    "threshold": 0.025,
+    "factor": 0.5,
+    "verbose": false
+  }
+}

@@ -122,16 +122,17 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
                                 params=params, lr_factor=(params.gamma_round ** federation_round),
                                 main_title='Training the clients', color=Color.GREEN)
 
+        # TODO: change that to the new ordering of operations
+        # Computation of the thresholds
+        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
+                                                       for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
+                                        main_title='Computing the thresholds', color=Color.DARK_PURPLE)
+
         # Federated aggregation
         params.aggregation_function(global_model, models)
 
         # Distribute the global model back to each client
         models = [deepcopy(global_model) for _ in range(n_clients)]
-
-        # Computation of the thresholds
-        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
-                                                       for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
-                                        main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated aggregation of the thresholds
         params.aggregation_function(global_threshold, thresholds)

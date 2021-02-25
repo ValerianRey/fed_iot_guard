@@ -45,12 +45,12 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
-    autoencoder_opt_default_params = {'epochs': 50,
+    autoencoder_opt_default_params = {'epochs': 400,
                                       'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
-                                      'lr_scheduler_params': {'patience': 3, 'threshold': 1e-2, 'factor': 0.5, 'verbose': False}}
+                                      'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
@@ -59,7 +59,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_1}
+    federation_params = {'federation_rounds': 30, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_1}
 
     # Loading the data
     all_data = read_all_data()
