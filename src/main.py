@@ -24,8 +24,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'n_splits': 1,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'sampling': 'downsampling',  # 'upsampling', 'downsampling'
-                     'p_benign': 0.95}  # Desired proportion of benign data in the train/validation sets
+                     'sampling': None,  # 'upsampling', 'downsampling', None
+                     'p_benign': None}  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
 
     if common_params['cuda']:
         Ctp.print('Using CUDA')
@@ -34,7 +34,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     autoencoder_params = {'hidden_layers': [29],
                           'activation_fn': torch.nn.ELU,
-                          'p_threshold': 0.5}  # The proportion of benign data that we use to compute the threshold
+                          'p_threshold': 0.5}  # The proportion of training benign data that we use to compute the threshold
 
     classifier_params = {'hidden_layers': [40, 10, 5],
                          'activation_fn': torch.nn.ELU}
@@ -50,7 +50,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
     autoencoder_opt_default_params = {'epochs': 400,
-                                      'train_bs': 128,
+                                      'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
@@ -97,8 +97,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[11], [38, 11, 38], [58, 38, 29, 11, 29, 38, 58], [29],
-                                                [58, 29, 58], [86, 58, 38, 29, 38, 58, 86], [38]],
+            varying_params = {'hidden_layers': [[29], [38], [58, 29, 58], [58, 38, 58], [86, 58, 38, 58, 86], [86, 58, 38, 29, 38, 58, 86]],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
@@ -117,7 +116,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[], [50], [50, 10], [50, 10, 5]],
+            varying_params = {'hidden_layers': [[], [115], [115, 58], [115, 58, 29]],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
