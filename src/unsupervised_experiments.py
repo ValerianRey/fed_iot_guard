@@ -43,17 +43,21 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
 
 
 def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
+    sampling = None
+
     # Split train data between actual train and the set that will be used to search the threshold
     train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
 
     # We restrict the new device's benign data so that it has on average
     # the same proportion of benign data used during testing as the training devices
-    restrict_new_device_benign_data(new_test_data, params.p_test)
+    if sampling is None:  # Otherwise we already handle the dataset balance somewhere else
+        restrict_new_device_benign_data(new_test_data, params.p_test)
 
     # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data,
-                                                                      params.train_bs, params.test_bs, params.cuda)
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
+    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data, params.train_bs, params.test_bs,
+                                                                      sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
+
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
 
     return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
 
@@ -75,24 +79,24 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 
     # Local training of the autoencoder
-    multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+    multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i) + device_names(client_devices)
                                              for i, client_devices in enumerate(params.clients_devices)], train_dls, models)),
                             params=params, main_title='Training the clients', color=Color.GREEN)
 
     # Computation of the thresholds
-    thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
+    thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                    for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
     # Local testing of each autoencoder
-    local_result = multitest_autoencoders(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
+    local_result = multitest_autoencoders(tests=list(zip(['Testing client {} on: '.format(i) + device_names(client_devices)
                                                           for i, client_devices in enumerate(params.clients_devices)],
                                                          local_test_dls_dicts, models, thresholds)),
                                           main_title='Testing the clients on their own devices', color=Color.BLUE)
 
     # New devices testing
     new_devices_result = multitest_autoencoders(
-        tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(params.test_devices) for i in range(n_clients)],
+        tests=list(zip(['Testing client {} on: '.format(i) + device_names(params.test_devices) for i in range(n_clients)],
                        [new_test_dls_dict for _ in range(n_clients)], models, thresholds)),
         main_title='Testing the clients on the new devices: ' + device_names(params.test_devices), color=Color.DARK_CYAN)
 
@@ -123,7 +127,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         print_federation_round(federation_round, params.federation_rounds)
 
         # Local training of each client
-        multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+        multitrain_autoencoders(trains=list(zip(['Training client {} on: '.format(i) + device_names(client_devices)
                                                  for i, client_devices in enumerate(params.clients_devices)],
                                                 train_dls, models)),
                                 params=params, lr_factor=(params.gamma_round ** federation_round),
@@ -136,7 +140,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         models = [deepcopy(global_model) for _ in range(n_clients)]
 
         # Computation of the thresholds
-        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i + 1) + device_names(client_devices)
+        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                        for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 

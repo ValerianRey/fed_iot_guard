@@ -1,11 +1,11 @@
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 
 import torch
 import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData
+from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData, compute_alphas_resampling, resample_array
 
 
 def get_benign_dataset(train_data: ClientData, cuda: bool = False) -> Dataset:
@@ -16,13 +16,23 @@ def get_benign_dataset(train_data: ClientData, cuda: bool = False) -> Dataset:
     return dataset
 
 
-def get_test_datasets(test_data: ClientData, cuda: bool = False) -> Dict[str, Dataset]:
+def get_test_datasets(test_data: ClientData, sampling: Optional[str] = None, p_benign: Optional[float] = None,
+                      cuda: bool = False) -> Dict[str, Dataset]:
     data_dict = {**{'benign': []},
                  **{'mirai_' + attack: [] for attack in mirai_attacks},
                  **{'gafgyt_' + attack: [] for attack in gafgyt_attacks}}
 
     for device_data in test_data:
+        benign_samples = sum([len(arr) for key, arr in device_data.items() if key == 'benign'])
+        attack_samples = sum([len(arr) for key, arr in device_data.items() if key != 'benign'])
+        alpha_benign, alpha_attack = compute_alphas_resampling(benign_samples, attack_samples, sampling, p_benign, verbose=True)
+
         for key, arr in device_data.items():
+            if key == 'benign':
+                arr = resample_array(arr, alpha_benign)
+            else:
+                arr = resample_array(arr, alpha_attack)
+
             data_tensor = torch.tensor(arr).float()
             if cuda:
                 data_tensor = data_tensor.cuda()
@@ -44,8 +54,9 @@ def get_val_dl(client_val_data: ClientData, test_bs: int, cuda: bool = False) ->
     return val_dl
 
 
-def get_test_dls_dict(client_test_data: ClientData, test_bs: int, cuda: bool = False) -> Dict[str, DataLoader]:
-    datasets = get_test_datasets(client_test_data, cuda=cuda)
+def get_test_dls_dict(client_test_data: ClientData, test_bs: int, sampling: Optional[str] = None, p_benign: Optional[float] = None,
+                      cuda: bool = False) -> Dict[str, DataLoader]:
+    datasets = get_test_datasets(client_test_data, sampling=sampling, p_benign=p_benign, cuda=cuda)
     test_dls = {key: DataLoader(dataset, batch_size=test_bs) for key, dataset in datasets.items()}
     return test_dls
 
@@ -59,10 +70,12 @@ def restrict_new_device_benign_data(new_device_data: ClientData, p_test: float) 
 
 
 def get_train_val_test_dls(train_data: FederationData, val_data: FederationData, local_test_data: FederationData, train_bs: int, test_bs: int,
+                           sampling: Optional[str] = None, p_benign: Optional[float] = None,
                            cuda: bool = False) -> Tuple[List[DataLoader], List[DataLoader], List[Dict[str, DataLoader]]]:
     clients_dl_train = [get_train_dl(client_train_data, train_bs, cuda=cuda) for client_train_data in train_data]
     clients_dl_val = [get_val_dl(client_val_data, test_bs, cuda=cuda) for client_val_data in val_data]
-    clients_dls_test = [get_test_dls_dict(client_test_data, test_bs, cuda=cuda) for client_test_data in local_test_data]
+    clients_dls_test = [get_test_dls_dict(client_test_data, test_bs, sampling=sampling, p_benign=p_benign, cuda=cuda)
+                        for client_test_data in local_test_data]
 
     return clients_dl_train, clients_dl_val, clients_dls_test
 

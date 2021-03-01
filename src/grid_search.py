@@ -76,7 +76,7 @@ def run_grid_search(all_data: List[DeviceData], setup: str, experiment: str,
     clients_results = {}
     for i, client_devices_tuple in enumerate(all_clients_devices):
         client_devices = list(client_devices_tuple)
-        Ctp.enter_section('Client [{}/{}] with devices: '.format(i + 1, len(all_clients_devices)) + device_names(client_devices), Color.WHITE)
+        Ctp.enter_section('Client {} with devices: '.format(i) + device_names(client_devices), Color.WHITE)
         client_data = get_client_data(all_data, client_devices)
         train_val_data, _ = splitting_function(client_data, p_test=params_dict['p_test'], p_unused=params_dict['p_unused'])
         clients_results[repr(client_devices)] = {}

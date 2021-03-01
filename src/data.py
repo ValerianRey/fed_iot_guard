@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, Callable
+from typing import Tuple, Dict, List, Callable, Optional
 
 import numpy as np
 import pandas as pd
@@ -127,3 +127,41 @@ def get_initial_splitting(splitting_function: Callable, clients_data: Federation
         clients_test.append(client_test)
 
     return clients_train_val, clients_test
+
+
+def compute_alphas_resampling(benign_samples: int, attack_samples: int,
+                              sampling: Optional[str] = None, p_benign: Optional[float] = None,
+                              verbose: bool = False) -> Tuple[float, float]:
+    if sampling is not None and p_benign is not None:
+        ratio = (attack_samples / benign_samples) * (p_benign / (1 - p_benign))
+        if sampling == 'upsampling' and ratio > 1. or sampling == 'downsampling' and ratio <= 1.:
+            alpha_benign = ratio
+            alpha_attack = 1.
+            if verbose:
+                Ctp.print(sampling + ' with alpha benign = {:.2f}%'.format(alpha_benign * 100))
+        elif sampling == 'downsampling' and ratio > 1. or sampling == 'upsampling' and ratio <= 1.:
+            alpha_attack = 1. / ratio
+            alpha_benign = 1.
+            if verbose:
+                Ctp.print(sampling + ' with alpha attack = {:.2f}%'.format(alpha_attack * 100))
+        else:
+            raise ValueError('Wrong value for sampling')
+
+    else:
+        alpha_benign = 1.
+        alpha_attack = 1.
+
+    return alpha_benign, alpha_attack
+
+
+def resample_array(arr: np.ndarray, alpha: float) -> np.ndarray:
+    # Repeat the original array as many times as possible (integer number of times)
+    repeats = int(alpha)
+    repeated_arr = arr.repeat(repeats, axis=0)
+
+    # Sample randomly without replacement the remaining samples
+    n_random_samples = int(len(arr) * (alpha - repeats))
+    all_indexes = np.arange(len(arr))
+    random_arr = arr[np.random.choice(all_indexes, n_random_samples, replace=False)]
+
+    return np.append(repeated_arr, random_arr, axis=0)
