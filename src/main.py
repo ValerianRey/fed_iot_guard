@@ -48,14 +48,14 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
     autoencoder_opt_default_params = {'epochs': 400,
-                                      'train_bs': 64,
+                                      'train_bs': 128,
                                       'optimizer': torch.optim.Adadelta,
-                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
+                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 1,  # 4
-                                     'train_bs': 256,  # 64
+    classifier_opt_default_params = {'epochs': 4,
+                                     'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
@@ -66,7 +66,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     # poisonings: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
     # (only applies to the malicious clients; for honest clients this factor is always 1)
-    poisoning_params = {'n_malicious': 1, 'poisoning': None, 'p_poison': None, 'model_update_factor': 1.0, 'cancel_attack': True}
+    poisoning_params = {'n_malicious': 0, 'poisoning': None, 'p_poison': None, 'model_update_factor': 1.0, 'cancel_attack': False}
 
     # Loading the data
     all_data = read_all_data()
