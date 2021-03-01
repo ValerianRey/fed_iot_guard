@@ -5,7 +5,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData
+from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData, compute_alphas_resampling, resample_array
 
 
 def get_benign_dataset(train_data: ClientData, cuda: bool = False) -> Dataset:
@@ -22,7 +22,16 @@ def get_test_datasets(test_data: ClientData, cuda: bool = False) -> Dict[str, Da
                  **{'gafgyt_' + attack: [] for attack in gafgyt_attacks}}
 
     for device_data in test_data:
+        benign_samples = sum([len(arr) for key, arr in device_data.items() if key == 'benign'])
+        attack_samples = sum([len(arr) for key, arr in device_data.items() if key != 'benign'])
+        alpha_benign, alpha_attack = compute_alphas_resampling(benign_samples, attack_samples)
+
         for key, arr in device_data.items():
+            if key == 'benign':
+                arr = resample_array(arr, alpha_benign)
+            else:
+                arr = resample_array(arr, alpha_attack)
+
             data_tensor = torch.tensor(arr).float()
             if cuda:
                 data_tensor = data_tensor.cuda()

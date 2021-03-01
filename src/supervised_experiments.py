@@ -19,8 +19,8 @@ from supervised_ml import multitrain_classifiers, multitest_classifiers, train_c
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
     # Creating the dataloaders
-    train_dl = get_train_dl(train_data, params.train_bs, params.cuda)
-    val_dl = get_test_dl(val_data, params.test_bs, params.cuda)
+    train_dl = get_train_dl(train_data, params.train_bs, sampling=params.sampling, p_benign=params.p_benign, cuda=params.cuda)
+    val_dl = get_test_dl(val_data, params.test_bs, sampling=params.sampling, p_benign=params.p_benign, cuda=params.cuda)
 
     # Initialize the model and compute the normalization values with the client's local training data
     model = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
@@ -49,8 +49,9 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
         -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
     # Creating the dataloaders
     train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
-                                                   malicious_clients=set(), cuda=params.cuda)
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
+                                                   malicious_clients=set(), sampling=params.sampling, p_benign=params.p_benign,
+                                                   cuda=params.cuda)
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
@@ -63,20 +64,20 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 
     # Training
-    multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+    multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i) + device_names(client_devices)
                                             for i, client_devices in enumerate(params.clients_devices)],
                                            train_dls, models)),
                            params=params, main_title='Training the clients', color=Color.GREEN)
 
     # Local testing
-    local_result = multitest_classifiers(tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(client_devices)
+    local_result = multitest_classifiers(tests=list(zip(['Testing client {} on: '.format(i) + device_names(client_devices)
                                                          for i, client_devices in enumerate(params.clients_devices)],
                                                         local_test_dls, models)),
                                          main_title='Testing the clients on their own devices', color=Color.BLUE)
 
     # New devices testing
     new_devices_result = multitest_classifiers(
-        tests=list(zip(['Testing client {} on: '.format(i + 1) + device_names(params.test_devices) for i in range(n_clients)],
+        tests=list(zip(['Testing client {} on: '.format(i) + device_names(params.test_devices) for i in range(n_clients)],
                        [new_test_dl for _ in range(n_clients)], models)),
         main_title='Testing the clients on the new devices: ' + device_names(params.test_devices),
         color=Color.DARK_CYAN)
@@ -89,10 +90,11 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
     # Creating the dataloaders
     train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
+                                                   sampling=params.sampling, p_benign=params.p_benign,
                                                    malicious_clients=params.malicious_clients, cuda=params.cuda,
                                                    poisoning=params.data_poisoning, p_poison=params.p_poison)
 
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, params.cuda)
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
 
     # Initialization of a global model
     n_clients = len(params.clients_devices)
@@ -116,7 +118,7 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
         print_federation_round(federation_round, params.federation_rounds)
 
         # Local training of each client
-        multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i + 1) + device_names(client_devices)
+        multitrain_classifiers(trains=list(zip(['Training client {} on: '.format(i) + device_names(client_devices)
                                                 for i, client_devices in enumerate(params.clients_devices)],
                                                train_dls, models)),
                                params=params, lr_factor=(params.gamma_round ** federation_round),

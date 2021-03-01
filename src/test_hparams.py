@@ -27,7 +27,7 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
             if federated:
                 malicious_clients = set(np.random.choice(len(clients_train_val), params.n_malicious, replace=False))
                 params.malicious_clients = malicious_clients
-                Ctp.print('Malicious clients (indexes from 1 to 8): ' + repr([mc+1 for mc in malicious_clients]))
+                Ctp.print('Malicious clients: ' + repr([mc for mc in malicious_clients]))
                 local_result, new_devices_result = federated_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
             else:
                 local_result, new_devices_result = local_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
