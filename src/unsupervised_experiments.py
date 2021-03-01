@@ -43,17 +43,20 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
 
 
 def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
+    sampling = None
+
     # Split train data between actual train and the set that will be used to search the threshold
     train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
 
     # We restrict the new device's benign data so that it has on average
     # the same proportion of benign data used during testing as the training devices
-    restrict_new_device_benign_data(new_test_data, params.p_test)
+    restrict_new_device_benign_data(new_test_data, params.p_test, sampling=sampling)
 
     # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data,
-                                                                      params.train_bs, params.test_bs, params.cuda)
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
+    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data, params.train_bs, params.test_bs,
+                                                                      sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
+
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
 
     return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
 
