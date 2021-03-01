@@ -53,7 +53,7 @@ def prepare_dataloaders(train_val_data: FederationData, local_test_data: Federat
     # Creating the dataloaders
     train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data,
                                                                       params.train_bs, params.test_bs, params.cuda)
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, params.cuda)
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
 
     return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
 
