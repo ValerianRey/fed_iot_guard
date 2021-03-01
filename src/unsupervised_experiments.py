@@ -50,7 +50,8 @@ def prepare_dataloaders(train_val_data: FederationData, local_test_data: Federat
 
     # We restrict the new device's benign data so that it has on average
     # the same proportion of benign data used during testing as the training devices
-    restrict_new_device_benign_data(new_test_data, params.p_test, sampling=sampling)
+    if sampling is None:  # Otherwise we already handle the dataset balance somewhere else
+        restrict_new_device_benign_data(new_test_data, params.p_test)
 
     # Creating the dataloaders
     train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data, params.train_bs, params.test_bs,

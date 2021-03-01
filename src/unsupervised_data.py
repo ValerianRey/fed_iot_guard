@@ -61,13 +61,12 @@ def get_test_dls_dict(client_test_data: ClientData, test_bs: int, sampling: Opti
     return test_dls
 
 
-def restrict_new_device_benign_data(new_device_data: ClientData, p_test: float, sampling: Optional[str] = None) -> None:
-    if sampling is None:  # Otherwise we already handle the dataset balance somewhere else
-        for device_data in new_device_data:
-            for key, arr in device_data.items():
-                if key == 'benign':
-                    begin_index = int(len(arr) * (1 - p_test))
-                    device_data[key] = arr[begin_index:]
+def restrict_new_device_benign_data(new_device_data: ClientData, p_test: float) -> None:
+    for device_data in new_device_data:
+        for key, arr in device_data.items():
+            if key == 'benign':
+                begin_index = int(len(arr) * (1 - p_test))
+                device_data[key] = arr[begin_index:]
 
 
 def get_train_val_test_dls(train_data: FederationData, val_data: FederationData, local_test_data: FederationData, train_bs: int, test_bs: int,
