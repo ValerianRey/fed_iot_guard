@@ -48,14 +48,14 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
     autoencoder_opt_default_params = {'epochs': 400,
-                                      'train_bs': 128,
+                                      'train_bs': 64,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 2,
-                                     'train_bs': 128,
+                                     'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
