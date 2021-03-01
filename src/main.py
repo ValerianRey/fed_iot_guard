@@ -48,20 +48,20 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
 
     autoencoder_opt_default_params = {'epochs': 400,
-                                      'train_bs': 64,
+                                      'train_bs': 128,
                                       'optimizer': torch.optim.Adadelta,
                                       'optimizer_params': {'lr': 1.0, 'weight_decay': 5 * 1e-5},
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 1,  # 4
-                                     'train_bs': 256,  # 64
+    classifier_opt_default_params = {'epochs': 2,
+                                     'train_bs': 128,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.8, 'aggregation_function': federated_averaging}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_averaging}
 
     # poisonings: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
