@@ -97,7 +97,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[29], [38], [58, 29, 58], [58, 38, 58], [86, 58, 38, 58, 86], [86, 58, 38, 29, 38, 58, 86]],
+            varying_params = {'hidden_layers': [[29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
