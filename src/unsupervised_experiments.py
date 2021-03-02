@@ -9,11 +9,11 @@ from context_printer import ContextPrinter as Ctp
 from architectures import SimpleAutoencoder, NormalizingModel, Threshold, OutNormalizingModel, Generator, BinaryClassifier
 from data import device_names, split_clients_data, ClientData, FederationData
 from metrics import BinaryClassificationResult
-from ml import set_models_sub_divs, set_model_sub_div
+from ml import set_models_sub_divs, set_model_sub_div, set_models_add_mults
 from print_util import print_federation_round
 from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_val_test_dls, restrict_new_device_benign_data
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
-    compute_reconstruction_losses, train_gan
+    compute_reconstruction_losses, multitrain_gans, compute_gan_thresholds, multitest_gans
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
@@ -64,7 +64,6 @@ def prepare_dataloaders(train_val_data: FederationData, local_test_data: Federat
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                   params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
-
     # Prepare the dataloaders
     train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
@@ -168,26 +167,45 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
     return local_results, new_devices_results
 
 
-def local_gan_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace):
-    # Create the dataloaders
-    train_dl = get_train_dl(train_data, params.train_bs, params.cuda)
-    val_dl = get_val_dl(val_data, params.test_bs, params.cuda)
+def local_gan_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
+                         params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
+    # Prepare the dataloaders
+    train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialize the model and compute the normalization values with the client's local training data
-    discriminator = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
-                                     sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
-    generator = OutNormalizingModel(Generator(activation_function=params.activation_fn, hidden_layers=params.generator_hidden_layers),
-                                    add=torch.zeros(params.n_features), mult=torch.ones(params.n_features))
+    n_clients = len(params.clients_devices)
+    generators = [OutNormalizingModel(Generator(activation_function=params.activation_fn, hidden_layers=params.generator_hidden_layers),
+                                      add=torch.zeros(params.n_features), mult=torch.ones(params.n_features)) for _ in range(n_clients)]
+    discriminators = [NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
+                                       sub=torch.zeros(params.n_features), div=torch.ones(params.n_features)) for _ in range(n_clients)]
     if params.cuda:
-        discriminator = discriminator.cuda()
+        generators = [model.cuda() for model in generators]
+        discriminators = [model.cuda() for model in discriminators]
 
-    set_model_sub_div(params.normalization, discriminator, train_dl)
-    set_model_sub_div(params.normalization, discriminator, train_dl)
+    set_models_add_mults(params.normalization, generators, train_dls, color=Color.RED)
+    set_models_sub_divs(params.normalization, discriminators, train_dls, color=Color.RED)
 
-    # Local training
-    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.GREEN)
-    train_gan(generator, discriminator, params, train_dl)
-    Ctp.exit_section()
+    # Local training of each client
+    multitrain_gans(trains=list(zip(['Training client {} on: '.format(i) + device_names(client_devices)
+                                     for i, client_devices in enumerate(params.clients_devices)],
+                                    train_dls, generators, discriminators)),
+                    params=params, main_title='Training the clients', color=Color.GREEN)
 
-    # Local validation
-    raise NotImplementedError
+    # Computation of the thresholds
+    thresholds = compute_gan_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
+                                                       for i, client_devices in enumerate(params.clients_devices)], val_dls, discriminators)),
+                                        quantile=params.quantile, main_title='Computing the thresholds', color=Color.DARK_PURPLE)
+
+    # Local testing of each autoencoder
+    local_result = multitest_gans(tests=list(zip(['Testing client {} on: '.format(i) + device_names(client_devices)
+                                                  for i, client_devices in enumerate(params.clients_devices)],
+                                                 local_test_dls_dicts, discriminators, thresholds)),
+                                  main_title='Testing the clients on their own devices', color=Color.BLUE)
+
+    # New devices testing
+    new_devices_result = multitest_gans(
+        tests=list(zip(['Testing client {} on: '.format(i) + device_names(params.test_devices) for i in range(n_clients)],
+                       [new_test_dls_dict for _ in range(n_clients)], discriminators, thresholds)),
+        main_title='Testing the clients on the new devices: ' + device_names(params.test_devices), color=Color.DARK_CYAN)
+
+    return local_result, new_devices_result

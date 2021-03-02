@@ -7,9 +7,7 @@ from federated_util import *
 from grid_search import run_grid_search
 from supervised_data import get_client_supervised_initial_splitting
 from test_hparams import test_hyperparameters
-from unsupervised_data import get_client_unsupervised_initial_splitting, split_client_data
-from unsupervised_experiments import local_gan_train_val
-from types import SimpleNamespace
+from unsupervised_data import get_client_unsupervised_initial_splitting
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):
@@ -41,7 +39,9 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     classifier_params = {'hidden_layers': [40, 10, 5],
                          'activation_fn': torch.nn.ELU}
 
-    gan_params = {'generator_hidden_layers': [5, 58]}
+    gan_params = {'generator_hidden_layers': [5, 58],
+                  'p_threshold': 0.1,  # The proportion of training benign data that we use to compute the threshold
+                  'quantile': 0.8}  # We require that at least 'quantile' proportion of benign data is classified as benign
 
     n_devices = len(all_devices)
 
@@ -66,6 +66,13 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
+
+    gan_opt_default_params = {'epochs': 1,
+                              'train_bs': 64,
+                              'optimizer': torch.optim.Adadelta,
+                              'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
+                              'lr_scheduler': torch.optim.lr_scheduler.StepLR,
+                              'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
     federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_averaging,
                          'resampling': None}
@@ -127,12 +134,11 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
 
     elif experiment == 'gan':
-        constant_params = {**common_params, **classifier_params, **classifier_opt_default_params, **gan_params}
+        constant_params = {**common_params, **classifier_params, **gan_opt_default_params, **gan_params}
+        configurations_params = [{} for _ in range(len(configurations))]
         splitting_function = get_client_unsupervised_initial_splitting
-        client_data = [all_data[0]]
-        train_val_data, _ = splitting_function(client_data, p_test=constant_params['p_test'], p_unused=constant_params['p_unused'])
-        train_data, val_data = split_client_data(train_val_data, p_test=constant_params['p_val'], p_unused=0.0)
-        local_gan_train_val(train_data, val_data, params=SimpleNamespace(**constant_params))
+
+        test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
     else:
         raise ValueError
 

@@ -107,7 +107,6 @@ def multitrain_autoencoders(trains: List[Tuple[str, DataLoader, nn.Module]], par
 # this function will test each model on its associated dataloader, and will find the correct threshold for them
 def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title: str = 'Computing the thresholds',
                        color: Union[str, Color] = Color.NONE) -> List[Threshold]:
-
     Ctp.enter_section(main_title, color)
 
     thresholds = []
@@ -165,7 +164,6 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
     discriminator_optimizer = params.optimizer(discriminator.parameters(), **params.optimizer_params)
     for param_group in generator_optimizer.param_groups:
         param_group['lr'] = param_group['lr'] * lr_factor
-
     for param_group in discriminator_optimizer.param_groups:
         param_group['lr'] = param_group['lr'] * lr_factor
 
@@ -175,6 +173,10 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
     generator.train()
     discriminator.train()
 
+    Ctp.print(discriminator.model.seq)
+    Ctp.print(type(discriminator))
+    Ctp.print(type(generator))
+
     # loss
     loss = nn.BCELoss()
 
@@ -182,6 +184,7 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
     Ctp.print('Starting to train the GAN')
 
     for epoch in range(params.epochs):
+        Ctp.print('Epoch {}'.format(epoch))
         for i, (x,) in enumerate(train_loader):
             # Create noisy input for generator
             noise = torch.normal(0., 1., size=(batch_size, generator.model.n_in))
@@ -189,16 +192,20 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
 
             # Train the generator
             generator_discriminator_out = discriminator(generated_data)
-            generator_loss = loss(generator_discriminator_out, torch.ones_like(generator_discriminator_out))
+            with torch.no_grad():
+                if not (generator_discriminator_out.min() >= 0. and generator_discriminator_out.max() <= 1.):
+                    Ctp.print('Error')
+                    Ctp.print(generator_discriminator_out)
+            generator_loss = loss(generator_discriminator_out, torch.zeros_like(generator_discriminator_out))
             generator_optimizer.zero_grad()
             generator_loss.backward()
             generator_optimizer.step()
 
             # Train the discriminator on the true/generated data
             true_discriminator_out = discriminator(x)
-            true_discriminator_loss = loss(true_discriminator_out, torch.ones_like(true_discriminator_out))
+            true_discriminator_loss = loss(true_discriminator_out, torch.zeros_like(true_discriminator_out))
             generator_discriminator_out = discriminator(generated_data.detach())  # add .detach() here because we already optimized the generator
-            generator_discriminator_loss = loss(generator_discriminator_out, torch.zeros(batch_size))
+            generator_discriminator_loss = loss(generator_discriminator_out, torch.ones_like(generator_discriminator_out))
             discriminator_loss = (true_discriminator_loss + generator_discriminator_loss) / 2
             discriminator_optimizer.zero_grad()
             discriminator_loss.backward()
@@ -206,3 +213,85 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
 
         generator_scheduler.step()
         discriminator_scheduler.step()
+
+
+# this function will train each model on its associated dataloader, and will print the title for it
+def multitrain_gans(trains: List[Tuple[str, DataLoader, nn.Module, nn.Module]], params: SimpleNamespace, lr_factor: float = 1.0,
+                    main_title: str = 'Multitrain gans', color: Union[str, Color] = Color.NONE) -> None:
+    Ctp.enter_section(main_title, color)
+    for i, (title, dataloader, generator, discriminator) in enumerate(trains):
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title, color=Color.NONE, header='      ')
+        train_gan(generator, discriminator, params, dataloader, lr_factor)
+        Ctp.exit_section()
+    Ctp.exit_section()
+
+
+def compute_all_discriminator_outputs(discriminator: nn.Module, dataloader) -> torch.Tensor:
+    with torch.no_grad():
+        discriminator.eval()
+        num_elements = len(dataloader.dataset)
+        num_batches = len(dataloader)
+        batch_size = dataloader.batch_size
+
+        outputs = torch.zeros(num_elements)
+
+        for i, (x,) in enumerate(dataloader):
+            output = discriminator(x).squeeze()
+
+            start = i * batch_size
+            end = start + batch_size
+            if i == num_batches - 1:
+                end = num_elements
+
+            outputs[start:end] = output
+
+        return outputs
+
+
+def compute_gan_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], quantile: float, main_title: str = 'Computing the thresholds',
+                           color: Union[str, Color] = Color.NONE) -> List[Threshold]:
+    Ctp.enter_section(main_title, color)
+
+    thresholds = []
+    for i, (title, dataloader, discriminator) in enumerate(opts):
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(opts)) + title, color=Color.NONE, header='      ')
+        outputs = compute_all_discriminator_outputs(discriminator, dataloader)
+        Ctp.print(outputs.mean())
+        threshold = Threshold(outputs.quantile(quantile))
+        thresholds.append(threshold)
+        Ctp.print('The threshold is {:.8f}'.format(threshold.threshold.item()))
+        Ctp.exit_section()
+
+    Ctp.exit_section()
+    return thresholds
+
+
+def test_gan(discriminator: nn.Module, threshold: Threshold, dataloaders: Dict[str, DataLoader]) -> BinaryClassificationResult:
+    result = BinaryClassificationResult()
+    for key, dataloader in dataloaders.items():
+        outputs = compute_all_discriminator_outputs(discriminator, dataloader)
+        predictions = torch.gt(outputs, threshold.threshold).int()
+        current_results = count_scores(predictions, is_malicious=False if key == 'benign' else True)
+        result += current_results
+
+    return result
+
+
+# this function will test each model on its associated dataloader, and will print the title for it
+def multitest_gans(tests: List[Tuple[str, Dict[str, DataLoader], nn.Module, Threshold]], main_title: str = 'Multitest autoencoders',
+                   color: Union[str, Color] = Color.NONE) -> BinaryClassificationResult:
+    Ctp.enter_section(main_title, color)
+
+    result = BinaryClassificationResult()
+    for i, (title, dataloaders, discriminator, threshold) in enumerate(tests):
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(tests)) + title, color=Color.NONE, header='      ')
+        current_result = test_gan(discriminator, threshold, dataloaders)
+        result += current_result
+        Ctp.exit_section()
+        print_rates(current_result)
+
+    Ctp.exit_section()
+    Ctp.print('Average result')
+    print_rates(result)
+
+    return result

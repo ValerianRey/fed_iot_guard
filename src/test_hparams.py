@@ -11,7 +11,7 @@ from metrics import BinaryClassificationResult
 from saving import create_new_numbered_dir, save_results_test
 
 from supervised_experiments import local_classifiers_train_test, federated_classifiers_train_test
-from unsupervised_experiments import local_autoencoders_train_test, federated_autoencoders_train_test
+from unsupervised_experiments import local_autoencoders_train_test, federated_autoencoders_train_test, local_gan_train_test
 
 
 # Computes the results of multiple random reruns of the same experiment
@@ -33,9 +33,15 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
                 local_result, new_devices_result = local_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
         elif experiment == 'autoencoder':
             if federated:
-                local_result, new_devices_result = federated_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+                local_result, new_devices_result = federated_autoencoders_train_test(clients_train_val, clients_test,
+                                                                                     test_devices_data, params=params)
             else:
                 local_result, new_devices_result = local_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+        elif experiment == 'gan':
+            if federated:
+                raise NotImplementedError()
+            else:
+                local_result, new_devices_result = local_gan_train_test(clients_train_val, clients_test, test_devices_data, params=params)
         else:
             raise ValueError()
 
