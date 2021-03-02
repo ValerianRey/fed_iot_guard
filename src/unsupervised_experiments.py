@@ -6,14 +6,14 @@ import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
-from architectures import SimpleAutoencoder, NormalizingModel, Threshold
+from architectures import SimpleAutoencoder, NormalizingModel, Threshold, OutNormalizingModel, Generator, BinaryClassifier
 from data import device_names, split_clients_data, ClientData, FederationData
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
 from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_val_test_dls, restrict_new_device_benign_data
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
-    compute_reconstruction_losses
+    compute_reconstruction_losses, train_gan
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
@@ -166,3 +166,28 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         Ctp.exit_section()
 
     return local_results, new_devices_results
+
+
+def local_gan_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace):
+    # Create the dataloaders
+    train_dl = get_train_dl(train_data, params.train_bs, params.cuda)
+    val_dl = get_val_dl(val_data, params.test_bs, params.cuda)
+
+    # Initialize the model and compute the normalization values with the client's local training data
+    discriminator = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
+                                     sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+    generator = OutNormalizingModel(Generator(activation_function=params.activation_fn, hidden_layers=params.generator_hidden_layers),
+                                    add=torch.zeros(params.n_features), mult=torch.ones(params.n_features))
+    if params.cuda:
+        discriminator = discriminator.cuda()
+
+    set_model_sub_div(params.normalization, discriminator, train_dl)
+    set_model_sub_div(params.normalization, discriminator, train_dl)
+
+    # Local training
+    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.GREEN)
+    train_gan(generator, discriminator, params, train_dl)
+    Ctp.exit_section()
+
+    # Local validation
+    raise NotImplementedError

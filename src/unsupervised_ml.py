@@ -158,3 +158,51 @@ def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Modu
     print_rates(result)
 
     return result
+
+
+def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleNamespace, train_loader, lr_factor: float = 1.0) -> None:
+    generator_optimizer = params.optimizer(generator.parameters(), **params.optimizer_params)
+    discriminator_optimizer = params.optimizer(discriminator.parameters(), **params.optimizer_params)
+    for param_group in generator_optimizer.param_groups:
+        param_group['lr'] = param_group['lr'] * lr_factor
+
+    for param_group in discriminator_optimizer.param_groups:
+        param_group['lr'] = param_group['lr'] * lr_factor
+
+    generator_scheduler = params.lr_scheduler(generator_optimizer, **params.lr_scheduler_params)
+    discriminator_scheduler = params.lr_scheduler(discriminator_optimizer, **params.lr_scheduler_params)
+
+    generator.train()
+    discriminator.train()
+
+    # loss
+    loss = nn.BCELoss()
+
+    batch_size = train_loader.batch_size
+    Ctp.print('Starting to train the GAN')
+
+    for epoch in range(params.epochs):
+        for i, (x,) in enumerate(train_loader):
+            # Create noisy input for generator
+            noise = torch.normal(0., 1., size=(batch_size, generator.model.n_in))
+            generated_data = generator(noise)
+
+            # Train the generator
+            generator_discriminator_out = discriminator(generated_data)
+            generator_loss = loss(generator_discriminator_out, torch.ones_like(generator_discriminator_out))
+            generator_optimizer.zero_grad()
+            generator_loss.backward()
+            generator_optimizer.step()
+
+            # Train the discriminator on the true/generated data
+            true_discriminator_out = discriminator(x)
+            true_discriminator_loss = loss(true_discriminator_out, torch.ones_like(true_discriminator_out))
+            generator_discriminator_out = discriminator(generated_data.detach())  # add .detach() here because we already optimized the generator
+            generator_discriminator_loss = loss(generator_discriminator_out, torch.zeros(batch_size))
+            discriminator_loss = (true_discriminator_loss + generator_discriminator_loss) / 2
+            discriminator_optimizer.zero_grad()
+            discriminator_loss.backward()
+            discriminator_optimizer.step()
+
+        generator_scheduler.step()
+        discriminator_scheduler.step()

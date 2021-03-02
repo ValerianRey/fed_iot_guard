@@ -7,7 +7,9 @@ from federated_util import *
 from grid_search import run_grid_search
 from supervised_data import get_client_supervised_initial_splitting
 from test_hparams import test_hyperparameters
-from unsupervised_data import get_client_unsupervised_initial_splitting
+from unsupervised_data import get_client_unsupervised_initial_splitting, split_client_data
+from unsupervised_experiments import local_gan_train_val
+from types import SimpleNamespace
 
 
 def main(experiment: str, setup: str, federated: bool, test: bool):
@@ -38,6 +40,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     classifier_params = {'hidden_layers': [40, 10, 5],
                          'activation_fn': torch.nn.ELU}
+
+    gan_params = {'generator_hidden_layers': [5, 58]}
 
     n_devices = len(all_devices)
 
@@ -121,6 +125,14 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
             run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
+
+    elif experiment == 'gan':
+        constant_params = {**common_params, **classifier_params, **classifier_opt_default_params, **gan_params}
+        splitting_function = get_client_unsupervised_initial_splitting
+        client_data = [all_data[0]]
+        train_val_data, _ = splitting_function(client_data, p_test=constant_params['p_test'], p_unused=constant_params['p_unused'])
+        train_data, val_data = split_client_data(train_val_data, p_test=constant_params['p_val'], p_unused=0.0)
+        local_gan_train_val(train_data, val_data, params=SimpleNamespace(**constant_params))
     else:
         raise ValueError
 

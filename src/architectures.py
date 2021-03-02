@@ -82,3 +82,44 @@ class NormalizingModel(nn.Module):
 
     def normalize(self, x: torch.Tensor) -> torch.Tensor:
         return (x - self.sub) / self.div
+
+
+class OutNormalizingModel(nn.Module):
+    def __init__(self, model: torch.nn.Module, add: torch.Tensor, mult: torch.Tensor) -> None:
+        super(OutNormalizingModel, self).__init__()
+        self.add = nn.Parameter(add, requires_grad=False)
+        self.mult = nn.Parameter(mult, requires_grad=False)
+        self.model = model
+
+    # Manually change normalization values
+    def set_add_mult(self, add: torch.Tensor, mult: torch.Tensor) -> None:
+        self.add = nn.Parameter(add, requires_grad=False)
+        self.mult = nn.Parameter(mult, requires_grad=False)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.normalize(self.model(x))
+
+    def normalize(self, x: torch.Tensor) -> torch.Tensor:
+        return (x * self.mult) + self.add
+
+
+class Generator(nn.Module):
+    def __init__(self, activation_function: nn.Module, hidden_layers: List[int], verbose: bool = False) -> None:
+        super(Generator, self).__init__()
+        self.seq = nn.Sequential()
+        n_neurons_out = 115
+        n_in = hidden_layers[0]
+        self.n_in = n_in
+
+        for i, n_out in enumerate(hidden_layers[1:]):
+            self.seq.add_module('fc' + str(i), nn.Linear(n_in, n_out, bias=True))
+            self.seq.add_module('act_fn' + str(i), activation_function())
+            n_in = n_out
+
+        self.seq.add_module('final_fc', nn.Linear(n_in, n_neurons_out, bias=True))
+
+        if verbose:
+            print(self.seq)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.seq(x)
