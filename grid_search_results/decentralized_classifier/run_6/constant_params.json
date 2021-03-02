@@ -1,0 +1,36 @@
+{
+  "n_features": 115,
+  "normalization": "min-max",
+  "test_bs": 4096,
+  "p_test": 0.2,
+  "p_unused": 0.01,
+  "p_val": 0.3,
+  "n_splits": 1,
+  "n_random_reruns": 1,
+  "cuda": false,
+  "sampling": null,
+  "p_benign": null,
+  "hidden_layers": [
+    40,
+    10,
+    5
+  ],
+  "activation_fn": "ELU",
+  "epochs": 2,
+  "train_bs": 64,
+  "optimizer": "Adadelta",
+  "optimizer_params": {
+    "lr": 1.0,
+    "weight_decay": 1e-05
+  },
+  "lr_scheduler": "StepLR",
+  "lr_scheduler_params": {
+    "step_size": 1,
+    "gamma": 0.5
+  },
+  "n_malicious": 0,
+  "data_poisoning": null,
+  "p_poison": null,
+  "model_update_factor": 1.0,
+  "model_poisoning": null
+}
