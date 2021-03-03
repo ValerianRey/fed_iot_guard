@@ -8,19 +8,26 @@ from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
 from architectures import BinaryClassifier, NormalizingModel
-from data import ClientData, FederationData, device_names
+from data import ClientData, FederationData, device_names, get_benign_attack_samples_per_device
 from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack
 from metrics import BinaryClassificationResult
 from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates
-from supervised_data import get_train_test_dls, get_train_dl, get_test_dl
+from supervised_data import get_train_dl, get_test_dl, get_train_dls, get_test_dls
 from supervised_ml import multitrain_classifiers, multitest_classifiers, train_classifier, test_classifier
 
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
     # Creating the dataloaders
-    train_dl = get_train_dl(train_data, params.train_bs, sampling=params.sampling, p_benign=params.p_benign, cuda=params.cuda)
-    val_dl = get_test_dl(val_data, params.test_bs, sampling=params.sampling, p_benign=params.p_benign, cuda=params.cuda)
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_train, p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    train_dl = get_train_dl(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device,
+                            attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_val, p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    val_dl = get_test_dl(val_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                         attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
 
     # Initialize the model and compute the normalization values with the client's local training data
     model = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
@@ -48,10 +55,19 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
                                  new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
-                                                   malicious_clients=set(), sampling=params.sampling, p_benign=params.p_benign,
-                                                   cuda=params.cuda)
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=(params.p_train + params.p_val),
+                                                                                                p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    train_dls = get_train_dls(train_data, params.train_bs, malicious_clients=set(), benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    local_test_dls = get_test_dls(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                  attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
@@ -89,12 +105,21 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
                                      new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
     # Creating the dataloaders
-    train_dls, local_test_dls = get_train_test_dls(train_data, local_test_data, params.train_bs, params.test_bs,
-                                                   sampling=params.sampling, p_benign=params.p_benign,
-                                                   malicious_clients=params.malicious_clients, cuda=params.cuda,
-                                                   poisoning=params.data_poisoning, p_poison=params.p_poison)
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=(params.p_train + params.p_val),
+                                                                                                p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, malicious_clients=params.malicious_clients, cuda=params.cuda,
+                              poisoning=params.data_poisoning, p_poison=params.p_poison)
 
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, sampling=None, p_benign=None, cuda=params.cuda)
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test,
+                                                                                                p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    local_test_dls = get_test_dls(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                  attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
 
     # Initialization of a global model
     n_clients = len(params.clients_devices)

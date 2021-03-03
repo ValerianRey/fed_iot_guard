@@ -60,7 +60,6 @@ def run_grid_search(all_data: List[DeviceData], setup: str, experiment: str,
                     splitting_function: Callable, constant_params: dict, varying_params: dict, configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
     base_path = 'grid_search_results/' + setup + '_' + experiment + '/run_'
-    results_path = create_new_numbered_dir(base_path)
 
     # Compute the different sets of hyper-parameters to test in the grid search
     params_product = list(itertools.product(*varying_params.values()))
@@ -109,4 +108,5 @@ def run_grid_search(all_data: List[DeviceData], setup: str, experiment: str,
                 configurations_results[repr(configuration['clients_devices'])][repr(experiment_params)] += result
 
     # We save the results in a json file
+    results_path = create_new_numbered_dir(base_path)
     save_results_gs(results_path, configurations_results, constant_params)

@@ -51,7 +51,6 @@ def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str
                          constant_params: dict, configurations_params: List[dict], configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
     base_path = 'test_results/' + setup + '_' + experiment + ('_federated' if federated else '') + '/run_'
-    results_path = create_new_numbered_dir(base_path)
 
     params_dict = deepcopy(constant_params)
     local_results, new_devices_results = {}, {}
@@ -70,4 +69,5 @@ def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str
         Ctp.exit_section()
 
     # We save the results in a json file
+    results_path = create_new_numbered_dir(base_path)
     save_results_test(results_path, local_results, new_devices_results, constant_params, configurations_params)

@@ -6,7 +6,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import multiclass_labels, ClientData, FederationData, split_client_data, compute_alphas_resampling, resample_array
+from data import multiclass_labels, ClientData, FederationData, split_client_data, resample_array
 
 
 def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False,
@@ -31,20 +31,23 @@ def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False,
         return target
 
 
-def get_dataset(data: ClientData, sampling: Optional[str] = None, p_benign: Optional[float] = None, cuda: bool = False,
+# Creates a dataset with the given client's data. If n_benign and n_attack are specified, up or down sampling will be used to have the right
+# amount of that class of data. The data can also be poisoned if needed.
+def get_dataset(data: ClientData, benign_samples_per_device: Optional[int] = None, attack_samples_per_device: Optional[int] = None,
+                cuda: bool = False,
                 multiclass: bool = False, poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Dataset:
     data_list, target_list = [], []
+    resample = benign_samples_per_device is not None and attack_samples_per_device is not None
 
     for device_data in data:
-        benign_samples = sum([len(arr) for key, arr in device_data.items() if key == 'benign'])
-        attack_samples = sum([len(arr) for key, arr in device_data.items() if key != 'benign'])
-        alpha_benign, alpha_attack = compute_alphas_resampling(benign_samples, attack_samples, sampling, p_benign, verbose=True)
-
+        number_of_attacks = len(device_data.keys()) - 1
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
-            if key == 'benign':
-                arr = resample_array(arr, alpha_benign)
-            else:
-                arr = resample_array(arr, alpha_attack)
+            if resample:
+                if key == 'benign':
+                    arr = resample_array(arr, benign_samples_per_device)
+                else:
+                    # We evenly divide the attack samples among the existing attacks on that device
+                    arr = resample_array(arr, int(attack_samples_per_device / number_of_attacks))
 
             data_tensor = torch.tensor(arr).float()
             target_tensor = get_target_tensor(key, arr, multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)
@@ -58,35 +61,46 @@ def get_dataset(data: ClientData, sampling: Optional[str] = None, p_benign: Opti
     return dataset
 
 
-def get_train_dl(client_train_data: ClientData, train_bs: int, sampling: Optional[str] = None, p_benign: Optional[float] = None,
+def get_train_dl(client_train_data: ClientData, train_bs: int, benign_samples_per_device: Optional[int] = None,
+                 attack_samples_per_device: Optional[int] = None,
                  cuda: bool = False, multiclass: bool = False, poisoning: Optional[str] = None,
                  p_poison: Optional[float] = None) -> DataLoader:
-    dataset_train = get_dataset(client_train_data, sampling=sampling, p_benign=p_benign, cuda=cuda,
+    dataset_train = get_dataset(client_train_data, benign_samples_per_device=benign_samples_per_device,
+                                attack_samples_per_device=attack_samples_per_device, cuda=cuda,
                                 multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)
     train_dl = DataLoader(dataset_train, batch_size=train_bs, shuffle=True)
     return train_dl
 
 
-def get_test_dl(client_test_data: ClientData, test_bs: int, sampling: Optional[str] = None, p_benign: Optional[float] = None,
+def get_test_dl(client_test_data: ClientData, test_bs: int, benign_samples_per_device: Optional[int] = None,
+                attack_samples_per_device: Optional[int] = None,
                 cuda: bool = False, multiclass: bool = False) -> DataLoader:
-    dataset_test = get_dataset(client_test_data, sampling=sampling, p_benign=p_benign, cuda=cuda, multiclass=multiclass)
+    dataset_test = get_dataset(client_test_data, benign_samples_per_device=benign_samples_per_device,
+                               attack_samples_per_device=attack_samples_per_device, cuda=cuda, multiclass=multiclass)
     test_dl = DataLoader(dataset_test, batch_size=test_bs)
     return test_dl
 
 
-def get_train_test_dls(train_data: FederationData, test_data: FederationData, train_bs: int, test_bs: int, malicious_clients: Set[int],
-                       sampling: Optional[str] = None, p_benign: Optional[float] = None, cuda: bool = False, multiclass: bool = False,
-                       poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Tuple[List[DataLoader], List[DataLoader]]:
-
+def get_train_dls(train_data: FederationData, train_bs: int, malicious_clients: Set[int],
+                  benign_samples_per_device: Optional[int] = None, attack_samples_per_device: Optional[int] = None, cuda: bool = False,
+                  multiclass: bool = False, poisoning: Optional[str] = None,
+                  p_poison: Optional[float] = None) -> List[DataLoader]:
     train_dls = [get_train_dl(client_train_data, train_bs,
-                              sampling=sampling, p_benign=p_benign, cuda=cuda, multiclass=multiclass,
+                              benign_samples_per_device=benign_samples_per_device, attack_samples_per_device=attack_samples_per_device,
+                              cuda=cuda, multiclass=multiclass,
                               poisoning=(poisoning if client_id in malicious_clients else None),
                               p_poison=(p_poison if client_id in malicious_clients else None))
                  for client_id, client_train_data in enumerate(train_data)]
+    return train_dls
 
-    test_dls = [get_test_dl(client_test_data, test_bs, sampling=None, p_benign=None, cuda=cuda, multiclass=multiclass)
+
+def get_test_dls(test_data: FederationData, test_bs: int, benign_samples_per_device: Optional[int] = None,
+                 attack_samples_per_device: Optional[int] = None,
+                 cuda: bool = False, multiclass: bool = False) -> List[DataLoader]:
+    test_dls = [get_test_dl(client_test_data, test_bs, benign_samples_per_device=benign_samples_per_device,
+                            attack_samples_per_device=attack_samples_per_device, cuda=cuda, multiclass=multiclass)
                 for client_test_data in test_data]
-    return train_dls, test_dls
+    return test_dls
 
 
 def get_client_supervised_initial_splitting(client_data: ClientData, p_test: float, p_unused: float) -> Tuple[ClientData, ClientData]:

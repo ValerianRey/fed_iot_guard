@@ -1,4 +1,5 @@
-from typing import Tuple, Dict, List, Callable, Optional
+from types import SimpleNamespace
+from typing import Tuple, Dict, List, Callable
 
 import numpy as np
 import pandas as pd
@@ -129,39 +130,32 @@ def get_initial_splitting(splitting_function: Callable, clients_data: Federation
     return clients_train_val, clients_test
 
 
-def compute_alphas_resampling(benign_samples: int, attack_samples: int,
-                              sampling: Optional[str] = None, p_benign: Optional[float] = None,
-                              verbose: bool = False) -> Tuple[float, float]:
-    if sampling is not None and p_benign is not None:
-        ratio = (attack_samples / benign_samples) * (p_benign / (1 - p_benign))
-        if sampling == 'upsampling' and ratio > 1. or sampling == 'downsampling' and ratio <= 1.:
-            alpha_benign = ratio
-            alpha_attack = 1.
-            if verbose:
-                Ctp.print(sampling + ' with alpha benign = {:.2f}%'.format(alpha_benign * 100))
-        elif sampling == 'downsampling' and ratio > 1. or sampling == 'upsampling' and ratio <= 1.:
-            alpha_attack = 1. / ratio
-            alpha_benign = 1.
-            if verbose:
-                Ctp.print(sampling + ' with alpha attack = {:.2f}%'.format(alpha_attack * 100))
-        else:
-            raise ValueError('Wrong value for sampling')
-
+def get_benign_attack_samples_per_device(p_split: float, p_benign: float, samples_per_device: int) -> Tuple[int, int]:
+    if p_benign is None or samples_per_device is None:
+        benign_samples_per_device, attack_samples_per_device = None, None
     else:
-        alpha_benign = 1.
-        alpha_attack = 1.
+        n_samples = int(samples_per_device * p_split)
+        benign_samples_per_device = int(n_samples * p_benign)
+        attack_samples_per_device = int(n_samples * (1. - p_benign))
 
-    return alpha_benign, alpha_attack
+    return benign_samples_per_device, attack_samples_per_device
 
 
-def resample_array(arr: np.ndarray, alpha: float) -> np.ndarray:
+# Select n_samples rows from a numpy array, using either upsampling or downsampling.
+def resample_array(arr: np.ndarray, n_samples: int) -> np.ndarray:
+    # Compute the proportion between desired number of samples and input array's length
+    alpha = n_samples / len(arr)
+
     # Repeat the original array as many times as possible (integer number of times)
     repeats = int(alpha)
     repeated_arr = arr.repeat(repeats, axis=0)
 
     # Sample randomly without replacement the remaining samples
-    n_random_samples = int(len(arr) * (alpha - repeats))
+    n_random_samples = n_samples - len(repeated_arr)
     all_indexes = np.arange(len(arr))
     random_arr = arr[np.random.choice(all_indexes, n_random_samples, replace=False)]
+    result = np.append(repeated_arr, random_arr, axis=0)
 
-    return np.append(repeated_arr, random_arr, axis=0)
+    assert(len(result) == n_samples)
+
+    return result

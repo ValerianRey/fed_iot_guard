@@ -7,19 +7,25 @@ from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
 from architectures import SimpleAutoencoder, NormalizingModel, Threshold
-from data import device_names, split_clients_data, ClientData, FederationData
+from data import device_names, split_clients_data, ClientData, FederationData, get_benign_attack_samples_per_device
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
-from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_val_test_dls, restrict_new_device_benign_data
+from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_dls, \
+    get_val_dls, get_test_dls_dicts
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
     compute_reconstruction_losses
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
     # Create the dataloaders
-    train_dl = get_train_dl(train_data, params.train_bs, params.cuda)
-    val_dl = get_val_dl(val_data, params.test_bs, params.cuda)
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_train, p_benign=1.,
+                                                                        samples_per_device=params.samples_per_device)
+    train_dl = get_train_dl(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_val, p_benign=1.,
+                                                                        samples_per_device=params.samples_per_device)
+    val_dl = get_val_dl(val_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
     # Initialize the model and compute the normalization values with the client's local training data
     model = NormalizingModel(SimpleAutoencoder(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
@@ -43,28 +49,31 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
 
 
 def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
-    sampling = None
-
     # Split train data between actual train and the set that will be used to search the threshold
-    train_data, val_data = split_clients_data(train_val_data, p_test=params.p_threshold, p_unused=0.0)
-
-    # We restrict the new device's benign data so that it has on average
-    # the same proportion of benign data used during testing as the training devices
-    if sampling is None:  # Otherwise we already handle the dataset balance somewhere else
-        restrict_new_device_benign_data(new_test_data, params.p_test)
+    train_data, val_data = split_clients_data(train_val_data, p_test=params.p_val, p_unused=0.0)
 
     # Creating the dataloaders
-    train_dls, val_dls, local_test_dls_dicts = get_train_val_test_dls(train_data, val_data, local_test_data, params.train_bs, params.test_bs,
-                                                                      sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_train, p_benign=1.,
+                                                                        samples_per_device=params.samples_per_device)
+    train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, sampling=sampling, p_benign=params.p_benign, cuda=params.cuda)
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_val, p_benign=1.,
+                                                                        samples_per_device=params.samples_per_device)
+    val_dls = get_val_dls(val_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, p_benign=params.p_benign,
+                                                                                                samples_per_device=params.samples_per_device)
+    local_test_dls_dicts = get_test_dls_dicts(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                          attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
 
     return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
 
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                   params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
-
     # Prepare the dataloaders
     train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 

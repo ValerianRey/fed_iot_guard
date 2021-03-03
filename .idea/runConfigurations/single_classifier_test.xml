@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="single_classifier_test" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="single_classifier_test" type="PythonConfigurationType" factoryName="Python" folderName="Test">
     <module name="fed_iot_guard" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />

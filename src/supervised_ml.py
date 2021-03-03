@@ -1,6 +1,5 @@
-from copy import deepcopy
 from types import SimpleNamespace
-from typing import List, Union, Tuple, Set
+from typing import List, Union, Tuple
 
 import torch
 import torch.nn as nn
