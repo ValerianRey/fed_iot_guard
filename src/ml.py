@@ -33,7 +33,7 @@ def set_model_add_mult(normalization: str, model: torch.nn.Module, train_dl: Dat
     data = train_dl.dataset[:][0]
     Ctp.print('Computing normalization with {} train samples'.format(len(data)))
     sub, div = get_sub_div(data, normalization)
-    model.set_add_mult(add=-sub, mult=(1. / div))
+    model.set_add_mult(add=sub, mult=div)
 
 
 def set_models_sub_divs(normalization: str, models: List[torch.nn.Module], clients_dl_train: List[DataLoader], color: Color = Color.NONE) -> None:

@@ -173,15 +173,10 @@ def train_gan(generator: nn.Module, discriminator: nn.Module, params: SimpleName
     generator.train()
     discriminator.train()
 
-    Ctp.print(discriminator.model.seq)
-    Ctp.print(type(discriminator))
-    Ctp.print(type(generator))
-
     # loss
     loss = nn.BCELoss()
 
     batch_size = train_loader.batch_size
-    Ctp.print('Starting to train the GAN')
 
     for epoch in range(params.epochs):
         Ctp.print('Epoch {}'.format(epoch))

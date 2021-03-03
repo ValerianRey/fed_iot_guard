@@ -39,9 +39,9 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     classifier_params = {'hidden_layers': [40, 10, 5],
                          'activation_fn': torch.nn.ELU}
 
-    gan_params = {'generator_hidden_layers': [5, 58],
-                  'p_threshold': 0.1,  # The proportion of training benign data that we use to compute the threshold
-                  'quantile': 0.8}  # We require that at least 'quantile' proportion of benign data is classified as benign
+    gan_params = {'generator_hidden_layers': [11, 58],
+                  'p_threshold': 0.5,  # The proportion of training benign data that we use to compute the threshold
+                  'quantile': 0.95}  # We require that at least 'quantile' proportion of benign data is classified as benign
 
     n_devices = len(all_devices)
 
@@ -67,7 +67,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    gan_opt_default_params = {'epochs': 1,
+    gan_opt_default_params = {'epochs': 20,
                               'train_bs': 64,
                               'optimizer': torch.optim.Adadelta,
                               'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},

@@ -202,10 +202,4 @@ def local_gan_train_test(train_val_data: FederationData, local_test_data: Federa
                                                  local_test_dls_dicts, discriminators, thresholds)),
                                   main_title='Testing the clients on their own devices', color=Color.BLUE)
 
-    # New devices testing
-    new_devices_result = multitest_gans(
-        tests=list(zip(['Testing client {} on: '.format(i) + device_names(params.test_devices) for i in range(n_clients)],
-                       [new_test_dls_dict for _ in range(n_clients)], discriminators, thresholds)),
-        main_title='Testing the clients on the new devices: ' + device_names(params.test_devices), color=Color.DARK_CYAN)
-
-    return local_result, new_devices_result
+    return local_result, BinaryClassificationResult()
