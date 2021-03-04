@@ -94,6 +94,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                 constant_params.update(federation_params)
 
             configurations_params = [{} for _ in range(len(configurations))]
+
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
