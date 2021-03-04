@@ -97,7 +97,8 @@ def multitrain_autoencoders(trains: List[Tuple[str, DataLoader, nn.Module]], par
                             main_title: str = 'Multitrain autoencoders', color: Union[str, Color] = Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
     for i, (title, dataloader, model) in enumerate(trains):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title, color=Color.NONE, header='      ')
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title + ' ({} samples)'.format(len(dataloader.dataset[:][0])),
+                          color=Color.NONE, header='      ')
         train_autoencoder(model, params, dataloader, lr_factor)
         Ctp.exit_section()
     Ctp.exit_section()
@@ -112,7 +113,8 @@ def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title
 
     thresholds = []
     for i, (title, dataloader, model) in enumerate(opts):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(opts)) + title, color=Color.NONE, header='      ')
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(opts)) + title + ' ({} samples)'.format(len(dataloader.dataset[:][0])),
+                          color=Color.NONE, header='      ')
         print_autoencoder_loss_header()
         losses = compute_reconstruction_losses(model, dataloader)
         print_autoencoder_loss_stats('Benign (opt)', losses)
@@ -147,7 +149,8 @@ def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Modu
 
     result = BinaryClassificationResult()
     for i, (title, dataloaders, model, threshold) in enumerate(tests):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(tests)) + title, color=Color.NONE, header='      ')
+        n_samples = sum([len(dataloader.dataset[:][0]) for dataloader in dataloaders.values()])
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(tests)) + title + ' ({} samples)'.format(n_samples), color=Color.NONE, header='      ')
         current_result = test_autoencoder(model, threshold, dataloaders)
         result += current_result
         Ctp.exit_section()

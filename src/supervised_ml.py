@@ -64,7 +64,8 @@ def multitrain_classifiers(trains: List[Tuple[str, DataLoader, nn.Module]], para
                            main_title: str = 'Multitrain classifiers', color: Union[str, Color] = Color.NONE) -> None:
     Ctp.enter_section(main_title, color)
     for i, (title, dataloader, model) in enumerate(trains):
-        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title, color=Color.NONE, header='      ')
+        Ctp.enter_section('[{}/{}] '.format(i + 1, len(trains)) + title + ' ({} samples)'.format(len(dataloader.dataset[:][0])),
+                          color=Color.NONE, header='      ')
         train_classifier(model, params, dataloader, lr_factor)
         Ctp.exit_section()
 
@@ -77,7 +78,7 @@ def multitest_classifiers(tests: List[Tuple[str, DataLoader, nn.Module]], main_t
     Ctp.enter_section(main_title, color)
     result = BinaryClassificationResult()
     for i, (title, dataloader, model) in enumerate(tests):
-        Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title, bold=True)
+        Ctp.print('[{}/{}] '.format(i + 1, len(tests)) + title + ' ({} samples)'.format(len(dataloader.dataset[:][0])), bold=True)
         current_result = test_classifier(model, dataloader)
         result += current_result
         print_rates(current_result)

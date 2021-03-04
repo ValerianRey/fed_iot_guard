@@ -1,0 +1,74 @@
+{
+  "{'clients_devices': [[1, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [0]}": [
+    {
+      "tp": 796,
+      "tn": 15194,
+      "fp": 6,
+      "fn": 4
+    }
+  ],
+  "{'clients_devices': [[0, 2, 3, 4, 5, 6, 7, 8]], 'test_devices': [1]}": [
+    {
+      "tp": 794,
+      "tn": 15175,
+      "fp": 25,
+      "fn": 6
+    }
+  ],
+  "{'clients_devices': [[0, 1, 3, 4, 5, 6, 7, 8]], 'test_devices': [2]}": [
+    {
+      "tp": 799,
+      "tn": 15182,
+      "fp": 18,
+      "fn": 1
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 4, 5, 6, 7, 8]], 'test_devices': [3]}": [
+    {
+      "tp": 798,
+      "tn": 15184,
+      "fp": 16,
+      "fn": 2
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 3, 5, 6, 7, 8]], 'test_devices': [4]}": [
+    {
+      "tp": 797,
+      "tn": 15177,
+      "fp": 23,
+      "fn": 3
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 3, 4, 6, 7, 8]], 'test_devices': [5]}": [
+    {
+      "tp": 798,
+      "tn": 15171,
+      "fp": 29,
+      "fn": 2
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 3, 4, 5, 7, 8]], 'test_devices': [6]}": [
+    {
+      "tp": 798,
+      "tn": 15173,
+      "fp": 27,
+      "fn": 2
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 8]], 'test_devices': [7]}": [
+    {
+      "tp": 794,
+      "tn": 15167,
+      "fp": 33,
+      "fn": 6
+    }
+  ],
+  "{'clients_devices': [[0, 1, 2, 3, 4, 5, 6, 7]], 'test_devices': [8]}": [
+    {
+      "tp": 796,
+      "tn": 15174,
+      "fp": 26,
+      "fn": 4
+    }
+  ]
+}

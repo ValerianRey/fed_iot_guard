@@ -24,7 +24,6 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
     # Create the dataloaders
     benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_train, benign_prop=1.,
                                                                         samples_per_device=params.samples_per_device)
-    Ctp.print(benign_samples_per_device)
     train_dl = get_train_dl(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
     benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_val, benign_prop=1.,
@@ -40,11 +39,12 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
     set_model_sub_div(params.normalization, model, train_dl)
 
     # Local training
-    Ctp.enter_section('Training for {} epochs'.format(params.epochs), color=Color.GREEN)
+    Ctp.enter_section('Training for {} epochs with {} samples'.format(params.epochs, len(train_dl.dataset[:][0])), color=Color.GREEN)
     train_autoencoder(model, params, train_dl)
     Ctp.exit_section()
 
     # Local validation
+    Ctp.print("Validating with {} samples".format(len(val_dl.dataset[:][0])))
     losses = compute_reconstruction_losses(model, val_dl)
     loss = (sum(losses) / len(losses)).item()
     Ctp.print("Validation loss: {:.5f}".format(loss))
