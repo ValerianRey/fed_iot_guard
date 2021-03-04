@@ -47,7 +47,7 @@ def get_dataset(data: ClientData, benign_samples_per_device: Optional[int] = Non
                     arr = resample_array(arr, benign_samples_per_device)
                 else:
                     # We evenly divide the attack samples among the existing attacks on that device
-                    arr = resample_array(arr, int(attack_samples_per_device / number_of_attacks))
+                    arr = resample_array(arr, int(round(attack_samples_per_device / number_of_attacks, 5)))
 
             data_tensor = torch.tensor(arr).float()
             target_tensor = get_target_tensor(key, arr, multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)
@@ -104,5 +104,5 @@ def get_test_dls(test_data: FederationData, test_bs: int, benign_samples_per_dev
 
 
 def get_client_supervised_initial_splitting(client_data: ClientData, p_test: float, p_unused: float) -> Tuple[ClientData, ClientData]:
-    client_train_val, client_test = split_client_data(client_data, p_test=p_test, p_unused=p_unused)
+    client_train_val, client_test = split_client_data(client_data, p_second_split=p_test, p_unused=p_unused)
     return client_train_val, client_test

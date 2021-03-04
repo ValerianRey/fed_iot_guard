@@ -43,7 +43,7 @@ def get_test_datasets(test_data: ClientData, benign_samples_per_device: Optional
                     arr = resample_array(arr, benign_samples_per_device)
                 else:
                     # We evenly divide the attack samples among the existing attacks on that device
-                    arr = resample_array(arr, int(attack_samples_per_device / number_of_attacks))
+                    arr = resample_array(arr, int(round(attack_samples_per_device / number_of_attacks, 5)))
 
             data_tensor = torch.tensor(arr).float()
             if cuda:
@@ -93,7 +93,7 @@ def get_client_unsupervised_initial_splitting(client_data: ClientData, p_test: f
     # Separate the data of the clients between benign and attack
     client_benign_data = [{'benign': device_data['benign']} for device_data in client_data]
     client_attack_data = [{key: device_data[key] for key in device_data.keys() if key != 'benign'} for device_data in client_data]
-    client_train_val, client_benign_test = split_client_data(client_benign_data, p_test=p_test, p_unused=p_unused)
+    client_train_val, client_benign_test = split_client_data(client_benign_data, p_second_split=p_test, p_unused=p_unused)
     client_test = [{**device_benign_test, **device_attack_data}
                    for device_benign_test, device_attack_data in zip(client_benign_test, client_attack_data)]
 

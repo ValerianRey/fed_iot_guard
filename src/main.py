@@ -21,21 +21,31 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'test_bs': 4096,
                      'p_test': 0.2,
                      'p_unused': 0.01,
-                     'p_val': 0.3,  # In unsupervised approach it's also the proportion of training benign data used to compute the threshold
+                     'val_part': 0.3,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
                      'n_splits': 1,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'p_benign': None,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': None}  # Total number of datapoints (train + val + unused + test) for each device.
+                     'benign_prop': 0.95,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
+                     'samples_per_device': 100_000}  # Total number of datapoints (train + val + unused + test) for each device.
 
-    if common_params['p_val'] is None:
-        p_val = (1. - common_params['p_test'] - common_params['p_unused']) / common_params['n_splits']
-        p_train = (1. - common_params['p_test'] - common_params['p_unused']) * (common_params['n_splits'] - 1) / common_params['n_splits']
+    # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
+    # validation set.
+    # val_part and threshold_part are the proportions of the the *train & validation set* used for respectively the validation and the threshold
+    # note that we either use one or the other: when grid searching we do not compute the threshold, so we have the train & validation set
+    # split between val_part proportion of validation data and (1. - val_part) proportion of train data
+    # when testing hyper-params, we have train & validation set split between threshold_part proportion of threshold data and
+    # (1. - threshold_part) proportion of train data.
+    # benign_prop is yet another thing, determining the proportion of benign data when applicable (everywhere except in the train_val set of
+    # the unsupervised method)
+
+    p_train_val = 1. - common_params['p_test'] - common_params['p_unused']
+
+    if common_params['val_part'] is None:
+        val_part = 1. / common_params['n_splits']
     else:
-        p_train = 1. - common_params['p_test'] - common_params['p_unused'] - common_params['p_val']
-        p_val = common_params['p_val']
+        val_part = common_params['val_part']
 
-    common_params.update({'p_train': p_train, 'p_val': p_val})
+    common_params.update({'p_train_val': p_train_val, 'val_part': val_part})
 
     if common_params['cuda']:
         Ctp.print('Using CUDA')
@@ -43,7 +53,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
         Ctp.print('Using CPU')
 
     autoencoder_params = {'hidden_layers': [29],
-                          'activation_fn': torch.nn.ELU}
+                          'activation_fn': torch.nn.ELU,
+                          'threshold_part': 0.5}
 
     classifier_params = {'hidden_layers': [40, 10, 5],
                          'activation_fn': torch.nn.ELU}

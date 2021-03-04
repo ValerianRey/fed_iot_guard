@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 from typing import Tuple, Dict, List, Callable
 
 import numpy as np
@@ -79,24 +78,24 @@ def get_configuration_data(all_data: List[DeviceData], clients_devices: List[Lis
     return clients_devices_data, test_devices_data
 
 
-def split_clients_data(data: FederationData, p_test: float, p_unused: float) -> Tuple[FederationData, FederationData]:
+def split_clients_data(data: FederationData, p_second_split: float, p_unused: float) -> Tuple[FederationData, FederationData]:
     train_data, test_data = [], []
     for client_data in data:
-        client_train_data, client_test_data = split_client_data(client_data, p_test, p_unused)
+        client_train_data, client_test_data = split_client_data(client_data, p_second_split=p_second_split, p_unused=p_unused)
         train_data.append(client_train_data)
         test_data.append(client_test_data)
 
     return train_data, test_data
 
 
-def split_client_data(data: ClientData, p_test: float, p_unused: float) -> Tuple[ClientData, ClientData]:
-    p_train = 1 - p_test - p_unused
+def split_client_data(data: ClientData, p_second_split: float, p_unused: float) -> Tuple[ClientData, ClientData]:
+    p_first_split = 1 - p_second_split - p_unused
     train_data, test_data = [], []
     for device_id, device_data in enumerate(data):
         train_data.append({})
         test_data.append({})
         for key, array in device_data.items():
-            indexes = [0] + list(np.cumsum((len(array) * np.array([p_train, p_unused, p_test])).astype(int)))
+            indexes = [0] + list(np.cumsum((len(array) * np.array([p_first_split, p_unused, p_second_split])).astype(int)))
             train_data[device_id][key] = array[indexes[0]:indexes[1]]
             test_data[device_id][key] = array[indexes[2]:indexes[3]]
 
@@ -130,13 +129,12 @@ def get_initial_splitting(splitting_function: Callable, clients_data: Federation
     return clients_train_val, clients_test
 
 
-def get_benign_attack_samples_per_device(p_split: float, p_benign: float, samples_per_device: int) -> Tuple[int, int]:
-    if p_benign is None or samples_per_device is None:
+def get_benign_attack_samples_per_device(p_split: float, benign_prop: float, samples_per_device: int) -> Tuple[int, int]:
+    if benign_prop is None or samples_per_device is None:
         benign_samples_per_device, attack_samples_per_device = None, None
     else:
-        n_samples = int(samples_per_device * p_split)
-        benign_samples_per_device = int(n_samples * p_benign)
-        attack_samples_per_device = int(n_samples * (1. - p_benign))
+        benign_samples_per_device = int(round(samples_per_device * p_split * benign_prop, 5))
+        attack_samples_per_device = int(round(samples_per_device * p_split * (1. - benign_prop), 5))
 
     return benign_samples_per_device, attack_samples_per_device
 

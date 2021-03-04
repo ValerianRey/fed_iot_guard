@@ -44,8 +44,8 @@ def compute_cv_result(train_val_data: ClientData, experiment: str, params: Simpl
 
 # Compute the result of the experiment on a specified proportion of validation data
 def compute_single_split_result(train_val_data: ClientData, experiment: str, params: SimpleNamespace,
-                                p_val: float) -> Union[BinaryClassificationResult, float]:
-    train_data, val_data = split_client_data(train_val_data, p_test=p_val, p_unused=0.0)
+                                val_part: float) -> Union[BinaryClassificationResult, float]:
+    train_data, val_data = split_client_data(train_val_data, p_second_split=val_part, p_unused=0.0)
     if experiment == 'classifier':
         result = local_classifier_train_val(train_data, val_data, params=params)
     elif experiment == 'autoencoder':
@@ -66,8 +66,8 @@ def run_grid_search(all_data: List[DeviceData], setup: str, experiment: str,
 
     params_dict = deepcopy(constant_params)
 
-    if params_dict['n_splits'] == 1 and params_dict['p_val'] is None:
-        raise ValueError('p_val should be specified when not using cross-validation')
+    if params_dict['n_splits'] == 1 and params_dict['val_part'] is None:
+        raise ValueError('val_part should be specified when not using cross-validation')
 
     # First we compute the set of unique clients in the configurations, and we compute the grid search results for each client.
     # This way we do not make extra computations if the same client appears in several configurations
@@ -87,7 +87,7 @@ def run_grid_search(all_data: List[DeviceData], setup: str, experiment: str,
             Ctp.enter_section('Experiment [{}/{}] with params: '.format(j + 1, len(params_product)) + str(experiment_params), Color.NONE)
             params = SimpleNamespace(**params_dict)
             if params_dict['n_splits'] == 1:  # We do not use cross-validation
-                result = compute_single_split_result(train_val_data, experiment, params, params_dict['p_val'])
+                result = compute_single_split_result(train_val_data, experiment, params, params_dict['val_part'])
             else:  # Cross validation: we sum the results over the folds
                 result = compute_cv_result(train_val_data, experiment, params, params_dict['n_splits'])
             clients_results[repr(client_devices)][repr(experiment_params)] = result

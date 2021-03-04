@@ -18,12 +18,16 @@ from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, com
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
+    p_train = params.p_train_val * (1. - params.val_part)
+    p_val = params.p_train_val * params.val_part
+
     # Create the dataloaders
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_train, p_benign=1.,
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_train, benign_prop=1.,
                                                                         samples_per_device=params.samples_per_device)
+    Ctp.print(benign_samples_per_device)
     train_dl = get_train_dl(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_val, p_benign=1.,
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_val, benign_prop=1.,
                                                                         samples_per_device=params.samples_per_device)
     val_dl = get_val_dl(val_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
@@ -50,18 +54,21 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
 
 def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
     # Split train data between actual train and the set that will be used to search the threshold
-    train_data, val_data = split_clients_data(train_val_data, p_test=params.p_val, p_unused=0.0)
+    train_data, threshold_data = split_clients_data(train_val_data, p_second_split=params.threshold_part, p_unused=0.0)
+
+    p_train = params.p_train_val * (1. - params.threshold_part)
+    p_threshold = params.p_train_val * params.threshold_part
 
     # Creating the dataloaders
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_train, p_benign=1.,
-                                                                        samples_per_device=params.samples_per_device)
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_train,
+                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
     train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=params.p_val, p_benign=1.,
-                                                                        samples_per_device=params.samples_per_device)
-    val_dls = get_val_dls(val_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_threshold,
+                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
+    threshold_dls = get_val_dls(threshold_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
 
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, p_benign=params.p_benign,
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, benign_prop=params.benign_prop,
                                                                                                 samples_per_device=params.samples_per_device)
     local_test_dls_dicts = get_test_dls_dicts(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
                                               attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
@@ -69,13 +76,13 @@ def prepare_dataloaders(train_val_data: FederationData, local_test_data: Federat
     new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
                                           attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
 
-    return train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict
+    return train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict
 
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                   params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
     # Prepare the dataloaders
-    train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
+    train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
@@ -94,7 +101,7 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
 
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
-                                                   for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
+                                                   for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
     # Local testing of each autoencoder
@@ -115,7 +122,7 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
 def federated_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
                                       params: SimpleNamespace) -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
     # Prepare the dataloaders
-    train_dls, val_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
+    train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialization of a global model
     n_clients = len(params.clients_devices)
@@ -150,7 +157,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
 
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
-                                                       for i, client_devices in enumerate(params.clients_devices)], val_dls, models)),
+                                                       for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated aggregation of the thresholds
