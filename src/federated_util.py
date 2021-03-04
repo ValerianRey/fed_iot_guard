@@ -1,9 +1,8 @@
+from copy import deepcopy
 from typing import List, Set, Tuple
 
-import torch
-from context_printer import ContextPrinter as Ctp
 import numpy as np
-from copy import deepcopy
+import torch
 
 
 def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
