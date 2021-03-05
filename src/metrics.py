@@ -56,6 +56,10 @@ class BinaryClassificationResult:
     def acc(self) -> float:
         return (self.tp + self.tn) / self.n_samples() if self.n_samples() != 0 else 0.
 
+    # Balanced accuracy: equal to the accuracy as if the dataset on which we computed the results originally had benign_prop proportion of negatives
+    def balanced_acc(self, benign_prop: float) -> float:
+        return self.tnr() * benign_prop + self.tpr() * (1. - benign_prop)
+
     # Recall (same as true positive rate)
     def recall(self) -> float:
         return self.tpr()

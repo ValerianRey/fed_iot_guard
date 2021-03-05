@@ -25,8 +25,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'n_splits': 1,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': None,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': None}  # Total number of datapoints (train + val + unused + test) for each device.
+                     'benign_prop': 0.95,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -76,7 +76,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                                       'lr_scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau,
                                       'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
-    classifier_opt_default_params = {'epochs': 2,
+    classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
                                      'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
@@ -112,13 +112,12 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             if federated:
                 constant_params.update(federation_params)
 
-            configurations_params = [{} for _ in range(len(configurations))]
-
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
+            configurations_params = [{} for _ in range(len(configurations))]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[29], [58, 29, 58], [86, 58, 38, 29, 38, 58, 86]],
+            varying_params = {'hidden_layers': [[86, 58, 38, 29, 38, 58, 86], [58, 29, 58], [29]],
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
@@ -132,15 +131,15 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
             if federated:
                 constant_params.update(federation_params)
 
-            configurations_params = [{} for _ in range(len(configurations))]
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
+            configurations_params = [{} for _ in range(len(configurations))]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
-            varying_params = {'hidden_layers': [[], [115], [115, 58], [115, 58, 29]],
-                              'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
+            varying_params = {'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
-                                                   {'lr': 1.0, 'weight_decay': 1e-4}]}
+                                                   {'lr': 1.0, 'weight_decay': 1e-4}],
+                              'hidden_layers': [[115, 58, 29], [115, 58], [115], []]}
             run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
     else:
         raise ValueError
