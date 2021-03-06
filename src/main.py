@@ -133,14 +133,14 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                 constant_params.update(federation_params)
 
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
-            configurations_params = [{'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+            configurations_params = [{'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
                                      {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
