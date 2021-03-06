@@ -25,8 +25,9 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'n_splits': 1,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.95,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'benign_prop': 0.0787,
+                     # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -56,7 +57,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                           'activation_fn': torch.nn.ELU,
                           'threshold_part': 0.5}
 
-    classifier_params = {'hidden_layers': [40, 10, 5],
+    classifier_params = {'hidden_layers': [115, 58, 29],
                          'activation_fn': torch.nn.ELU}
 
     n_devices = len(all_devices)
@@ -79,7 +80,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
                                      'optimizer': torch.optim.Adadelta,
-                                     'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-5},
+                                     'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-4},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
@@ -132,7 +133,15 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                 constant_params.update(federation_params)
 
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
-            configurations_params = [{} for _ in range(len(configurations))]
+            configurations_params = [{'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:
