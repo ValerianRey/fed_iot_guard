@@ -60,13 +60,24 @@ class BinaryClassificationResult:
     def balanced_acc(self, benign_prop: float) -> float:
         return self.tnr() * benign_prop + self.tpr() * (1. - benign_prop)
 
+    def __negative_minority(self) -> bool:
+        return (self.tn + self.fp) < (self.n_samples() / 2)
+
     # Recall (same as true positive rate)
-    def recall(self) -> float:
-        return self.tpr()
+    # If minority is set to True, computes the recall of the minority class instead of the recall of the positive class
+    def recall(self, minority: bool = False) -> float:
+        if minority and self.__negative_minority():
+            return self.tnr()
+        else:
+            return self.tpr()
 
     # Precision
-    def precision(self) -> float:
-        return self.tp / (self.tp + self.fp) if self.tp != 0 else 0.
+    # If minority is set to True, computes the precision of the minority class instead of the precision of the positive class
+    def precision(self, minority: bool = False) -> float:
+        if minority and self.__negative_minority():
+            return self.tn / (self.tn + self.fn) if self.tn != 0 else 0.
+        else:
+            return self.tp / (self.tp + self.fp) if self.tp != 0 else 0.
 
     # Sensitivity (same as true positive rate)
     def sensitivity(self) -> float:
@@ -77,8 +88,10 @@ class BinaryClassificationResult:
         return self.tnr()
 
     # F1-Score
-    def f1(self) -> float:
-        return (2 * self.precision() * self.recall()) / (self.precision() + self.recall()) if (self.precision() + self.recall()) != 0 else 0.
+    # If minority is set to True, computes the F1-score of the minority class instead of the F1-score of the positive class
+    def f1(self, minority: bool = False) -> float:
+        return (2 * self.precision(minority) * self.recall(minority)) / (self.precision(minority) + self.recall(minority))\
+            if (self.precision(minority) + self.recall(minority)) != 0 else 0.
 
     def n_samples(self) -> int:
         return self.tp + self.tn + self.fp + self.fn
