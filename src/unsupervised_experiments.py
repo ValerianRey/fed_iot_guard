@@ -80,7 +80,7 @@ def prepare_dataloaders(train_val_data: FederationData, local_test_data: Federat
 
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
-                                  params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
+                                  params: SimpleNamespace) -> Tuple[BinaryClassificationResult, BinaryClassificationResult, List[float]]:
     # Prepare the dataloaders
     train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
@@ -102,6 +102,7 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                    for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                    quantile=params.quantile,
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
     # Local testing of each autoencoder
@@ -116,11 +117,12 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
                        [new_test_dls_dict for _ in range(n_clients)], models, thresholds)),
         main_title='Testing the clients on the new devices: ' + device_names(params.test_devices), color=Color.DARK_CYAN)
 
-    return local_result, new_devices_result
+    return local_result, new_devices_result, [threshold.threshold.item() for threshold in thresholds]
 
 
-def federated_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
-                                      params: SimpleNamespace) -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
+def federated_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData,
+                                      new_test_data: ClientData, params: SimpleNamespace)\
+        -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], List[float]]:
     # Prepare the dataloaders
     train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
@@ -137,7 +139,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 
     # Initialization of the results
-    local_results, new_devices_results = [], []
+    local_results, new_devices_results, global_thresholds = [], [], []
 
     for federation_round in range(params.federation_rounds):
         print_federation_round(federation_round, params.federation_rounds)
@@ -158,11 +160,13 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                        for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                        quantile=params.quantile,
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated aggregation of the thresholds
         params.aggregation_function(global_threshold, thresholds)
         Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
+        global_thresholds.append(global_threshold.threshold.item())
         # There is no need to distribute the global threshold back to each client since they will compute it again from scratch at the next iteration
         # But in reality it's like if we transmitted them back because the local testing is made with the global threshold
 
@@ -181,4 +185,4 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
                                                           color=Color.DARK_CYAN))
         Ctp.exit_section()
 
-    return local_results, new_devices_results
+    return local_results, new_devices_results, global_thresholds
