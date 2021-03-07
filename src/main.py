@@ -16,17 +16,18 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     Ctp.print('\n\t\t\t\t\t' + ('FEDERATED ' if federated else '') + setup.upper() + ' ' + experiment.upper()
               + (' TESTING' if test else ' GRID SEARCH') + '\n', bold=True)
 
+
     common_params = {'n_features': 115,
                      'normalization': 'min-max',
                      'test_bs': 4096,
                      'p_test': 0.2,
                      'p_unused': 0.01,
-                     'val_part': 0.3,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
-                     'n_splits': 1,
+                     'val_part': None,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
+                     'n_splits': 5,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
                      'benign_prop': 0.5,  # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
