@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Optional
 
 import torch
 import torch.nn as nn
@@ -104,10 +104,21 @@ def multitrain_autoencoders(trains: List[Tuple[str, DataLoader, nn.Module]], par
     Ctp.exit_section()
 
 
+# Compute a single threshold value. If no quantile is indicated, it's the average reconstruction loss + its standard deviation, otherwise
+# it's the quantile of the loss.
+def compute_threshold_value(losses: torch.Tensor, quantile: Optional[float] = None) -> torch.Tensor:
+    if quantile is None:
+        threshold_value = losses.mean() + losses.std()
+    else:
+        threshold_value = losses.quantile(quantile)
+
+    return threshold_value
+
+
 # opts should be a list of tuples (title, dataloader_benign_opt, model)
 # this function will test each model on its associated dataloader, and will find the correct threshold for them
-def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title: str = 'Computing the thresholds',
-                       color: Union[str, Color] = Color.NONE) -> List[Threshold]:
+def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], quantile: Optional[float] = None,
+                       main_title: str = 'Computing the thresholds', color: Union[str, Color] = Color.NONE) -> List[Threshold]:
 
     Ctp.enter_section(main_title, color)
 
@@ -118,9 +129,8 @@ def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], main_title
         print_autoencoder_loss_header()
         losses = compute_reconstruction_losses(model, dataloader)
         print_autoencoder_loss_stats('Benign (opt)', losses)
-        avg_loss_val = losses.mean()
-        std_loss_val = losses.std()
-        threshold = Threshold(avg_loss_val + std_loss_val)
+        threshold_value = compute_threshold_value(losses, quantile)
+        threshold = Threshold(threshold_value)
         thresholds.append(threshold)
         Ctp.print('The threshold is {:.4f}'.format(threshold.threshold.item()))
         Ctp.exit_section()

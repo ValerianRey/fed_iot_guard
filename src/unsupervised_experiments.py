@@ -102,6 +102,7 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     # Computation of the thresholds
     thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                    for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                    quantile=params.quantile,
                                     main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
     # Local testing of each autoencoder
@@ -159,6 +160,7 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
                                                        for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                        quantile=params.quantile,
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
         # Federated aggregation of the thresholds
