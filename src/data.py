@@ -151,7 +151,9 @@ def resample_array(arr: np.ndarray, n_samples: int) -> np.ndarray:
     # Sample randomly without replacement the remaining samples
     n_random_samples = n_samples - len(repeated_arr)
     all_indexes = np.arange(len(arr))
+    np.random.seed(0)  # Fix the seed so that the resampling is not random (to have more meaningful results)
     random_arr = arr[np.random.choice(all_indexes, n_random_samples, replace=False)]
+    np.random.seed(None)  # Reset the seed to a pseudo-random value so that the rest of the program is unaffected by the fixing of the seed
     result = np.append(repeated_arr, random_arr, axis=0)
 
     assert(len(result) == n_samples)

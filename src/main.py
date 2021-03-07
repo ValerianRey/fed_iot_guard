@@ -25,9 +25,9 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'n_splits': 1,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.0787,
+                     'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 1000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -133,15 +133,15 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                 constant_params.update(federation_params)
 
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
-            configurations_params = [{'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}]
+            configurations_params = [{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}},
+                                     {'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:

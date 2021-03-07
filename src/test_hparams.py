@@ -1,7 +1,7 @@
 from copy import deepcopy
 from time import time
 from types import SimpleNamespace
-from typing import Callable, Tuple, List, Dict
+from typing import Callable, Tuple, List, Dict, Optional
 
 import numpy as np
 from context_printer import ContextPrinter as Ctp, Color
@@ -16,13 +16,15 @@ from unsupervised_experiments import local_autoencoders_train_test, federated_au
 # Computes the results of multiple random reruns of the same experiment
 def compute_rerun_results(clients_train_val: FederationData, clients_test: FederationData, test_devices_data: ClientData,
                           experiment: str, federated: bool, params: SimpleNamespace) \
-        -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
+        -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], Optional[List[List[float]]]]:
     local_results = []
     new_devices_results = []
+    thresholds = []
     for run_id in range(params.n_random_reruns):  # Multiple reruns: we run the same experiment multiple times to get better confidence in the results
         Ctp.enter_section('Run [{}/{}]'.format(run_id + 1, params.n_random_reruns), Color.GRAY)
         start_time = time()
         if experiment == 'classifier':
+            threshold = None
             if federated:
                 malicious_clients = set(np.random.choice(len(clients_train_val), params.n_malicious, replace=False))
                 params.malicious_clients = malicious_clients
@@ -32,17 +34,19 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
                 local_result, new_devices_result = local_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
         elif experiment == 'autoencoder':
             if federated:
-                local_result, new_devices_result = federated_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+                local_result, new_devices_result, threshold = federated_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
             else:
-                local_result, new_devices_result = local_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+                local_result, new_devices_result, threshold = local_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
         else:
             raise ValueError()
 
         local_results.append(local_result)
         new_devices_results.append(new_devices_result)
+        if threshold is not None:
+            thresholds.append(threshold)
         Ctp.print("Elapsed time: {:.1f} seconds".format(time() - start_time))
         Ctp.exit_section()
-    return local_results, new_devices_results
+    return local_results, new_devices_results, thresholds
 
 
 # This function is used to test the performance of a model with a given set of hyper-parameters on the test set
@@ -52,7 +56,7 @@ def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str
     base_path = 'test_results/' + setup + '_' + experiment + ('_federated' if federated else '') + '/run_'
 
     params_dict = deepcopy(constant_params)
-    local_results, new_devices_results = {}, {}
+    local_results, new_devices_results, thresholds = {}, {}, {}
 
     for j, (configuration, configuration_params) in enumerate(zip(configurations, configurations_params)):
         # Multiple configurations: we iterate over the possible configurations of the clients. Each configuration has its hyper-parameters
@@ -63,10 +67,13 @@ def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str
         params_dict.update(configuration_params)  # Update the hyper-parameters with the configuration-specific hyper-parameters
         params = SimpleNamespace(**params_dict)
         Ctp.enter_section('Configuration [{}/{}]: '.format(j + 1, len(configurations)) + str(configuration), Color.NONE)
-        local_result, new_result = compute_rerun_results(clients_train_val, clients_test, test_devices_data, experiment, federated, params)
+        local_result, new_result, threshold = compute_rerun_results(clients_train_val, clients_test, test_devices_data, experiment, federated, params)
         local_results[repr(configuration)], new_devices_results[repr(configuration)] = local_result, new_result
+        thresholds[repr(configuration)] = threshold
         Ctp.exit_section()
 
+    if experiment != 'autoencoder':
+        thresholds = None
     # We save the results in a json file
     results_path = create_new_numbered_dir(base_path)
-    save_results_test(results_path, local_results, new_devices_results, constant_params, configurations_params)
+    save_results_test(results_path, local_results, new_devices_results, thresholds, constant_params, configurations_params)
