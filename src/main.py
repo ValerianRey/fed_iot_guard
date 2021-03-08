@@ -82,6 +82,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
+
                                      'optimizer': torch.optim.SGD,
                                      'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,

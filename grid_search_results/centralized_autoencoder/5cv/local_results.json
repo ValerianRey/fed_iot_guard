@@ -1,0 +1,101 @@
+{
+  "[[1, 2, 3, 4, 5, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.005993815429974347,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.008077850739937276,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.016183866187930107,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0022027775121387094,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.00269048276823014,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.00613841280573979,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0016310814826283604,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0016912772989599034,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0033723525993991643
+  },
+  "[[0, 2, 3, 4, 5, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.00526440265821293,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.006849166238680482,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.021122045814990997,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0019139376818202436,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002440690790535882,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.006174473441205919,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0015337982040364295,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0015945603081490844,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.003114797844318673
+  },
+  "[[0, 1, 3, 4, 5, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.005227726243901998,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.006632964592427015,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.01596517045982182,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.002208505116868764,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002678577118786052,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0060889560845680535,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0016579413204453886,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0016128774150274694,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0032849966664798558
+  },
+  "[[0, 1, 2, 4, 5, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.005169124051462859,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.006347595830447972,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.019408948253840208,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0021316816564649343,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002577880717581138,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.006912647048011422,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0015675642498536035,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0015878457925282419,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0033427898306399584
+  },
+  "[[0, 1, 2, 3, 5, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0053241916466504335,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.007189342053607106,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.014031824306584895,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0021664008672814816,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.00257058025454171,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.006447168590966612,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0016189703746931627,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0016358110442524776,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0033522338490001857
+  },
+  "[[0, 1, 2, 3, 4, 6, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.004837785440031439,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.007286609499715269,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.012580197886563838,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0021432777430163696,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002611969626741484,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.006217246118467301,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0014867747813696042,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0015138932794798166,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.003239332960220054
+  },
+  "[[0, 1, 2, 3, 4, 5, 7, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.005483746819663793,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0076640237821266055,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.014829334104433656,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0022777836420573294,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002784663869533688,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0064812967902980745,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0016584310360485688,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0016712765354895964,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.003335708024678752
+  },
+  "[[0, 1, 2, 3, 4, 5, 6, 8]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0077207962167449296,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.008951665775384754,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.019136917544528842,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0040149099950212985,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.004368406138382852,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.007925951736979187,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.003146671297145076,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002834754894138314,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.005059843009803444
+  },
+  "[[0, 1, 2, 3, 4, 5, 6, 7]]": {
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.005359832721296698,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.007984819822013378,
+    "{'hidden_layers': [86, 58, 38, 29, 38, 58, 86], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.01701988826971501,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0021968461223877966,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.002540643559768796,
+    "{'hidden_layers': [58, 29, 58], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.006232827843632549,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0}}": 0.0016493741131853312,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 1e-05}}": 0.0016107858682516962,
+    "{'hidden_layers': [29], 'optimizer_params': {'lr': 1.0, 'weight_decay': 0.0001}}": 0.0033700386993587017
+  }
+}
