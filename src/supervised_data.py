@@ -41,13 +41,16 @@ def get_dataset(data: ClientData, benign_samples_per_device: Optional[int] = Non
 
     for device_data in data:
         number_of_attacks = len(device_data.keys()) - 1
+        n_samples_attack = attack_samples_per_device // 10
+        if number_of_attacks == 5:
+            n_samples_attack *= 2
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
             if resample:
                 if key == 'benign':
                     arr = resample_array(arr, benign_samples_per_device)
                 else:
                     # We evenly divide the attack samples among the existing attacks on that device
-                    arr = resample_array(arr, int(round(attack_samples_per_device / number_of_attacks, 5)))
+                    arr = resample_array(arr, n_samples_attack)
 
             data_tensor = torch.tensor(arr).float()
             target_tensor = get_target_tensor(key, arr, multiclass=multiclass, poisoning=poisoning, p_poison=p_poison)

@@ -37,13 +37,20 @@ def get_test_datasets(test_data: ClientData, benign_samples_per_device: Optional
 
     for device_data in test_data:
         number_of_attacks = len(device_data.keys()) - 1
+        n_samples_attack = attack_samples_per_device // 10
+        if number_of_attacks == 5:
+            n_samples_attack *= 2
+        # We evenly divide the attack samples among the existing attacks on that device
+        # With the above trick we always end up with exactly the same total number of attack samples,
+        # whether the device has 5 attacks or 10. It does not work if the device has any other number of attacks,
+        # but with N-BaIoT this is never the case
+
         for key, arr in device_data.items():
             if resample:
                 if key == 'benign':
                     arr = resample_array(arr, benign_samples_per_device)
                 else:
-                    # We evenly divide the attack samples among the existing attacks on that device
-                    arr = resample_array(arr, int(round(attack_samples_per_device / number_of_attacks, 5)))
+                    arr = resample_array(arr, n_samples_attack)
 
             data_tensor = torch.tensor(arr).float()
             if cuda:
