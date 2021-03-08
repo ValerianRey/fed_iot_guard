@@ -21,8 +21,8 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'test_bs': 4096,
                      'p_test': 0.2,
                      'p_unused': 0.01,
-                     'val_part': 0.3,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
-                     'n_splits': 1,
+                     'val_part': None,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
+                     'n_splits': 5,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
                      'benign_prop': 0.95,
