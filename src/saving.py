@@ -27,7 +27,6 @@ def save_results_test(path: str, local_results: dict, new_devices_results: dict,
         json.dump(configurations_params, outfile, default=dumper, indent=2)
 
     if thresholds is not None:
-        print(thresholds)
         with open(path + 'thresholds.json', 'w') as outfile:
             json.dump(thresholds, outfile, default=dumper, indent=2)
 
