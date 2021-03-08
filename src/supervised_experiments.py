@@ -9,7 +9,7 @@ from context_printer import ContextPrinter as Ctp
 
 from architectures import BinaryClassifier, NormalizingModel
 from data import ClientData, FederationData, device_names, get_benign_attack_samples_per_device
-from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack
+from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack, federated_min_max, federated_averaging
 from metrics import BinaryClassificationResult
 from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates
@@ -135,6 +135,15 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
 
     models = [deepcopy(global_model) for _ in range(n_clients)]
     set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
+
+    if params.normalization == 'min-max':
+        federated_min_max(global_model, models)
+    else:
+        federated_averaging(global_model, models)
+
+    models = [deepcopy(global_model) for _ in range(n_clients)]
+
+    params.aggregation_function(global_model, models)
 
     # Initialization of the results
     local_results, new_devices_results = [], []

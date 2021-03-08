@@ -3,6 +3,7 @@ from typing import List, Set, Tuple
 
 import numpy as np
 import torch
+from context_printer import ContextPrinter as Ctp
 
 
 def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
@@ -19,6 +20,16 @@ def federated_median(global_model: torch.nn.Module, models: List[torch.nn.Module
         for key in state_dict_median:
             state_dict_median[key], _ = torch.stack([model.state_dict()[key] for model in models], dim=-1).median(dim=-1)
         global_model.load_state_dict(state_dict_median)
+
+
+def federated_min_max(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
+    subs = torch.stack([model.sub for model in models])
+    sub, _ = torch.min(subs, dim=0)
+    divs = torch.stack([model.div for model in models])
+    max_values = divs + subs
+    max_value, _ = torch.max(max_values, dim=0)
+    div = max_value - sub
+    global_model.set_sub_div(sub, div)
 
 
 # Shortcut for __federated_trimmed_mean(global_model, models, 1) so that it's easier to set the aggregation function as a single param
