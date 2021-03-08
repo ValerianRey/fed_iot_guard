@@ -78,7 +78,7 @@ def compute_reconstruction_losses(model: nn.Module, dataloader) -> torch.Tensor:
         return losses
 
 
-def test_autoencoder(model: nn.Module, threshold: Threshold, dataloaders: Dict[str, DataLoader]) -> BinaryClassificationResult:
+def test_autoencoder(model: nn.Module, threshold: nn.Module, dataloaders: Dict[str, DataLoader]) -> BinaryClassificationResult:
     print_autoencoder_loss_header(print_positives=True)
     result = BinaryClassificationResult()
     for key, dataloader in dataloaders.items():
@@ -153,7 +153,7 @@ def count_scores(predictions: torch.Tensor, is_malicious: bool) -> BinaryClassif
 
 
 # this function will test each model on its associated dataloader, and will print the title for it
-def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Module, Threshold]], main_title: str = 'Multitest autoencoders',
+def multitest_autoencoders(tests: List[Tuple[str, Dict[str, DataLoader], nn.Module, nn.Module]], main_title: str = 'Multitest autoencoders',
                            color: Union[str, Color] = Color.NONE) -> BinaryClassificationResult:
     Ctp.enter_section(main_title, color)
 

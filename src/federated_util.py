@@ -1,6 +1,6 @@
 from copy import deepcopy
 from types import SimpleNamespace
-from typing import List, Set, Tuple, Callable
+from typing import List, Set, Tuple, Callable, Optional
 
 import numpy as np
 import torch
@@ -104,6 +104,15 @@ def model_canceling_attack(global_model: torch.nn.Module, malicious_clients_mode
             model.load_state_dict(new_state_dict)
 
 
+def select_mimicked_client(params: SimpleNamespace) -> Optional[int]:
+    honest_client_ids = [client_id for client_id in range(len(params.clients_devices)) if client_id not in params.malicious_clients]
+    if params.model_poisoning == 'mimic_attack':
+        mimicked_client_id = np.random.choice(honest_client_ids)
+    else:
+        mimicked_client_id = None
+    return mimicked_client_id
+
+
 # Attack in which all malicious clients mimic the model of a single good client. The mimicked client should always be the same throughout
 # the federation rounds.
 def mimic_attack(models: List[torch.nn.Module], malicious_clients: Set[int], mimicked_client: int) -> None:
@@ -130,4 +139,42 @@ def init_federated_models(train_dls: List[DataLoader], params: SimpleNamespace, 
         federated_averaging(global_model, models)
 
     models = [deepcopy(global_model) for _ in range(n_clients)]
+    return global_model, models
+
+
+def model_poisoning(global_model: torch.nn.Module, models: List[torch.nn.Module], params: SimpleNamespace,
+                    mimicked_client_id: Optional[int] = None, verbose: bool = False) -> List[torch.nn.Module]:
+    malicious_clients_models = [model for client_id, model in enumerate(models) if client_id in params.malicious_clients]
+    n_honest = len(models) - len(malicious_clients_models)
+
+    # Model poisoning attacks
+    if params.model_poisoning is not None:
+        if params.model_poisoning == 'cancel_attack':
+            model_canceling_attack(global_model=global_model, malicious_clients_models=malicious_clients_models, n_honest=n_honest)
+            if verbose:
+                Ctp.print('Performing cancel attack')
+        elif params.model_poisoning == 'mimic_attack':
+            mimic_attack(models, params.malicious_clients, mimicked_client_id)
+            if verbose:
+                Ctp.print('Performing mimic attack on client {}'.format(mimicked_client_id))
+        else:
+            raise ValueError('Wrong value for model_poisoning: ' + str(params.model_poisoning))
+
+    # Rescale the model updates of the malicious clients (if any)
+    model_update_scaling(global_model=global_model, malicious_clients_models=malicious_clients_models, factor=params.model_update_factor)
+    return models
+
+
+def model_aggregation(global_model: torch.nn.Module, models: List[torch.nn.Module], params: SimpleNamespace, verbose: bool = False)\
+        -> Tuple[torch.nn.Module, List[torch.nn.Module]]:
+
+    if params.resampling is not None:
+        models, indexes = s_resampling(models, params.resampling)
+        if verbose:
+            Ctp.print(indexes)
+    params.aggregation_function(global_model, models)
+
+    # Distribute the global model back to each client
+    models = [deepcopy(global_model) for _ in range(len(params.clients_devices))]
+
     return global_model, models

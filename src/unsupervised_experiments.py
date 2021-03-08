@@ -1,20 +1,20 @@
-from copy import deepcopy
 from types import SimpleNamespace
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+from torch.utils.data import DataLoader
 
 from architectures import SimpleAutoencoder, NormalizingModel, Threshold
 from data import device_names, ClientData, FederationData, get_benign_attack_samples_per_device
+from federated_util import init_federated_models, model_aggregation, select_mimicked_client, model_poisoning
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
 from unsupervised_data import get_train_dl, get_val_dl, prepare_dataloaders
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
     compute_reconstruction_losses
-from federated_util import init_federated_models
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
@@ -94,9 +94,11 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
 
 
 def federated_testing(global_model: torch.nn.Module, global_threshold: torch.nn.Module,
-                      local_test_dls_dicts: List[Dict[str, DataLoader], new_test_dl: DataLoader, n_clients: int,
+                      local_test_dls_dicts: List[Dict[str, DataLoader]], new_test_dls_dict: Dict[str, DataLoader],
                       params: SimpleNamespace, local_results: List[BinaryClassificationResult],
                       new_devices_results: List[BinaryClassificationResult]) -> None:
+
+    n_clients = len(params.clients_devices)
     # Global model testing on each client's data
     local_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
                                                                 for client_devices in params.clients_devices],
@@ -111,6 +113,7 @@ def federated_testing(global_model: torch.nn.Module, global_threshold: torch.nn.
                                                           params.test_devices),
                                                       color=Color.DARK_CYAN))
 
+
 def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData,
                                    new_test_data: ClientData, params: SimpleNamespace)\
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], List[float]]:
@@ -118,12 +121,14 @@ def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_da
     train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialization of the models
-    n_clients = len(params.clients_devices)
     global_model, models = init_federated_models(train_dls, params, architecture=SimpleAutoencoder)
     global_threshold = Threshold(torch.tensor(0.))
 
     # Initialization of the results
     local_results, new_devices_results, global_thresholds = [], [], []
+
+    # Selection of a client to mimic in case we use the mimic attack
+    mimicked_client_id = select_mimicked_client(params)
 
     for federation_round in range(params.federation_rounds):
         print_federation_round(federation_round, params.federation_rounds)
@@ -135,11 +140,11 @@ def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_da
                                 params=params, lr_factor=(params.gamma_round ** federation_round),
                                 main_title='Training the clients', color=Color.GREEN)
 
-        # Federated aggregation of the models
-        params.aggregation_function(global_model, models)
+        # Model poisoning attacks
+        models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=True)
 
-        # Distribute the global model back to each client
-        models = [deepcopy(global_model) for _ in range(n_clients)]
+        # Aggregation
+        global_model, models = model_aggregation(global_model, models, params, verbose=True)
 
         # Computation of the thresholds
         thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
@@ -147,13 +152,13 @@ def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_da
                                         quantile=params.quantile,
                                         main_title='Computing the thresholds', color=Color.DARK_PURPLE)
 
-        # Federated aggregation of the thresholds
-        params.aggregation_function(global_threshold, thresholds)
+        # Aggregation of the thresholds
+        global_threshold, thresholds = model_aggregation(global_threshold, thresholds, params, verbose=True)
         Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
         global_thresholds.append(global_threshold.threshold.item())
-        # There is no need to distribute the global threshold back to each client since they will compute it again from scratch at the next iteration
-        # But in reality it's like if we transmitted them back because the local testing is made with the global threshold
 
+        # Testing
+        federated_testing(global_model, global_threshold, local_test_dls_dicts, new_test_dls_dict, params, local_results, new_devices_results)
 
         Ctp.exit_section()
 

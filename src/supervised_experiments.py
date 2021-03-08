@@ -1,8 +1,6 @@
-from copy import deepcopy
 from types import SimpleNamespace
 from typing import Tuple, List
 
-import numpy as np
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
@@ -10,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from architectures import BinaryClassifier, NormalizingModel
 from data import ClientData, FederationData, device_names, get_benign_attack_samples_per_device
-from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack, init_federated_models
+from federated_util import init_federated_models, model_aggregation, select_mimicked_client, model_poisoning
 from metrics import BinaryClassificationResult
 from ml import set_model_sub_div, set_models_sub_divs
 from print_util import print_federation_round, print_rates, print_federation_epoch
@@ -93,9 +91,10 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
     return local_result, new_devices_result
 
 
-def federated_testing(global_model: torch.nn.Module, local_test_dls: List[DataLoader], new_test_dl: DataLoader, n_clients: int,
+def federated_testing(global_model: torch.nn.Module, local_test_dls: List[DataLoader], new_test_dl: DataLoader,
                       params: SimpleNamespace, local_results: List[BinaryClassificationResult],
                       new_devices_results: List[BinaryClassificationResult]) -> None:
+    n_clients = len(params.clients_devices)
     # Global model testing on each client's data
     result = multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
                                                    for client_devices in params.clients_devices],
@@ -125,11 +124,7 @@ def fedavg_classifiers_train_test(train_data: FederationData, local_test_data: F
     local_results, new_devices_results = [], []
 
     # Selection of a client to mimic in case we use the mimic attack
-    honest_client_ids = [client_id for client_id in range(n_clients) if client_id not in params.malicious_clients]
-    if params.model_poisoning == 'mimic_attack':
-        mimicked_client_id = np.random.choice(honest_client_ids)
-    else:
-        mimicked_client_id = None
+    mimicked_client_id = select_mimicked_client(params)
 
     for federation_round in range(params.federation_rounds):
         print_federation_round(federation_round, params.federation_rounds)
@@ -141,34 +136,14 @@ def fedavg_classifiers_train_test(train_data: FederationData, local_test_data: F
                                params=params, lr_factor=(params.gamma_round ** federation_round),
                                main_title='Training the clients', color=Color.GREEN)
 
-        malicious_clients_models = [model for client_id, model in enumerate(models) if client_id in params.malicious_clients]
-        n_honest = len(models) - len(malicious_clients_models)
-
         # Model poisoning attacks
-        if params.model_poisoning is not None:
-            if params.model_poisoning == 'cancel_attack':
-                Ctp.print('Launching cancel attack')
-                model_canceling_attack(global_model=global_model, malicious_clients_models=malicious_clients_models, n_honest=n_honest)
-            elif params.model_poisoning == 'mimic_attack':
-                Ctp.print('Launching mimic attack on client {}'.format(mimicked_client_id))
-                mimic_attack(models, params.malicious_clients, mimicked_client_id)
-            else:
-                raise ValueError('Wrong value for model_poisoning: ' + str(params.model_poisoning))
+        models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=True)
 
-        # Rescale the model updates of the malicious clients (if any)
-        model_update_scaling(global_model=global_model, malicious_clients_models=malicious_clients_models, factor=params.model_update_factor)
-
-        # Federated averaging
-        if params.resampling is not None:
-            models, indexes = s_resampling(models, params.resampling)
-            Ctp.print(indexes)
-        params.aggregation_function(global_model, models)
-
-        # Distribute the global model back to each client
-        models = [deepcopy(global_model) for _ in range(n_clients)]
+        # Aggregation
+        global_model, models = model_aggregation(global_model, models, params, verbose=True)
 
         # Testing
-        federated_testing(global_model, local_test_dls, new_test_dl, n_clients, params, local_results, new_devices_results)
+        federated_testing(global_model, local_test_dls, new_test_dl, params, local_results, new_devices_results)
 
         Ctp.exit_section()
 
@@ -189,17 +164,13 @@ def fedsgd_classifiers_train_test(train_data: FederationData, local_test_data: F
     local_results, new_devices_results = [], []
 
     # Selection of a client to mimic in case we use the mimic attack
-    honest_client_ids = [client_id for client_id in range(n_clients) if client_id not in params.malicious_clients]
-    if params.model_poisoning == 'mimic_attack':
-        mimicked_client_id = np.random.choice(honest_client_ids)
-    else:
-        mimicked_client_id = None
+    mimicked_client_id = select_mimicked_client(params)
 
     for epoch in range(params.epochs):
         print_federation_epoch(epoch, params.epochs)
         lr_factor = params.lr_scheduler_params['gamma'] ** (epoch // params.lr_scheduler_params['step_size'])
         train_classifiers_fedsgd(global_model, models, train_dls, params, epoch, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
-        federated_testing(global_model, local_test_dls, new_test_dl, n_clients, params, local_results, new_devices_results)
+        federated_testing(global_model, local_test_dls, new_test_dl, params, local_results, new_devices_results)
         Ctp.exit_section()
 
     return local_results, new_devices_results

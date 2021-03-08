@@ -1,4 +1,3 @@
-from copy import deepcopy
 from types import SimpleNamespace
 from typing import List, Union, Tuple, Optional
 
@@ -8,7 +7,7 @@ from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 from torch.utils.data import DataLoader
 
-from federated_util import s_resampling, model_canceling_attack, model_update_scaling, mimic_attack
+from federated_util import model_poisoning, model_aggregation
 from metrics import BinaryClassificationResult
 from print_util import print_train_classifier, print_train_classifier_header, print_rates
 
@@ -63,33 +62,17 @@ def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], d
 
     result = BinaryClassificationResult()
     print_train_classifier_header()
-    n_clients = len(models)
 
     for i, data_label_tuple in enumerate(zip(*dls)):
         for model, (data, label) in zip(models, data_label_tuple):
             optimizer = params.optimizer(model.parameters(), lr=lr, weight_decay=params.optimizer_params['weight_decay'])
             optimize(model, data, label, optimizer, criterion, result)
 
-        malicious_clients_models = [model for client_id, model in enumerate(models) if client_id in params.malicious_clients]
-        n_honest = len(models) - len(malicious_clients_models)
+            # Model poisoning attacks
+            models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
 
-        # Model poisoning attacks
-        if params.model_poisoning is not None:
-            if params.model_poisoning == 'cancel_attack':
-                model_canceling_attack(global_model=global_model, malicious_clients_models=malicious_clients_models, n_honest=n_honest)
-            elif params.model_poisoning == 'mimic_attack':
-                mimic_attack(models, params.malicious_clients, mimicked_client_id)
-            else:
-                raise ValueError('Wrong value for model_poisoning: ' + str(params.model_poisoning))
-
-        # Rescale the model updates of the malicious clients (if any)
-        model_update_scaling(global_model=global_model, malicious_clients_models=malicious_clients_models, factor=params.model_update_factor)
-
-        if params.resampling is not None:
-            models, indexes = s_resampling(models, params.resampling)
-        params.aggregation_function(global_model, models)
-
-        models = [deepcopy(global_model) for _ in range(n_clients)]
+            # Aggregation
+            global_model, models = model_aggregation(global_model, models, params, verbose=False)
 
         if i % 100 == 0:
             print_train_classifier(epoch, params.epochs, i, len(dls[0]), result, lr, persistent=False)

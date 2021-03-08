@@ -21,12 +21,12 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                      'p_test': 0.2,
                      'p_unused': 0.01,
                      'val_part': None,  # This is the proportion of training data that goes into the validation set, not the proportion of all data
-                     'n_splits': 1,
+                     'n_splits': 5,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
                      'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -80,21 +80,27 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     # 'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 4,
-                                     'train_bs': 8,  # TODO: change back to 64
+                                     'train_bs': 64,
                                      'optimizer': torch.optim.SGD,
                                      'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_2,  # TODO: change that back to avg
-                         'resampling': None}  # TODO: change that back to None
+    federation_params = {'train_bs': 8,
+                         'federation_rounds': 10,
+                         'gamma_round': 0.75,
+                         'aggregation_function': federated_averaging,
+                         'resampling': None}
 
     # data_poisoning: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model_poisoning: 'cancel_attack', 'mimic_attack'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
     # (only applies to the malicious clients; for honest clients this factor is always 1)
-    poisoning_params = {'n_malicious': 3, 'data_poisoning': 'all_labels_flipping', 'p_poison': 1.0,
-                        'model_update_factor': 5.0, 'model_poisoning': 'mimic_attack'}  # TODO: change that back to no attack
+    poisoning_params = {'n_malicious': 0,
+                        'data_poisoning': None,
+                        'p_poison': None,
+                        'model_update_factor': 1.0,
+                        'model_poisoning': None}
 
     # Loading the data
     all_data = read_all_data()
@@ -109,7 +115,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     Ctp.print(configurations)
 
     if experiment == 'autoencoder':
-        constant_params = {**common_params, **autoencoder_params, **autoencoder_opt_default_params}
+        constant_params = {**common_params, **autoencoder_params, **autoencoder_opt_default_params, **poisoning_params}
         splitting_function = get_client_unsupervised_initial_splitting
         if test:
             if federated:
@@ -201,3 +207,7 @@ if __name__ == "__main__":
         Ctp.set_max_depth(args.max_depth)  # Set the max depth at which we print in the console
 
     main(args.experiment, args.setup, args.federated, args.test)
+
+# TODO: change all hparams back to their original value (no attacks 100k samples, fed avg, etc...)
+# TODO: implement FedSGD for autoencoders
+# TODO: read the whole code to verify that everything is correct
