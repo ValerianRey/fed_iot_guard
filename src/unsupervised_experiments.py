@@ -7,14 +7,14 @@ from context_printer import Color
 from context_printer import ContextPrinter as Ctp
 
 from architectures import SimpleAutoencoder, NormalizingModel, Threshold
-from data import device_names, split_clients_data, ClientData, FederationData, get_benign_attack_samples_per_device
+from data import device_names, ClientData, FederationData, get_benign_attack_samples_per_device
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
 from print_util import print_federation_round
-from unsupervised_data import get_train_dl, get_val_dl, get_test_dls_dict, get_train_dls, \
-    get_val_dls, get_test_dls_dicts
+from unsupervised_data import get_train_dl, get_val_dl, prepare_dataloaders
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
     compute_reconstruction_losses
+from federated_util import init_federated_models
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
@@ -50,33 +50,6 @@ def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, pa
     Ctp.print("Validation loss: {:.5f}".format(loss))
 
     return loss
-
-
-def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace):
-    # Split train data between actual train and the set that will be used to search the threshold
-    train_data, threshold_data = split_clients_data(train_val_data, p_second_split=params.threshold_part, p_unused=0.0)
-
-    p_train = params.p_train_val * (1. - params.threshold_part)
-    p_threshold = params.p_train_val * params.threshold_part
-
-    # Creating the dataloaders
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_train,
-                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
-    train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
-
-    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_threshold,
-                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
-    threshold_dls = get_val_dls(threshold_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
-
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, benign_prop=params.benign_prop,
-                                                                                                samples_per_device=params.samples_per_device)
-    local_test_dls_dicts = get_test_dls_dicts(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                                          attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    return train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict
 
 
 def local_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData,
@@ -120,23 +93,34 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     return local_result, new_devices_result, [threshold.threshold.item() for threshold in thresholds]
 
 
-def federated_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData,
-                                      new_test_data: ClientData, params: SimpleNamespace)\
+def federated_testing(global_model: torch.nn.Module, global_threshold: torch.nn.Module,
+                      local_test_dls_dicts: List[Dict[str, DataLoader], new_test_dl: DataLoader, n_clients: int,
+                      params: SimpleNamespace, local_results: List[BinaryClassificationResult],
+                      new_devices_results: List[BinaryClassificationResult]) -> None:
+    # Global model testing on each client's data
+    local_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
+                                                                for client_devices in params.clients_devices],
+                                                               local_test_dls_dicts, [global_model for _ in range(n_clients)],
+                                                               [global_threshold for _ in range(n_clients)])),
+                                                main_title='Testing the global model on data from all clients', color=Color.BLUE))
+
+    # Global model testing on new devices
+    new_devices_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(params.test_devices)],
+                                                                     [new_test_dls_dict], [global_model], [global_threshold])),
+                                                      main_title='Testing the global model on the new devices: ' + device_names(
+                                                          params.test_devices),
+                                                      color=Color.DARK_CYAN))
+
+def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData,
+                                   new_test_data: ClientData, params: SimpleNamespace)\
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], List[float]]:
-    # Prepare the dataloaders
+    # Preparation of the dataloaders
     train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
-    # Initialization of a global model
+    # Initialization of the models
     n_clients = len(params.clients_devices)
-    global_model = NormalizingModel(SimpleAutoencoder(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
-                                    sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+    global_model, models = init_federated_models(train_dls, params, architecture=SimpleAutoencoder)
     global_threshold = Threshold(torch.tensor(0.))
-
-    if params.cuda:
-        global_model = global_model.cuda()
-
-    models = [deepcopy(global_model) for _ in range(n_clients)]
-    set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
 
     # Initialization of the results
     local_results, new_devices_results, global_thresholds = [], [], []
@@ -170,19 +154,24 @@ def federated_autoencoders_train_test(train_val_data: FederationData, local_test
         # There is no need to distribute the global threshold back to each client since they will compute it again from scratch at the next iteration
         # But in reality it's like if we transmitted them back because the local testing is made with the global threshold
 
-        # Global model testing on each client's data
-        local_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
-                                                                    for client_devices in params.clients_devices],
-                                                                   local_test_dls_dicts, [global_model for _ in range(n_clients)],
-                                                                   [global_threshold for _ in range(n_clients)])),
-                                                    main_title='Testing the global model on data from all clients', color=Color.BLUE))
 
-        # Global model testing on new devices
-        new_devices_results.append(multitest_autoencoders(tests=list(zip(['Testing global model on: ' + device_names(params.test_devices)],
-                                                                         [new_test_dls_dict], [global_model], [global_threshold])),
-                                                          main_title='Testing the global model on the new devices: ' + device_names(
-                                                              params.test_devices),
-                                                          color=Color.DARK_CYAN))
         Ctp.exit_section()
 
     return local_results, new_devices_results, global_thresholds
+
+
+def fedsgd_autoencoders_train_test(train_val_data: FederationData, local_test_data: FederationData,
+                                   new_test_data: ClientData, params: SimpleNamespace)\
+        -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], List[float]]:
+    # Preparation of the dataloaders
+    train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
+
+    # Initialization of the models
+    n_clients = len(params.clients_devices)
+    global_model, models = init_federated_models(train_dls, params, architecture=SimpleAutoencoder)
+    global_threshold = Threshold(torch.tensor(0.))
+
+    # Initialization of the results
+    local_results, new_devices_results, global_thresholds = [], [], []
+
+    raise NotImplementedError()

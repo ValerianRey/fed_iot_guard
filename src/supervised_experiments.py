@@ -6,15 +6,16 @@ import numpy as np
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+from torch.utils.data import DataLoader
 
 from architectures import BinaryClassifier, NormalizingModel
 from data import ClientData, FederationData, device_names, get_benign_attack_samples_per_device
-from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack, federated_min_max, federated_averaging
+from federated_util import model_update_scaling, model_canceling_attack, s_resampling, mimic_attack, init_federated_models
 from metrics import BinaryClassificationResult
 from ml import set_model_sub_div, set_models_sub_divs
-from print_util import print_federation_round, print_rates
-from supervised_data import get_train_dl, get_test_dl, get_train_dls, get_test_dls
-from supervised_ml import multitrain_classifiers, multitest_classifiers, train_classifier, test_classifier
+from print_util import print_federation_round, print_rates, print_federation_epoch
+from supervised_data import get_train_dl, get_test_dl, prepare_dataloaders
+from supervised_ml import multitrain_classifiers, multitest_classifiers, train_classifier, test_classifier, train_classifiers_fedsgd
 
 
 def local_classifier_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> BinaryClassificationResult:
@@ -58,20 +59,7 @@ def local_classifier_train_val(train_data: ClientData, val_data: ClientData, par
 def local_classifiers_train_test(train_data: FederationData, local_test_data: FederationData,
                                  new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[BinaryClassificationResult, BinaryClassificationResult]:
-    # Creating the dataloaders
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_train_val,
-                                                                                                benign_prop=params.benign_prop,
-                                                                                                samples_per_device=params.samples_per_device)
-    train_dls = get_train_dls(train_data, params.train_bs, malicious_clients=set(), benign_samples_per_device=benign_samples_per_device,
-                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, benign_prop=params.benign_prop,
-                                                                                                samples_per_device=params.samples_per_device)
-    local_test_dls = get_test_dls(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                                  attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+    train_dls, local_test_dls, new_test_dl = prepare_dataloaders(train_data, local_test_data, new_test_data, params, federated=False)
 
     # Initialize the models and compute the normalization values with each client's local training data
     n_clients = len(params.clients_devices)
@@ -105,52 +93,43 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
     return local_result, new_devices_result
 
 
-def federated_classifiers_train_test(train_data: FederationData, local_test_data: FederationData,
-                                     new_test_data: ClientData, params: SimpleNamespace) \
+def federated_testing(global_model: torch.nn.Module, local_test_dls: List[DataLoader], new_test_dl: DataLoader, n_clients: int,
+                      params: SimpleNamespace, local_results: List[BinaryClassificationResult],
+                      new_devices_results: List[BinaryClassificationResult]) -> None:
+    # Global model testing on each client's data
+    result = multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
+                                                   for client_devices in params.clients_devices],
+                                                  local_test_dls, [global_model for _ in range(n_clients)])),
+                                   main_title='Testing the global model on data from all clients', color=Color.BLUE)
+    local_results.append(result)
+
+    # Global model testing on new devices
+    result = multitest_classifiers(
+        tests=list(zip(['Testing global model on: ' + device_names(params.test_devices)], [new_test_dl], [global_model])),
+        main_title='Testing the global model on the new devices: ' + device_names(params.test_devices),
+        color=Color.DARK_CYAN)
+    new_devices_results.append(result)
+
+
+def fedavg_classifiers_train_test(train_data: FederationData, local_test_data: FederationData,
+                                  new_test_data: ClientData, params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
-    # Creating the dataloaders
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_train_val,
-                                                                                                benign_prop=params.benign_prop,
-                                                                                                samples_per_device=params.samples_per_device)
-    train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device,
-                              attack_samples_per_device=attack_samples_per_device, malicious_clients=params.malicious_clients, cuda=params.cuda,
-                              poisoning=params.data_poisoning, p_poison=params.p_poison)
+    # Preparation of the dataloaders
+    train_dls, local_test_dls, new_test_dl = prepare_dataloaders(train_data, local_test_data, new_test_data, params, federated=True)
 
-    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test,
-                                                                                                benign_prop=params.benign_prop,
-                                                                                                samples_per_device=params.samples_per_device)
-    local_test_dls = get_test_dls(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                                  attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    new_test_dl = get_test_dl(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
-                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
-
-    # Initialization of a global model
+    # Initialization of the models
     n_clients = len(params.clients_devices)
-    global_model = NormalizingModel(BinaryClassifier(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
-                                    sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
-
-    if params.cuda:
-        global_model = global_model.cuda()
-
-    models = [deepcopy(global_model) for _ in range(n_clients)]
-    set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
-
-    if params.normalization == 'min-max':
-        federated_min_max(global_model, models)
-    else:
-        federated_averaging(global_model, models)
-
-    models = [deepcopy(global_model) for _ in range(n_clients)]
-
-    params.aggregation_function(global_model, models)
+    global_model, models = init_federated_models(train_dls, params, architecture=BinaryClassifier)
 
     # Initialization of the results
     local_results, new_devices_results = [], []
 
     # Selection of a client to mimic in case we use the mimic attack
     honest_client_ids = [client_id for client_id in range(n_clients) if client_id not in params.malicious_clients]
-    mimicked_client_id = np.random.choice(honest_client_ids)
+    if params.model_poisoning == 'mimic_attack':
+        mimicked_client_id = np.random.choice(honest_client_ids)
+    else:
+        mimicked_client_id = None
 
     for federation_round in range(params.federation_rounds):
         print_federation_round(federation_round, params.federation_rounds)
@@ -188,20 +167,39 @@ def federated_classifiers_train_test(train_data: FederationData, local_test_data
         # Distribute the global model back to each client
         models = [deepcopy(global_model) for _ in range(n_clients)]
 
-        # Global model testing on each client's data
-        result = multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
-                                                       for client_devices in params.clients_devices],
-                                                      local_test_dls, [global_model for _ in range(n_clients)])),
-                                       main_title='Testing the global model on data from all clients', color=Color.BLUE)
-        local_results.append(result)
+        # Testing
+        federated_testing(global_model, local_test_dls, new_test_dl, n_clients, params, local_results, new_devices_results)
 
-        # Global model testing on new devices
-        result = multitest_classifiers(
-            tests=list(zip(['Testing global model on: ' + device_names(params.test_devices)], [new_test_dl], [global_model])),
-            main_title='Testing the global model on the new devices: ' + device_names(params.test_devices),
-            color=Color.DARK_CYAN)
-        new_devices_results.append(result)
+        Ctp.exit_section()
 
+    return local_results, new_devices_results
+
+
+def fedsgd_classifiers_train_test(train_data: FederationData, local_test_data: FederationData,
+                                  new_test_data: ClientData, params: SimpleNamespace) \
+        -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult]]:
+    # Preparation of the dataloaders
+    train_dls, local_test_dls, new_test_dl = prepare_dataloaders(train_data, local_test_data, new_test_data, params, federated=True)
+
+    # Initialization of the models
+    n_clients = len(params.clients_devices)
+    global_model, models = init_federated_models(train_dls, params, architecture=BinaryClassifier)
+
+    # Initialization of the results
+    local_results, new_devices_results = [], []
+
+    # Selection of a client to mimic in case we use the mimic attack
+    honest_client_ids = [client_id for client_id in range(n_clients) if client_id not in params.malicious_clients]
+    if params.model_poisoning == 'mimic_attack':
+        mimicked_client_id = np.random.choice(honest_client_ids)
+    else:
+        mimicked_client_id = None
+
+    for epoch in range(params.epochs):
+        print_federation_epoch(epoch, params.epochs)
+        lr_factor = params.lr_scheduler_params['gamma'] ** (epoch // params.lr_scheduler_params['step_size'])
+        train_classifiers_fedsgd(global_model, models, train_dls, params, epoch, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
+        federated_testing(global_model, local_test_dls, new_test_dl, n_clients, params, local_results, new_devices_results)
         Ctp.exit_section()
 
     return local_results, new_devices_results

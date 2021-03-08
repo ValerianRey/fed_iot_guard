@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from typing import List, Tuple, Optional, Set
 
 import numpy as np
@@ -6,7 +7,7 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import multiclass_labels, ClientData, FederationData, split_client_data, resample_array
+from data import multiclass_labels, ClientData, FederationData, split_client_data, resample_array, get_benign_attack_samples_per_device
 
 
 def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False,
@@ -109,3 +110,32 @@ def get_test_dls(test_data: FederationData, test_bs: int, benign_samples_per_dev
 def get_client_supervised_initial_splitting(client_data: ClientData, p_test: float, p_unused: float) -> Tuple[ClientData, ClientData]:
     client_train_val, client_test = split_client_data(client_data, p_second_split=p_test, p_unused=p_unused)
     return client_train_val, client_test
+
+
+def prepare_dataloaders(train_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace,
+                        federated: bool = False) -> Tuple[List[DataLoader], List[DataLoader], DataLoader]:
+    if federated:
+        malicious_clients = params.malicious_clients
+        poisoning = params.data_poisoning
+        p_poison = params.p_poison
+    else:
+        malicious_clients = set()
+        poisoning = None
+        p_poison = None
+
+    # Creating the dataloaders
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_train_val,
+                                                                                                benign_prop=params.benign_prop,
+                                                                                                samples_per_device=params.samples_per_device)
+    train_dls = get_train_dls(train_data, params.train_bs, malicious_clients=malicious_clients, benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda, poisoning=poisoning, p_poison=p_poison)
+
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, benign_prop=params.benign_prop,
+                                                                                                samples_per_device=params.samples_per_device)
+    local_test_dls = get_test_dls(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                  attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    new_test_dl = get_test_dl(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    return train_dls, local_test_dls, new_test_dl

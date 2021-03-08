@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from typing import Dict, Tuple, List, Optional
 
 import torch
@@ -5,7 +6,8 @@ import torch.utils
 import torch.utils.data
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData, resample_array
+from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData, resample_array, split_clients_data, \
+    get_benign_attack_samples_per_device
 
 
 def get_benign_dataset(data: ClientData, benign_samples_per_device: Optional[int] = None, cuda: bool = False) -> Dataset:
@@ -105,3 +107,31 @@ def get_client_unsupervised_initial_splitting(client_data: ClientData, p_test: f
                    for device_benign_test, device_attack_data in zip(client_benign_test, client_attack_data)]
 
     return client_train_val, client_test
+
+
+def prepare_dataloaders(train_val_data: FederationData, local_test_data: FederationData, new_test_data: ClientData, params: SimpleNamespace)\
+        -> Tuple[List[DataLoader], List[DataLoader], List[Dict[str, DataLoader]], Dict[str, DataLoader]]:
+    # Split train data between actual train and the set that will be used to search the threshold
+    train_data, threshold_data = split_clients_data(train_val_data, p_second_split=params.threshold_part, p_unused=0.0)
+
+    p_train = params.p_train_val * (1. - params.threshold_part)
+    p_threshold = params.p_train_val * params.threshold_part
+
+    # Creating the dataloaders
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_train,
+                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
+    train_dls = get_train_dls(train_data, params.train_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, _ = get_benign_attack_samples_per_device(p_split=p_threshold,
+                                                                        benign_prop=1., samples_per_device=params.samples_per_device)
+    threshold_dls = get_val_dls(threshold_data, params.test_bs, benign_samples_per_device=benign_samples_per_device, cuda=params.cuda)
+
+    benign_samples_per_device, attack_samples_per_device = get_benign_attack_samples_per_device(p_split=params.p_test, benign_prop=params.benign_prop,
+                                                                                                samples_per_device=params.samples_per_device)
+    local_test_dls_dicts = get_test_dls_dicts(local_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                              attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    new_test_dls_dict = get_test_dls_dict(new_test_data, params.test_bs, benign_samples_per_device=benign_samples_per_device,
+                                          attack_samples_per_device=attack_samples_per_device, cuda=params.cuda)
+
+    return train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict

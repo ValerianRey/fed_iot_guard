@@ -9,13 +9,13 @@ from context_printer import ContextPrinter as Ctp, Color
 from data import FederationData, ClientData, DeviceData, get_configuration_data, get_initial_splitting
 from metrics import BinaryClassificationResult
 from saving import create_new_numbered_dir, save_results_test
-from supervised_experiments import local_classifiers_train_test, federated_classifiers_train_test
-from unsupervised_experiments import local_autoencoders_train_test, federated_autoencoders_train_test
+from supervised_experiments import local_classifiers_train_test, fedavg_classifiers_train_test, fedsgd_classifiers_train_test
+from unsupervised_experiments import local_autoencoders_train_test, fedavg_autoencoders_train_test, fedsgd_autoencoders_train_test
 
 
 # Computes the results of multiple random reruns of the same experiment
 def compute_rerun_results(clients_train_val: FederationData, clients_test: FederationData, test_devices_data: ClientData,
-                          experiment: str, federated: bool, params: SimpleNamespace) \
+                          experiment: str, federated: str, params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], Optional[List[List[float]]]]:
     local_results = []
     new_devices_results = []
@@ -25,18 +25,34 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
         start_time = time()
         if experiment == 'classifier':
             threshold = None
-            if federated:
+            if federated is None:
+                local_result, new_devices_result = local_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+            else:
                 malicious_clients = set(np.random.choice(len(clients_train_val), params.n_malicious, replace=False))
                 params.malicious_clients = malicious_clients
                 Ctp.print('Malicious clients: ' + repr([mc for mc in malicious_clients]))
-                local_result, new_devices_result = federated_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
-            else:
-                local_result, new_devices_result = local_classifiers_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+                if federated == 'fedavg':
+                    local_result, new_devices_result = fedavg_classifiers_train_test(clients_train_val, clients_test, test_devices_data,
+                                                                                     params=params)
+                elif federated == 'fedsgd':
+                    local_result, new_devices_result = fedsgd_classifiers_train_test(clients_train_val, clients_test, test_devices_data,
+                                                                                     params=params)
+                else:
+                    raise ValueError('Wrong value for federated: ' + repr(federated))
+
         elif experiment == 'autoencoder':
-            if federated:
-                local_result, new_devices_result, threshold = federated_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+            if federated is None:
+                local_result, new_devices_result, threshold = local_autoencoders_train_test(clients_train_val, clients_test, test_devices_data,
+                                                                                            params=params)
             else:
-                local_result, new_devices_result, threshold = local_autoencoders_train_test(clients_train_val, clients_test, test_devices_data, params=params)
+                if federated == 'fedavg':
+                    local_result, new_devices_result, threshold = fedavg_autoencoders_train_test(clients_train_val, clients_test, test_devices_data,
+                                                                                                 params=params)
+                elif federated == 'fedsgd':
+                    local_result, new_devices_result, threshold = fedsgd_autoencoders_train_test(clients_train_val, clients_test, test_devices_data,
+                                                                                                 params=params)
+                else:
+                    raise ValueError('Wrong value for federated: ' + repr(federated))
         else:
             raise ValueError()
 
@@ -50,7 +66,7 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
 
 
 # This function is used to test the performance of a model with a given set of hyper-parameters on the test set
-def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str, federated: bool, splitting_function: Callable,
+def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str, federated: str, splitting_function: Callable,
                          constant_params: dict, configurations_params: List[dict], configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
     base_path = 'test_results/' + setup + '_' + experiment + ('_federated' if federated else '') + '/run_'

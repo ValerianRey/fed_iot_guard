@@ -1,9 +1,14 @@
 from copy import deepcopy
-from typing import List, Set, Tuple
+from types import SimpleNamespace
+from typing import List, Set, Tuple, Callable
 
 import numpy as np
 import torch
-from context_printer import ContextPrinter as Ctp
+from context_printer import ContextPrinter as Ctp, Color
+from torch.utils.data import DataLoader
+
+from architectures import NormalizingModel
+from ml import set_models_sub_divs
 
 
 def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
@@ -105,3 +110,24 @@ def mimic_attack(models: List[torch.nn.Module], malicious_clients: Set[int], mim
     with torch.no_grad():
         for i in malicious_clients:
             models[i] = deepcopy(models[mimicked_client])
+
+
+def init_federated_models(train_dls: List[DataLoader], params: SimpleNamespace, architecture: Callable):
+    # Initialization of a global model
+    n_clients = len(params.clients_devices)
+    global_model = NormalizingModel(architecture(activation_function=params.activation_fn, hidden_layers=params.hidden_layers),
+                                    sub=torch.zeros(params.n_features), div=torch.ones(params.n_features))
+
+    if params.cuda:
+        global_model = global_model.cuda()
+
+    models = [deepcopy(global_model) for _ in range(n_clients)]
+    set_models_sub_divs(params.normalization, models, train_dls, color=Color.RED)
+
+    if params.normalization == 'min-max':
+        federated_min_max(global_model, models)
+    else:
+        federated_averaging(global_model, models)
+
+    models = [deepcopy(global_model) for _ in range(n_clients)]
+    return global_model, models

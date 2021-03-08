@@ -17,6 +17,10 @@ def print_federation_round(federation_round: int, n_rounds: int) -> None:
     Ctp.enter_section('Federation round [{}/{}]'.format(federation_round + 1, n_rounds), Color.DARK_GRAY)
 
 
+def print_federation_epoch(epoch: int, n_epochs: int) -> None:
+    Ctp.enter_section('Epoch [{}/{}]'.format(epoch + 1, n_epochs), Color.DARK_GRAY)
+
+
 def print_rates(result: BinaryClassificationResult) -> None:
     Ctp.print('TPR: {:.2f}% - TNR: {:.2f}% - Accuracy: {:.2f}% - Precision: {:.2f}% - F1-Score: {:.2f}%'
               .format(result.tpr() * 100, result.tnr() * 100, result.acc() * 100, result.precision() * 100, result.f1() * 100))

@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 
 import torch.utils.data
-from context_printer import ContextPrinter as Ctp
 
 from data import read_all_data, all_devices
 from federated_util import *
@@ -11,9 +10,9 @@ from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
 
 
-def main(experiment: str, setup: str, federated: bool, test: bool):
+def main(experiment: str, setup: str, federated: str, test: bool):
     Ctp.set_automatic_skip(True)
-    Ctp.print('\n\t\t\t\t\t' + ('FEDERATED ' if federated else '') + setup.upper() + ' ' + experiment.upper()
+    Ctp.print('\n\t\t\t\t\t' + (federated.upper() + ' ' if federated is not None else '') + setup.upper() + ' ' + experiment.upper()
               + (' TESTING' if test else ' GRID SEARCH') + '\n', bold=True)
 
     common_params = {'n_features': 115,
@@ -27,7 +26,7 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
                      'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -81,21 +80,21 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
     # 'lr_scheduler_params': {'patience': 3, 'threshold': 0.025, 'factor': 0.5, 'verbose': False}}
 
     classifier_opt_default_params = {'epochs': 4,
-                                     'train_bs': 64,
+                                     'train_bs': 8,  # TODO: change back to 64
                                      'optimizer': torch.optim.SGD,
                                      'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                                      'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
 
-    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_averaging,
-                         'resampling': None}
+    federation_params = {'federation_rounds': 10, 'gamma_round': 0.75, 'aggregation_function': federated_trimmed_mean_2,  # TODO: change that back to avg
+                         'resampling': None}  # TODO: change that back to None
 
     # data_poisoning: 'all_labels_flipping', 'benign_labels_flipping', 'attack_labels_flipping'
     # model_poisoning: 'cancel_attack', 'mimic_attack'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
     # (only applies to the malicious clients; for honest clients this factor is always 1)
-    poisoning_params = {'n_malicious': 0, 'data_poisoning': None, 'p_poison': None,
-                        'model_update_factor': 1.0, 'model_poisoning': None}
+    poisoning_params = {'n_malicious': 3, 'data_poisoning': 'all_labels_flipping', 'p_poison': 1.0,
+                        'model_update_factor': 5.0, 'model_poisoning': 'mimic_attack'}  # TODO: change that back to no attack
 
     # Loading the data
     all_data = read_all_data()
@@ -177,9 +176,11 @@ if __name__ == "__main__":
     parser.set_defaults(test=False)
 
     federated_parser = parser.add_mutually_exclusive_group(required=False)
-    federated_parser.add_argument('--federated', dest='federated', action='store_true')
-    federated_parser.add_argument('--no-federated', dest='federated', action='store_false')
-    parser.set_defaults(federated=False)
+    federated_parser.add_argument('--fedavg', dest='federated', action='store_const',
+                                  const='fedavg', help='Federation of the models (default: None)')
+    federated_parser.add_argument('--fedsgd', dest='federated', action='store_const',
+                                  const='fedsgd', help='Federation of the models (default: None)')
+    parser.set_defaults(federated=None)
 
     verbose_parser = parser.add_mutually_exclusive_group(required=False)
     verbose_parser.add_argument('--verbose', dest='verbose', action='store_true')
@@ -191,6 +192,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    Ctp.print(args)
+
     if not args.verbose:  # Deactivate all printing in the console
         Ctp.deactivate()
 
@@ -198,7 +201,3 @@ if __name__ == "__main__":
         Ctp.set_max_depth(args.max_depth)  # Set the max depth at which we print in the console
 
     main(args.experiment, args.setup, args.federated, args.test)
-
-# TODO: maybe there's a problem with federated averaging for the normalization values: for min-max normalization it should actually
-#  select the min and max values of the clients instead of the avg / median / etc...
-#  Also, maybe that should happen before any training occurs
