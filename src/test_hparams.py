@@ -78,7 +78,7 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
 def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str, federated: Optional[str], splitting_function: Callable,
                          constant_params: dict, configurations_params: List[dict], configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
-    base_path = 'test_results/' + setup + '_' + experiment + ('_federated' if federated else '') + '/run_'
+    base_path = 'test_results/' + setup + '_' + experiment + ('_' + federated if federated is not None else '') + '/run_'
 
     params_dict = deepcopy(constant_params)
     local_results, new_devices_results, thresholds = {}, {}, {}

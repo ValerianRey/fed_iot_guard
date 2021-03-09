@@ -49,8 +49,6 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
         print_train_classifier(epoch, params.epochs, len(train_loader) - 1, len(train_loader), result, lr, persistent=True)
 
         scheduler.step()
-        if optimizer.param_groups[0]['lr'] <= 1e-3:
-            break
 
 
 def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace, epoch: int,
@@ -58,6 +56,7 @@ def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], d
     criterion = nn.BCELoss()
     lr = params.optimizer_params['lr'] * lr_factor
 
+    # Set the models to train mode
     for model in models:
         model.train()
 

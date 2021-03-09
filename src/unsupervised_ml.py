@@ -52,9 +52,6 @@ def train_autoencoder(model: nn.Module, params: SimpleNamespace, train_loader, l
         print_autoencoder_loss_stats('[{}/{}]'.format(epoch + 1, params.epochs), losses, lr=optimizer.param_groups[0]['lr'])
         scheduler.step()
 
-        if optimizer.param_groups[0]['lr'] <= 1e-3:
-            break
-
 
 def train_autoencoders_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace,
                               lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> None:
@@ -106,7 +103,7 @@ def test_autoencoder(model: nn.Module, threshold: nn.Module, dataloaders: Dict[s
     for key, dataloader in dataloaders.items():
         losses = compute_reconstruction_losses(model, dataloader)
         predictions = torch.gt(losses, threshold.threshold).int()
-        current_results = count_scores(predictions, is_malicious=False if key == 'benign' else True)
+        current_results = count_scores(predictions, is_attack=(key != 'benign'))
         title = ' '.join(key.split('_')).title()  # Transforms for example the key "mirai_ack" into the title "Mirai Ack"
         print_autoencoder_loss_stats(title, losses, positives=current_results.tp + current_results.fp, n_samples=current_results.n_samples())
         result += current_results
@@ -161,11 +158,11 @@ def compute_thresholds(opts: List[Tuple[str, DataLoader, nn.Module]], quantile: 
     return thresholds
 
 
-def count_scores(predictions: torch.Tensor, is_malicious: bool) -> BinaryClassificationResult:
+def count_scores(predictions: torch.Tensor, is_attack: bool) -> BinaryClassificationResult:
     positive_predictions = predictions.sum().item()
     negative_predictions = len(predictions) - positive_predictions
     results = BinaryClassificationResult()
-    if is_malicious:
+    if is_attack:
         results.add_tp(positive_predictions)
         results.add_fn(negative_predictions)
     else:

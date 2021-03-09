@@ -12,13 +12,11 @@ from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, F
 
 
 def get_benign_dataset(data: ClientData, benign_samples_per_device: Optional[int] = None, cuda: bool = False) -> Dataset:
-    resample = benign_samples_per_device is not None
-
     data_list = []
     for device_data in data:
         for key, arr in device_data.items():  # This will iterate over the benign splits, gafgyt splits and mirai splits (if applicable)
             if key == 'benign':
-                if resample:
+                if benign_samples_per_device is not None:
                     arr = resample_array(arr, benign_samples_per_device)
 
             data_tensor = torch.tensor(arr).float()
@@ -39,10 +37,13 @@ def get_test_datasets(test_data: ClientData, benign_samples_per_device: Optional
     resample = benign_samples_per_device is not None and attack_samples_per_device is not None
 
     for device_data in test_data:
-        number_of_attacks = len(device_data.keys()) - 1
-        n_samples_attack = attack_samples_per_device // 10
-        if number_of_attacks == 5:
-            n_samples_attack *= 2
+        if resample:
+            number_of_attacks = len(device_data.keys()) - 1
+            n_samples_attack = attack_samples_per_device // 10
+            if number_of_attacks == 5:
+                n_samples_attack *= 2
+        else:
+            n_samples_attack = None
         # We evenly divide the attack samples among the existing attacks on that device
         # With the above trick we always end up with exactly the same total number of attack samples,
         # whether the device has 5 attacks or 10. It does not work if the device has any other number of attacks,

@@ -36,8 +36,7 @@ def get_target_tensor(key: str, arr: np.ndarray, multiclass: bool = False,
 # Creates a dataset with the given client's data. If n_benign and n_attack are specified, up or down sampling will be used to have the right
 # amount of that class of data. The data can also be poisoned if needed.
 def get_dataset(data: ClientData, benign_samples_per_device: Optional[int] = None, attack_samples_per_device: Optional[int] = None,
-                cuda: bool = False,
-                multiclass: bool = False, poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Dataset:
+                cuda: bool = False, multiclass: bool = False, poisoning: Optional[str] = None, p_poison: Optional[float] = None) -> Dataset:
     data_list, target_list = [], []
     resample = benign_samples_per_device is not None and attack_samples_per_device is not None
 

@@ -33,7 +33,6 @@ def print_train_classifier_header() -> None:
               + '| TPR'.ljust(Columns.MEDIUM)
               + '| TNR'.ljust(Columns.MEDIUM)
               + '| Accuracy'.ljust(Columns.MEDIUM)
-              + '| Recall'.ljust(Columns.MEDIUM)
               + '| Precision'.ljust(Columns.MEDIUM)
               + '| F1-Score'.ljust(Columns.MEDIUM)
               + '| LR'.ljust(Columns.MEDIUM), bold=True)
@@ -46,7 +45,6 @@ def print_train_classifier(epoch: int, num_epochs: int, batch: int, num_batches:
               + '| {:.5f}'.format(result.tpr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.tnr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.acc()).ljust(Columns.MEDIUM)
-              + '| {:.5f}'.format(result.recall()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.precision()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.f1()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(lr).ljust(Columns.MEDIUM),
