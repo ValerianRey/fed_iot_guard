@@ -45,7 +45,7 @@ def device_names(device_ids: List[int]) -> str:
     return ', '.join([all_devices[device_id] for device_id in device_ids])
 
 
-def get_device_data(device_id: int) -> DeviceData:
+def read_device_data(device_id: int) -> DeviceData:
     Ctp.print('[{}/{}] Data from '.format(device_id + 1, len(all_devices)) + all_devices[device_id])
     device = all_devices[device_id]
     device_data = {'benign': pd.read_csv(benign_paths[device]).to_numpy()}
@@ -60,7 +60,7 @@ def get_device_data(device_id: int) -> DeviceData:
 
 def read_all_data() -> List[DeviceData]:
     Ctp.enter_section('Reading data', Color.YELLOW)
-    data = [get_device_data(device_id) for device_id in range(len(all_devices))]
+    data = [read_device_data(device_id) for device_id in range(len(all_devices))]
     Ctp.exit_section()
     return data
 

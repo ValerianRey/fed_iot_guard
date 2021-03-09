@@ -17,6 +17,10 @@ def print_federation_round(federation_round: int, n_rounds: int) -> None:
     Ctp.enter_section('Federation round [{}/{}]'.format(federation_round + 1, n_rounds), Color.DARK_GRAY)
 
 
+def print_federation_epoch(epoch: int, n_epochs: int) -> None:
+    Ctp.enter_section('Epoch [{}/{}]'.format(epoch + 1, n_epochs), Color.DARK_GRAY)
+
+
 def print_rates(result: BinaryClassificationResult) -> None:
     Ctp.print('TPR: {:.2f}% - TNR: {:.2f}% - Accuracy: {:.2f}% - Precision: {:.2f}% - F1-Score: {:.2f}%'
               .format(result.tpr() * 100, result.tnr() * 100, result.acc() * 100, result.precision() * 100, result.f1() * 100))
@@ -29,7 +33,6 @@ def print_train_classifier_header() -> None:
               + '| TPR'.ljust(Columns.MEDIUM)
               + '| TNR'.ljust(Columns.MEDIUM)
               + '| Accuracy'.ljust(Columns.MEDIUM)
-              + '| Recall'.ljust(Columns.MEDIUM)
               + '| Precision'.ljust(Columns.MEDIUM)
               + '| F1-Score'.ljust(Columns.MEDIUM)
               + '| LR'.ljust(Columns.MEDIUM), bold=True)
@@ -42,7 +45,6 @@ def print_train_classifier(epoch: int, num_epochs: int, batch: int, num_batches:
               + '| {:.5f}'.format(result.tpr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.tnr()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.acc()).ljust(Columns.MEDIUM)
-              + '| {:.5f}'.format(result.recall()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.precision()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(result.f1()).ljust(Columns.MEDIUM)
               + '| {:.5f}'.format(lr).ljust(Columns.MEDIUM),

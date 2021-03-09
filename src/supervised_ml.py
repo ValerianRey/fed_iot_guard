@@ -1,14 +1,29 @@
 from types import SimpleNamespace
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader
 
+from federated_util import model_poisoning, model_aggregation
 from metrics import BinaryClassificationResult
 from print_util import print_train_classifier, print_train_classifier_header, print_rates
+
+
+def optimize(model: nn.Module, data: torch.Tensor, label: torch.Tensor, optimizer: torch.optim.Optimizer, criterion: torch.nn.Module,
+             result: Optional[BinaryClassificationResult] = None) -> None:
+    output = model(data)
+    loss = criterion(output, label)
+    optimizer.zero_grad()
+    loss.mean().backward()
+    optimizer.step()
+
+    pred = torch.gt(output, torch.tensor(0.5)).int()
+    if result is not None:
+        result.update(pred, label)
 
 
 def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: DataLoader, lr_factor: float = 1.0) -> None:
@@ -26,14 +41,7 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
         lr = optimizer.param_groups[0]['lr']
         result = BinaryClassificationResult()
         for i, (data, label) in enumerate(train_loader):
-            output = model(data)
-            loss = criterion(output, label)
-            optimizer.zero_grad()
-            loss.mean().backward()
-            optimizer.step()
-
-            pred = torch.gt(output, torch.tensor(0.5)).int()
-            result.update(pred, label)
+            optimize(model, data, label, optimizer, criterion, result)
 
             if i % 1000 == 0:
                 print_train_classifier(epoch, params.epochs, i, len(train_loader), result, lr, persistent=False)
@@ -41,8 +49,34 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
         print_train_classifier(epoch, params.epochs, len(train_loader) - 1, len(train_loader), result, lr, persistent=True)
 
         scheduler.step()
-        if optimizer.param_groups[0]['lr'] <= 1e-3:
-            break
+
+
+def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace, epoch: int,
+                             lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> None:
+    criterion = nn.BCELoss()
+    lr = params.optimizer_params['lr'] * lr_factor
+
+    # Set the models to train mode
+    for model in models:
+        model.train()
+
+    result = BinaryClassificationResult()
+    print_train_classifier_header()
+
+    for i, data_label_tuple in enumerate(zip(*dls)):
+        for model, (data, label) in zip(models, data_label_tuple):
+            optimizer = params.optimizer(model.parameters(), lr=lr, weight_decay=params.optimizer_params['weight_decay'])
+            optimize(model, data, label, optimizer, criterion, result)
+
+            # Model poisoning attacks
+            models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
+
+            # Aggregation
+            global_model, models = model_aggregation(global_model, models, params, verbose=False)
+
+        if i % 100 == 0:
+            print_train_classifier(epoch, params.epochs, i, len(dls[0]), result, lr, persistent=False)
+    print_train_classifier(epoch, params.epochs, len(dls[0]) - 1, len(dls[0]), result, lr, persistent=True)
 
 
 def test_classifier(model: nn.Module, test_loader: DataLoader) -> BinaryClassificationResult:
