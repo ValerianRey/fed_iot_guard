@@ -5,12 +5,13 @@ import torch
 import torch.nn as nn
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader
 
 from architectures import Threshold
+from federated_util import model_poisoning, model_aggregation
 from metrics import BinaryClassificationResult
 from print_util import print_autoencoder_loss_stats, print_rates, print_autoencoder_loss_header
-from federated_util import model_poisoning, model_aggregation
 
 
 def optimize(model: nn.Module, data: torch.Tensor, optimizer: torch.optim.Optimizer, criterion: torch.nn.Module) -> torch.Tensor:

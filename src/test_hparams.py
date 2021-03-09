@@ -43,7 +43,7 @@ def select_experiment_function(experiment: str, federated: Optional[str]) -> Cal
 
 # Computes the results of multiple random reruns of the same experiment
 def compute_rerun_results(clients_train_val: FederationData, clients_test: FederationData, test_devices_data: ClientData,
-                          experiment: str, federated: str, params: SimpleNamespace) \
+                          experiment: str, federated: Optional[str], params: SimpleNamespace) \
         -> Tuple[List[BinaryClassificationResult], List[BinaryClassificationResult], Optional[List[List[float]]]]:
     local_results = []
     new_devices_results = []
@@ -75,7 +75,7 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
 
 
 # This function is used to test the performance of a model with a given set of hyper-parameters on the test set
-def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str, federated: str, splitting_function: Callable,
+def test_hyperparameters(all_data: List[DeviceData], setup: str, experiment: str, federated: Optional[str], splitting_function: Callable,
                          constant_params: dict, configurations_params: List[dict], configurations: List[Dict[str, list]]) -> None:
     # Create the path in which we store the results
     base_path = 'test_results/' + setup + '_' + experiment + ('_federated' if federated else '') + '/run_'

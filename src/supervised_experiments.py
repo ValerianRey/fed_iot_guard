@@ -4,6 +4,7 @@ from typing import Tuple, List
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader
 
 from architectures import BinaryClassifier, NormalizingModel
@@ -117,7 +118,6 @@ def fedavg_classifiers_train_test(train_data: FederationData, local_test_data: F
     train_dls, local_test_dls, new_test_dl = prepare_dataloaders(train_data, local_test_data, new_test_data, params, federated=True)
 
     # Initialization of the models
-    n_clients = len(params.clients_devices)
     global_model, models = init_federated_models(train_dls, params, architecture=BinaryClassifier)
 
     # Initialization of the results
@@ -157,7 +157,6 @@ def fedsgd_classifiers_train_test(train_data: FederationData, local_test_data: F
     train_dls, local_test_dls, new_test_dl = prepare_dataloaders(train_data, local_test_data, new_test_data, params, federated=True)
 
     # Initialization of the models
-    n_clients = len(params.clients_devices)
     global_model, models = init_federated_models(train_dls, params, architecture=BinaryClassifier)
 
     # Initialization of the results

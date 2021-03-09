@@ -4,6 +4,7 @@ from typing import Tuple, List, Dict
 import torch
 from context_printer import Color
 from context_printer import ContextPrinter as Ctp
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader
 
 from architectures import SimpleAutoencoder, NormalizingModel, Threshold
@@ -93,6 +94,20 @@ def local_autoencoders_train_test(train_val_data: FederationData, local_test_dat
     return local_result, new_devices_result, [threshold.threshold.item() for threshold in thresholds]
 
 
+def federated_thresholds(models: List[torch.nn.Module], threshold_dls: List[DataLoader], global_threshold: torch.nn.Module,
+                         params: SimpleNamespace, global_thresholds: List[float]) -> None:
+    # Computation of the thresholds
+    thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
+                                                   for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                    quantile=params.quantile,
+                                    main_title='Computing the thresholds', color=Color.DARK_PURPLE)
+
+    # Aggregation of the thresholds
+    global_threshold, thresholds = model_aggregation(global_threshold, thresholds, params, verbose=True)
+    Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
+    global_thresholds.append(global_threshold.threshold.item())
+
+
 def federated_testing(global_model: torch.nn.Module, global_threshold: torch.nn.Module,
                       local_test_dls_dicts: List[Dict[str, DataLoader]], new_test_dls_dict: Dict[str, DataLoader],
                       params: SimpleNamespace, local_results: List[BinaryClassificationResult],
@@ -146,16 +161,8 @@ def fedavg_autoencoders_train_test(train_val_data: FederationData, local_test_da
         # Aggregation
         global_model, models = model_aggregation(global_model, models, params, verbose=True)
 
-        # Computation of the thresholds
-        thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
-                                                       for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
-                                        quantile=params.quantile,
-                                        main_title='Computing the thresholds', color=Color.DARK_PURPLE)
-
-        # Aggregation of the thresholds
-        global_threshold, thresholds = model_aggregation(global_threshold, thresholds, params, verbose=True)
-        Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
-        global_thresholds.append(global_threshold.threshold.item())
+        # Compute and aggregate thresholds
+        federated_thresholds(models, threshold_dls, global_threshold, params, global_thresholds)
 
         # Testing
         federated_testing(global_model, global_threshold, local_test_dls_dicts, new_test_dls_dict, params, local_results, new_devices_results)
@@ -187,16 +194,8 @@ def fedsgd_autoencoders_train_test(train_val_data: FederationData, local_test_da
         train_autoencoders_fedsgd(global_model, models, train_dls, params, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
 
         if epoch % 10 == 0:
-            # Computation of the thresholds
-            thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
-                                                           for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
-                                            quantile=params.quantile,
-                                            main_title='Computing the thresholds', color=Color.DARK_PURPLE)
-
-            # Aggregation of the thresholds
-            global_threshold, thresholds = model_aggregation(global_threshold, thresholds, params, verbose=True)
-            Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
-            global_thresholds.append(global_threshold.threshold.item())
+            # Compute and aggregate thresholds
+            federated_thresholds(models, threshold_dls, global_threshold, params, global_thresholds)
 
             # Testing
             federated_testing(global_model, global_threshold, local_test_dls_dicts, new_test_dls_dict, params, local_results, new_devices_results)

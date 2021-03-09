@@ -5,6 +5,7 @@ from typing import List, Set, Tuple, Callable, Optional
 import numpy as np
 import torch
 from context_printer import ContextPrinter as Ctp, Color
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader
 
 from architectures import NormalizingModel
@@ -60,6 +61,7 @@ def __federated_trimmed_mean(global_model: torch.nn.Module, models: List[torch.n
         global_model.load_state_dict(state_dict_result)
 
 
+# As defined in https://arxiv.org/pdf/2006.09365.pdf
 def s_resampling(models: List[torch.nn.Module], s: int) -> Tuple[List[torch.nn.Module], List[List[int]]]:
     T = len(models)
     c = [0 for _ in range(T)]

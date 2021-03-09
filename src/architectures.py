@@ -4,17 +4,6 @@ import torch
 import torch.nn as nn
 
 
-def get_smooth_layers(dim_encoding: int, n_layers_encoder: int, n_layers_decoder: int, n_neurons_in: int = 115) -> List[int]:
-    reduction_factor = (dim_encoding / n_neurons_in) ** (1 / n_layers_encoder)
-    augmentation_factor = (n_neurons_in / dim_encoding) ** (1 / n_layers_decoder)
-
-    hidden_layers = [int(n_neurons_in * (reduction_factor ** (i + 1))) for i in range(n_layers_encoder - 1)] + \
-                    [dim_encoding] + \
-                    [int(dim_encoding * (augmentation_factor ** (i + 1))) for i in range(n_layers_decoder - 1)]
-
-    return hidden_layers
-
-
 class SimpleAutoencoder(nn.Module):
     def __init__(self, activation_function: nn.Module, hidden_layers: List[int], verbose: bool = False) -> None:
         super(SimpleAutoencoder, self).__init__()

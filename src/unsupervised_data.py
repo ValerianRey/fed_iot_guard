@@ -4,6 +4,7 @@ from typing import Dict, Tuple, List, Optional
 import torch
 import torch.utils
 import torch.utils.data
+# noinspection PyProtectedMember
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 from data import mirai_attacks, gafgyt_attacks, split_client_data, ClientData, FederationData, resample_array, split_clients_data, \
@@ -84,7 +85,8 @@ def get_test_dls_dict(client_test_data: ClientData, test_bs: int, benign_samples
 
 
 def get_train_dls(train_data: FederationData, train_bs: int, benign_samples_per_device: Optional[int] = None, cuda: bool = False) -> List[DataLoader]:
-    return [get_train_dl(client_train_data, train_bs, benign_samples_per_device=benign_samples_per_device, cuda=cuda) for client_train_data in train_data]
+    return [get_train_dl(client_train_data, train_bs, benign_samples_per_device=benign_samples_per_device, cuda=cuda)
+            for client_train_data in train_data]
 
 
 def get_val_dls(val_data: FederationData, test_bs: int, benign_samples_per_device: Optional[int] = None, cuda: bool = False) -> List[DataLoader]:
