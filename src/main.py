@@ -23,11 +23,11 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                      'val_part': None,
                      # This is the proportion of *train_val set* that goes into the validation set, not the proportion of all data
                      'n_splits': 5,  # number of splits in the cross validation
-                     'n_random_reruns': 1,
+                     'n_random_reruns': 5,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.0787,
+                     'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the *test set*, the *unused set*
     # and the *train_val set*.
@@ -77,7 +77,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     fedsgd_params = {'train_bs': 8}  # We divide the batch size by the number of clients to make fedSGD closer to the centralized method
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
-    federation_params = {'aggregation_function': federated_trimmed_mean_2,
+    federation_params = {'aggregation_function': federated_averaging,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
@@ -213,7 +213,3 @@ if __name__ == "__main__":
         Ctp.set_max_depth(args.max_depth)  # Set the max depth at which we print in the console
 
     main(args.experiment, args.setup, args.federated, args.test)
-
-# TODO: change all hparams back to their original value (no attacks 100k samples, fed avg, etc...)
-# TODO: implement FedSGD for autoencoders
-# TODO: read the whole code to verify that everything is correct
