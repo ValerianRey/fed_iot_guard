@@ -10,6 +10,18 @@ from torch.utils.data import DataLoader
 from architectures import Threshold
 from metrics import BinaryClassificationResult
 from print_util import print_autoencoder_loss_stats, print_rates, print_autoencoder_loss_header
+from federated_util import model_poisoning, model_aggregation
+
+
+def optimize(model: nn.Module, data: torch.Tensor, optimizer: torch.optim.Optimizer, criterion: torch.nn.Module) -> torch.Tensor:
+    output = model(data)
+    # Since the normalization is made by the model itself, the output is computed on the normalized x
+    # so we need to compute the loss with respect to the normalized x
+    loss = criterion(output, model.normalize(data))
+    optimizer.zero_grad()
+    loss.mean().backward()
+    optimizer.step()
+    return loss
 
 
 def train_autoencoder(model: nn.Module, params: SimpleNamespace, train_loader, lr_factor: float = 1.0) -> None:
@@ -28,30 +40,39 @@ def train_autoencoder(model: nn.Module, params: SimpleNamespace, train_loader, l
 
     for epoch in range(params.epochs):
         losses = torch.zeros(num_elements)
-        for i, (x,) in enumerate(train_loader):
-            output = model(x)
-            # Since the normalization is made by the model itself, the output is computed on the normalized x
-            # so we need to compute the loss with respect to the normalized x
-            loss = criterion(output, model.normalize(x))
-            optimizer.zero_grad()
-            loss.mean().backward()
-            optimizer.step()
-
+        for i, (data,) in enumerate(train_loader):
             start = i * batch_size
             end = start + batch_size
             if i == num_batches - 1:
                 end = num_elements
-
+            loss = optimize(model, data, optimizer, criterion)
             losses[start:end] = loss.mean(dim=1)
 
         print_autoencoder_loss_stats('[{}/{}]'.format(epoch + 1, params.epochs), losses, lr=optimizer.param_groups[0]['lr'])
-        if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-            scheduler.step(losses.mean())
-        else:
-            scheduler.step()
+        scheduler.step()
 
         if optimizer.param_groups[0]['lr'] <= 1e-3:
             break
+
+
+def train_autoencoders_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace,
+                              lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> None:
+    criterion = nn.MSELoss(reduction='none')
+    lr = params.optimizer_params['lr'] * lr_factor
+
+    for model in models:
+        model.train()
+
+    for data_tuple in zip(*dls):
+        for model, (data,) in zip(models, data_tuple):
+            optimizer = params.optimizer(model.parameters(), lr=lr, weight_decay=params.optimizer_params['weight_decay'])
+            optimize(model, data, optimizer, criterion)
+
+            # Model poisoning attacks
+            models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
+
+            # Aggregation
+            global_model, models = model_aggregation(global_model, models, params, verbose=False)
 
 
 def compute_reconstruction_losses(model: nn.Module, dataloader) -> torch.Tensor:

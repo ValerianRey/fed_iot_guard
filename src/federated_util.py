@@ -165,6 +165,7 @@ def model_poisoning(global_model: torch.nn.Module, models: List[torch.nn.Module]
     return models
 
 
+# Aggregates the model according to params.aggregation_function, potentially using s-resampling, and distributes the global model back to the clients
 def model_aggregation(global_model: torch.nn.Module, models: List[torch.nn.Module], params: SimpleNamespace, verbose: bool = False)\
         -> Tuple[torch.nn.Module, List[torch.nn.Module]]:
 

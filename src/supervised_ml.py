@@ -13,7 +13,7 @@ from print_util import print_train_classifier, print_train_classifier_header, pr
 
 
 def optimize(model: nn.Module, data: torch.Tensor, label: torch.Tensor, optimizer: torch.optim.Optimizer, criterion: torch.nn.Module,
-             result: Optional[BinaryClassificationResult] = None):
+             result: Optional[BinaryClassificationResult] = None) -> None:
     output = model(data)
     loss = criterion(output, label)
     optimizer.zero_grad()

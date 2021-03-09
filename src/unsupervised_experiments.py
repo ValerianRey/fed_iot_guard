@@ -11,10 +11,10 @@ from data import device_names, ClientData, FederationData, get_benign_attack_sam
 from federated_util import init_federated_models, model_aggregation, select_mimicked_client, model_poisoning
 from metrics import BinaryClassificationResult
 from ml import set_models_sub_divs, set_model_sub_div
-from print_util import print_federation_round
+from print_util import print_federation_round, print_federation_epoch
 from unsupervised_data import get_train_dl, get_val_dl, prepare_dataloaders
 from unsupervised_ml import multitrain_autoencoders, multitest_autoencoders, compute_thresholds, train_autoencoder, \
-    compute_reconstruction_losses
+    compute_reconstruction_losses, train_autoencoders_fedsgd
 
 
 def local_autoencoder_train_val(train_data: ClientData, val_data: ClientData, params: SimpleNamespace) -> float:
@@ -172,11 +172,34 @@ def fedsgd_autoencoders_train_test(train_val_data: FederationData, local_test_da
     train_dls, threshold_dls, local_test_dls_dicts, new_test_dls_dict = prepare_dataloaders(train_val_data, local_test_data, new_test_data, params)
 
     # Initialization of the models
-    n_clients = len(params.clients_devices)
     global_model, models = init_federated_models(train_dls, params, architecture=SimpleAutoencoder)
     global_threshold = Threshold(torch.tensor(0.))
 
     # Initialization of the results
     local_results, new_devices_results, global_thresholds = [], [], []
 
-    raise NotImplementedError()
+    # Selection of a client to mimic in case we use the mimic attack
+    mimicked_client_id = select_mimicked_client(params)
+
+    for epoch in range(params.epochs):
+        print_federation_epoch(epoch, params.epochs)
+        lr_factor = params.lr_scheduler_params['gamma'] ** (epoch // params.lr_scheduler_params['step_size'])
+        train_autoencoders_fedsgd(global_model, models, train_dls, params, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
+
+        if epoch % 10 == 0:
+            # Computation of the thresholds
+            thresholds = compute_thresholds(opts=list(zip(['Computing threshold for client {} on: '.format(i) + device_names(client_devices)
+                                                           for i, client_devices in enumerate(params.clients_devices)], threshold_dls, models)),
+                                            quantile=params.quantile,
+                                            main_title='Computing the thresholds', color=Color.DARK_PURPLE)
+
+            # Aggregation of the thresholds
+            global_threshold, thresholds = model_aggregation(global_threshold, thresholds, params, verbose=True)
+            Ctp.print('Global threshold: {:.6f}'.format(global_threshold.threshold.item()))
+            global_thresholds.append(global_threshold.threshold.item())
+
+            # Testing
+            federated_testing(global_model, global_threshold, local_test_dls_dicts, new_test_dls_dict, params, local_results, new_devices_results)
+        Ctp.exit_section()
+
+    return local_results, new_devices_results, global_thresholds
