@@ -25,9 +25,9 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
                      'n_splits': 5,
                      'n_random_reruns': 1,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.95,
+                     'benign_prop': 0.5,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the test set, the unused set and the train &
     # validation set.
@@ -82,7 +82,6 @@ def main(experiment: str, setup: str, federated: bool, test: bool):
 
     classifier_opt_default_params = {'epochs': 4,
                                      'train_bs': 64,
-
                                      'optimizer': torch.optim.SGD,
                                      'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-5},
                                      'lr_scheduler': torch.optim.lr_scheduler.StepLR,
