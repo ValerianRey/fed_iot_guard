@@ -110,6 +110,7 @@ def select_mimicked_client(params: SimpleNamespace) -> Optional[int]:
     honest_client_ids = [client_id for client_id in range(len(params.clients_devices)) if client_id not in params.malicious_clients]
     if params.model_poisoning == 'mimic_attack':
         mimicked_client_id = np.random.choice(honest_client_ids)
+        Ctp.print('The mimicked client is {}'.format(mimicked_client_id))
     else:
         mimicked_client_id = None
     return mimicked_client_id
