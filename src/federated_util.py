@@ -120,7 +120,7 @@ def select_mimicked_client(params: SimpleNamespace) -> Optional[int]:
 def mimic_attack(models: List[torch.nn.Module], malicious_clients: Set[int], mimicked_client: int) -> None:
     with torch.no_grad():
         for i in malicious_clients:
-            models[i] = deepcopy(models[mimicked_client])
+            models[i].load_state_dict(models[mimicked_client].state_dict())
 
 
 def init_federated_models(train_dls: List[DataLoader], params: SimpleNamespace, architecture: Callable):
