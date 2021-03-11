@@ -8,7 +8,7 @@
   "n_splits": 5,
   "n_random_reruns": 5,
   "cuda": false,
-  "benign_prop": 0.0787,
+  "benign_prop": 0.95,
   "samples_per_device": 100000,
   "p_train_val": 0.79,
   "activation_fn": "ELU",
@@ -24,9 +24,5 @@
   "data_poisoning": null,
   "p_poison": null,
   "model_update_factor": 1.0,
-  "model_poisoning": null,
-  "aggregation_function": {},
-  "resampling": null,
-  "federation_rounds": 10,
-  "gamma_round": 0.75
+  "model_poisoning": null
 }
