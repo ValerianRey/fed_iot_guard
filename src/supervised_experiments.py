@@ -168,7 +168,8 @@ def fedsgd_classifiers_train_test(train_data: FederationData, local_test_data: F
     for epoch in range(params.epochs):
         print_federation_epoch(epoch, params.epochs)
         lr_factor = params.lr_scheduler_params['gamma'] ** (epoch // params.lr_scheduler_params['step_size'])
-        train_classifiers_fedsgd(global_model, models, train_dls, params, epoch, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
+        global_model, models = train_classifiers_fedsgd(global_model, models, train_dls, params, epoch,
+                                                        lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
         federated_testing(global_model, local_test_dls, new_test_dl, params, local_results, new_devices_results)
         Ctp.exit_section()
 

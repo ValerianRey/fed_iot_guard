@@ -191,7 +191,8 @@ def fedsgd_autoencoders_train_test(train_val_data: FederationData, local_test_da
     for epoch in range(params.epochs):
         print_federation_epoch(epoch, params.epochs)
         lr_factor = params.lr_scheduler_params['gamma'] ** (epoch // params.lr_scheduler_params['step_size'])
-        train_autoencoders_fedsgd(global_model, models, train_dls, params, lr_factor=lr_factor, mimicked_client_id=mimicked_client_id)
+        global_model, models = train_autoencoders_fedsgd(global_model, models, train_dls, params, lr_factor=lr_factor,
+                                                         mimicked_client_id=mimicked_client_id)
 
         if epoch % 10 == 0:
             # Compute and aggregate thresholds

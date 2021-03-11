@@ -54,7 +54,8 @@ def train_autoencoder(model: nn.Module, params: SimpleNamespace, train_loader, l
 
 
 def train_autoencoders_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace,
-                              lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> None:
+                              lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None)\
+        -> Tuple[torch.nn.Module, List[torch.nn.Module]]:
     criterion = nn.MSELoss(reduction='none')
     lr = params.optimizer_params['lr'] * lr_factor
 
@@ -66,11 +67,13 @@ def train_autoencoders_fedsgd(global_model: nn.Module, models: List[nn.Module], 
             optimizer = params.optimizer(model.parameters(), lr=lr, weight_decay=params.optimizer_params['weight_decay'])
             optimize(model, data, optimizer, criterion)
 
-            # Model poisoning attacks
-            models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
+        # Model poisoning attacks
+        models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
 
-            # Aggregation
-            global_model, models = model_aggregation(global_model, models, params, verbose=False)
+        # Aggregation
+        global_model, models = model_aggregation(global_model, models, params, verbose=False)
+
+    return global_model, models
 
 
 def compute_reconstruction_losses(model: nn.Module, dataloader) -> torch.Tensor:

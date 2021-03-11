@@ -52,7 +52,7 @@ def train_classifier(model: nn.Module, params: SimpleNamespace, train_loader: Da
 
 
 def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], dls: List[DataLoader], params: SimpleNamespace, epoch: int,
-                             lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> None:
+                             lr_factor: float = 1.0, mimicked_client_id: Optional[int] = None) -> Tuple[torch.nn.Module, List[torch.nn.Module]]:
     criterion = nn.BCELoss()
     lr = params.optimizer_params['lr'] * lr_factor
 
@@ -68,15 +68,17 @@ def train_classifiers_fedsgd(global_model: nn.Module, models: List[nn.Module], d
             optimizer = params.optimizer(model.parameters(), lr=lr, weight_decay=params.optimizer_params['weight_decay'])
             optimize(model, data, label, optimizer, criterion, result)
 
-            # Model poisoning attacks
-            models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
+        # Model poisoning attacks
+        models = model_poisoning(global_model, models, params, mimicked_client_id=mimicked_client_id, verbose=False)
 
-            # Aggregation
-            global_model, models = model_aggregation(global_model, models, params, verbose=False)
+        # Aggregation
+        global_model, models = model_aggregation(global_model, models, params, verbose=False)
 
         if i % 100 == 0:
             print_train_classifier(epoch, params.epochs, i, len(dls[0]), result, lr, persistent=False)
     print_train_classifier(epoch, params.epochs, len(dls[0]) - 1, len(dls[0]), result, lr, persistent=True)
+
+    return global_model, models
 
 
 def test_classifier(model: nn.Module, test_loader: DataLoader) -> BinaryClassificationResult:
