@@ -25,9 +25,9 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                      'n_splits': 5,  # number of splits in the cross validation
                      'n_random_reruns': 5,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.5,
+                     'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the *test set*, the *unused set*
     # and the *train_val set*.
