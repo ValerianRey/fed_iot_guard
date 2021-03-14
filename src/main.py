@@ -74,10 +74,10 @@ def main(experiment: str, setup: str, federated: str, test: bool):
 
     n_devices = len(all_devices)
 
-    fedsgd_params = {'train_bs': 8}  # We divide the batch size by the number of clients to make fedSGD closer to the centralized method
+    fedsgd_params = {'train_bs': 64}  # We divide the batch size by the number of clients to make fedSGD closer to the centralized method
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
-    federation_params = {'aggregation_function': federated_averaging,
+    federation_params = {'aggregation_function': federated_median,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
