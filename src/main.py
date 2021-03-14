@@ -25,9 +25,9 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                      'n_splits': 5,  # number of splits in the cross validation
                      'n_random_reruns': 5,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.5,
+                     'benign_prop': 0.95,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the *test set*, the *unused set*
     # and the *train_val set*.
@@ -68,7 +68,6 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                          'optimizer': torch.optim.SGD,
                          'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                          'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
-
     # Note that other architecture-specific parameters, such as the dimensions of the hidden layers, can be specified in either in the
     # varying_params for the grid searches, or in the configurations_params for the tests.
 
@@ -77,7 +76,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     fedsgd_params = {'train_bs': 8}  # We divide the batch size by the number of clients to make fedSGD closer to the centralized method
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
-    federation_params = {'aggregation_function': federated_averaging,
+    federation_params = {'aggregation_function': federated_median,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
