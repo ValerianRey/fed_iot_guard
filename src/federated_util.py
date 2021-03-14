@@ -20,11 +20,22 @@ def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Mod
         global_model.load_state_dict(state_dict_mean)
 
 
+# For 8 clients this is equivalent to federated trimmed mean 3
 def federated_median(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
+    n_excluded_down = (len(models) - 1) // 2
+    n_included = 1
+
     with torch.no_grad():
         state_dict_median = global_model.state_dict()
         for key in state_dict_median:
-            state_dict_median[key], _ = torch.stack([model.state_dict()[key] for model in models], dim=-1).median(dim=-1)
+            # It seems that it's much faster to compute the median by manually sorting and narrowing onto the right element
+            # rather than using torch.median. When we have an even number of clients, the value selected is the one
+            # just below the middle (and not the average between this one and the one just above the middle).
+            # This is the same behavior as torch.median and it makes the results on an even number of clients
+            # easily generalizable on an odd number of clients, because each time we use just 1 value to make the update.
+            sorted_tensor, _ = torch.sort(torch.stack([model.state_dict()[key] for model in models], dim=-1), dim=-1)
+            trimmed_tensor = torch.narrow(sorted_tensor, -1, n_excluded_down, n_included)
+            state_dict_median[key] = trimmed_tensor.mean(dim=-1)
         global_model.load_state_dict(state_dict_median)
 
 
@@ -39,12 +50,12 @@ def federated_min_max(global_model: torch.nn.Module, models: List[torch.nn.Modul
 
 
 # Shortcut for __federated_trimmed_mean(global_model, models, 1) so that it's easier to set the aggregation function as a single param
-def federated_trimmed_mean_1(global_model: torch.nn.Module, models: List[torch.nn.Module]):
+def federated_trimmed_mean_1(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
     __federated_trimmed_mean(global_model, models, 1)
 
 
 # Shortcut for __federated_trimmed_mean(global_model, models, 2) so that it's easier to set the aggregation function as a single param
-def federated_trimmed_mean_2(global_model: torch.nn.Module, models: List[torch.nn.Module]):
+def federated_trimmed_mean_2(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
     __federated_trimmed_mean(global_model, models, 2)
 
 
