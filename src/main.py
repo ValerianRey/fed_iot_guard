@@ -68,7 +68,6 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                          'optimizer': torch.optim.SGD,
                          'lr_scheduler': torch.optim.lr_scheduler.StepLR,
                          'lr_scheduler_params': {'step_size': 1, 'gamma': 0.5}}
-
     # Note that other architecture-specific parameters, such as the dimensions of the hidden layers, can be specified in either in the
     # varying_params for the grid searches, or in the configurations_params for the tests.
 
