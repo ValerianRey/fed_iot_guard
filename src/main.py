@@ -77,7 +77,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
 
-    federation_params = {'aggregation_function': federated_median,
+    federation_params = {'aggregation_function': federated_averaging,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
@@ -97,7 +97,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                         'data_poisoning': None,
                         'p_poison': None,
                         'model_update_factor': 1.0,
-                        'model_poisoning': 'mimic_attack'}
+                        'model_poisoning': 'cancel_attack'}
 
     if poisoning_params['n_malicious'] != 0:
         Ctp.print("Poisoning params: {}".format(poisoning_params), color='red')

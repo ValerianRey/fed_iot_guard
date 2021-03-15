@@ -110,11 +110,13 @@ def model_update_scaling(global_model: torch.nn.Module, malicious_clients_models
 def model_canceling_attack(global_model: torch.nn.Module, malicious_clients_models: List[torch.nn.Module], n_honest: int) -> None:
     factor = - n_honest / len(malicious_clients_models)
     with torch.no_grad():
-        for model in malicious_clients_models:
+        for normalizing_model in malicious_clients_models:
             new_state_dict = {}
-            for key, original_param in global_model.state_dict().items():
+            for key, original_param in global_model.model.state_dict().items():
                 new_state_dict.update({key: original_param * factor})
-            model.load_state_dict(new_state_dict)
+            normalizing_model.model.load_state_dict(new_state_dict)
+            # We only change the internal model of the NormalizingModel. That way we do not actually attack the normalization values
+            # because they are not supposed to change throughout the training anyway.
 
 
 def select_mimicked_client(params: SimpleNamespace) -> Optional[int]:
