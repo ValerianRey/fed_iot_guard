@@ -49,15 +49,16 @@ def compute_rerun_results(clients_train_val: FederationData, clients_test: Feder
     new_devices_results = []
     thresholds = []
 
-    if federated is not None:
-        malicious_clients = set(np.random.choice(len(clients_train_val), params.n_malicious, replace=False))
-        params.malicious_clients = malicious_clients
-        Ctp.print('Malicious clients: ' + repr([mc for mc in malicious_clients]))
-
     experiment_function = select_experiment_function(experiment, federated)
 
     for run_id in range(params.n_random_reruns):  # Multiple reruns: we run the same experiment multiple times to get better confidence in the results
         Ctp.enter_section('Run [{}/{}]'.format(run_id + 1, params.n_random_reruns), Color.GRAY)
+
+        if federated is not None:
+            malicious_clients = set(np.random.choice(len(clients_train_val), params.n_malicious, replace=False))
+            params.malicious_clients = malicious_clients
+            Ctp.print('Malicious clients: ' + repr([mc for mc in malicious_clients]))
+
         start_time = time()
         result = experiment_function(clients_train_val, clients_test, test_devices_data, params=params)
         local_results.append(result[0])

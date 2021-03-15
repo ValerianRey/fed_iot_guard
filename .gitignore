@@ -4,6 +4,29 @@
 # Figures
 *.pdf
 
+# Local files
+src/main1.py
+src/main2.py
+src/main3.py
+src/main4.py
+src/main5.py
+src/main6.py
+src/main7.py
+src/main8.py
+src/main9.py
+src/main10.py
+src/main11.py
+src/main12.py
+src/main13.py
+src/main14.py
+src/main15.py
+src/main16.py
+src/main17.py
+src/main18.py
+src/main19.py
+src/main20.py
+run_all.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
