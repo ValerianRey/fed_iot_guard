@@ -73,7 +73,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
 
     n_devices = len(all_devices)
 
-    fedsgd_params = {'train_bs': 64}  # We divide the batch size by the number of clients to make fedSGD closer to the centralized method
+    fedsgd_params = {'train_bs': 64}  # We can divide the batch size by the number of clients to make fedSGD closer to the centralized method
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
 
@@ -96,8 +96,8 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     poisoning_params = {'n_malicious': 3,
                         'data_poisoning': None,
                         'p_poison': None,
-                        'model_update_factor': 1.0,
-                        'model_poisoning': 'cancel_attack'}
+                        'model_update_factor': -4.333,
+                        'model_poisoning': None}
 
     if poisoning_params['n_malicious'] != 0:
         Ctp.print("Poisoning params: {}".format(poisoning_params), color='red')
