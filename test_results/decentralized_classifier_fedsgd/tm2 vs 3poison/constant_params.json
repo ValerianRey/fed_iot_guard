@@ -21,9 +21,9 @@
     "gamma": 0.5
   },
   "n_malicious": 3,
-  "data_poisoning": null,
-  "p_poison": null,
-  "model_update_factor": -3.0,
+  "data_poisoning": "all_labels_flipping",
+  "p_poison": 1.0,
+  "model_update_factor": 1.0,
   "model_poisoning": null,
   "aggregation_function": {},
   "resampling": null
