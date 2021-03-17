@@ -95,11 +95,14 @@ def local_classifiers_train_test(train_data: FederationData, local_test_data: Fe
 def federated_testing(global_model: torch.nn.Module, local_test_dls: List[DataLoader], new_test_dl: DataLoader,
                       params: SimpleNamespace, local_results: List[BinaryClassificationResult],
                       new_devices_results: List[BinaryClassificationResult]) -> None:
-    n_clients = len(params.clients_devices)
+
     # Global model testing on each client's data
-    result = multitest_classifiers(tests=list(zip(['Testing global model on: ' + device_names(client_devices)
-                                                   for client_devices in params.clients_devices],
-                                                  local_test_dls, [global_model for _ in range(n_clients)])),
+    tests = []
+    for client_id, client_devices in enumerate(params.clients_devices):
+        if client_id not in params.malicious_clients:
+            tests.append(('Testing global model on: ' + device_names(client_devices), local_test_dls[client_id], global_model))
+
+    result = multitest_classifiers(tests=tests,
                                    main_title='Testing the global model on data from all clients', color=Color.BLUE)
     local_results.append(result)
 
