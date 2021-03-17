@@ -23,7 +23,7 @@
   "n_malicious": 3,
   "data_poisoning": null,
   "p_poison": null,
-  "model_update_factor": -1.0,
+  "model_update_factor": -4.333,
   "model_poisoning": null,
   "aggregation_function": {},
   "resampling": null
