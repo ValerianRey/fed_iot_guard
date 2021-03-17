@@ -1,17 +1,19 @@
 import json
 import os
 from typing import Optional, Any, Union, List
+from types import FunctionType
 
 from context_printer import ContextPrinter as Ctp
 
 
 def dumper(obj: Any) -> Union[dict, str]:
-    if isinstance(obj, type):
-        return obj.__name__
     try:
         return obj.to_json()
     except AttributeError:
-        return obj.__dict__
+        if isinstance(obj, type) or isinstance(obj, FunctionType):
+            return obj.__name__
+        else:
+            return obj.__dict__
 
 
 def save_results_test(path: str, local_results: dict, new_devices_results: dict, thresholds: Optional[dict],

@@ -77,7 +77,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     fedavg_params = {'federation_rounds': 10,
                      'gamma_round': 0.75}
 
-    federation_params = {'aggregation_function': federated_averaging,
+    federation_params = {'aggregation_function': federated_median,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
