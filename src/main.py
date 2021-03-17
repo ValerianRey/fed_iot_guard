@@ -96,8 +96,8 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     poisoning_params = {'n_malicious': 3,
                         'data_poisoning': None,
                         'p_poison': None,
-                        'model_update_factor': -4.333,
-                        'model_poisoning': None}
+                        'model_update_factor': 1.0,
+                        'model_poisoning': 'mimic_attack'}
 
     if poisoning_params['n_malicious'] != 0:
         Ctp.print("Poisoning params: {}".format(poisoning_params), color='red')
