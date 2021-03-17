@@ -21,16 +21,10 @@
     "gamma": 0.5
   },
   "n_malicious": 3,
-<<<<<<< HEAD:test_results/decentralized_classifier_fedsgd/tm2 vs 3poison/constant_params.json
   "data_poisoning": "all_labels_flipping",
   "p_poison": 1.0,
   "model_update_factor": 1.0,
-=======
-  "data_poisoning": null,
-  "p_poison": null,
-  "model_update_factor": -4.333,
->>>>>>> d60e2929e7c6b89337eccac7d0d43ae88e530146:test_results/decentralized_classifier_fedsgd/tm1 vs 3factor/constant_params.json
   "model_poisoning": null,
   "aggregation_function": {},
-  "resampling": null
+  "resampling": 2
 }

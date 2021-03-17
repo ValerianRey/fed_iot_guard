@@ -23,7 +23,7 @@ def federated_averaging(global_model: torch.nn.Module, models: List[torch.nn.Mod
 # For 8 clients this is equivalent to federated trimmed mean 3
 def federated_median(global_model: torch.nn.Module, models: List[torch.nn.Module]) -> None:
     n_excluded_down = (len(models) - 1) // 2
-    n_included = 1 if (len(models) % 2 == 0) else 2
+    n_included = 2 if (len(models) % 2 == 0) else 1
 
     with torch.no_grad():
         state_dict_median = global_model.state_dict()
