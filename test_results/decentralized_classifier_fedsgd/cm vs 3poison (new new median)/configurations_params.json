@@ -1,0 +1,101 @@
+[
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  },
+  {
+    "optimizer_params": {
+      "lr": 0.5,
+      "weight_decay": 1e-05
+    },
+    "hidden_layers": [
+      115,
+      58,
+      29
+    ]
+  }
+]
