@@ -20,11 +20,11 @@
     "step_size": 1,
     "gamma": 0.5
   },
-  "n_malicious": 3,
+  "n_malicious": 1,
   "data_poisoning": null,
   "p_poison": null,
-  "model_update_factor": -4.333,
+  "model_update_factor": -15.0,
   "model_poisoning": null,
-  "aggregation_function": {},
+  "aggregation_function": "federated_trimmed_mean_1",
   "resampling": null
 }
