@@ -25,9 +25,9 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                      'n_splits': 5,  # number of splits in the cross validation
                      'n_random_reruns': 5,
                      'cuda': False,  # It looks like cuda is slower than CPU for me so I enforce using the CPU
-                     'benign_prop': 0.95,
+                     'benign_prop': 0.5,
                      # Desired proportion of benign data in the train/validation sets (or None to keep the natural proportions)
-                     'samples_per_device': 100_000}  # Total number of datapoints (train & val + unused + test) for each device.
+                     'samples_per_device': 10_000}  # Total number of datapoints (train & val + unused + test) for each device.
 
     # p_test, p_unused and p_train_val are the proportions of *all data* that go into respectively the *test set*, the *unused set*
     # and the *train_val set*.
@@ -55,7 +55,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
 
     autoencoder_params = {'activation_fn': torch.nn.ELU,
                           'threshold_part': 0.5,
-                          'quantile': 0.95,
+                          'quantile': None,
                           'epochs': 120,
                           'train_bs': 64,
                           'optimizer': torch.optim.SGD,
@@ -73,11 +73,11 @@ def main(experiment: str, setup: str, federated: str, test: bool):
 
     n_devices = len(all_devices)
 
-    fedsgd_params = {'train_bs': 64}  # We can divide the batch size by the number of clients to make fedSGD closer to the centralized method
-    fedavg_params = {'federation_rounds': 10,
+    fedsgd_params = {'train_bs': 8}  # We can divide the batch size by the number of clients to make fedSGD closer to the centralized method
+    fedavg_params = {'federation_rounds': 20,
                      'gamma_round': 0.75}
 
-    federation_params = {'aggregation_function': federated_median,
+    federation_params = {'aggregation_function': federated_averaging,
                          'resampling': None}  # s-resampling
 
     if federated is not None:
@@ -93,11 +93,11 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     # model_poisoning: 'cancel_attack', 'mimic_attack'
     # model update factor is the factor by which the difference between the original (global) model and the trained model is multiplied
     # (only applies to the malicious clients; for honest clients this factor is always 1)
-    poisoning_params = {'n_malicious': 3,
+    poisoning_params = {'n_malicious': 0,
                         'data_poisoning': None,
                         'p_poison': None,
                         'model_update_factor': 1.0,
-                        'model_poisoning': 'mimic_attack'}
+                        'model_poisoning': None}
 
     if poisoning_params['n_malicious'] != 0:
         Ctp.print("Poisoning params: {}".format(poisoning_params), color='red')
