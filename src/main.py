@@ -55,7 +55,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
 
     autoencoder_params = {'activation_fn': torch.nn.ELU,
                           'threshold_part': 0.5,
-                          'quantile': None,
+                          'quantile': 0.95,
                           'epochs': 120,
                           'train_bs': 64,
                           'optimizer': torch.optim.SGD,
@@ -74,7 +74,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
     n_devices = len(all_devices)
 
     fedsgd_params = {'train_bs': 8}  # We can divide the batch size by the number of clients to make fedSGD closer to the centralized method
-    fedavg_params = {'federation_rounds': 20,
+    fedavg_params = {'federation_rounds': 30,
                      'gamma_round': 0.75}
 
     federation_params = {'aggregation_function': federated_averaging,
