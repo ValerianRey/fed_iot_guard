@@ -25,8 +25,8 @@
   "p_poison": null,
   "model_update_factor": 1.0,
   "model_poisoning": null,
-  "aggregation_function": "federated_averaging",
+  "aggregation_function": {},
   "resampling": null,
-  "federation_rounds": 30,
+  "federation_rounds": 10,
   "gamma_round": 0.75
 }
