@@ -1,0 +1,668 @@
+{
+  "[0]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3946,
+      "tn": 75025,
+      "fp": 25,
+      "fn": 4
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3941,
+      "tn": 75007,
+      "fp": 43,
+      "fn": 9
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3929,
+      "tn": 74886,
+      "fp": 164,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3814,
+      "tn": 74844,
+      "fp": 206,
+      "fn": 136
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3946,
+      "tn": 75028,
+      "fp": 22,
+      "fn": 4
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3936,
+      "tn": 74976,
+      "fp": 74,
+      "fn": 14
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3929,
+      "tn": 74905,
+      "fp": 145,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3815,
+      "tn": 74844,
+      "fp": 206,
+      "fn": 135
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3947,
+      "tn": 75027,
+      "fp": 23,
+      "fn": 3
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3929,
+      "tn": 74999,
+      "fp": 51,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3929,
+      "tn": 74880,
+      "fp": 170,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3810,
+      "tn": 74844,
+      "fp": 206,
+      "fn": 140
+    }
+  },
+  "[1]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3928,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 22
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3925,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 25
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3913,
+      "tn": 74949,
+      "fp": 101,
+      "fn": 37
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3825,
+      "tn": 74888,
+      "fp": 162,
+      "fn": 125
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3933,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 17
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3929,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3915,
+      "tn": 74949,
+      "fp": 101,
+      "fn": 35
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3824,
+      "tn": 74881,
+      "fp": 169,
+      "fn": 126
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3925,
+      "tn": 74971,
+      "fp": 79,
+      "fn": 25
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3925,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 25
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3906,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 44
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3821,
+      "tn": 74888,
+      "fp": 162,
+      "fn": 129
+    }
+  },
+  "[2]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3937,
+      "tn": 74822,
+      "fp": 228,
+      "fn": 13
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3925,
+      "tn": 74819,
+      "fp": 231,
+      "fn": 25
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3908,
+      "tn": 74806,
+      "fp": 244,
+      "fn": 42
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3790,
+      "tn": 74772,
+      "fp": 278,
+      "fn": 160
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3934,
+      "tn": 74850,
+      "fp": 200,
+      "fn": 16
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3927,
+      "tn": 74824,
+      "fp": 226,
+      "fn": 23
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3911,
+      "tn": 74805,
+      "fp": 245,
+      "fn": 39
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3789,
+      "tn": 74770,
+      "fp": 280,
+      "fn": 161
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3938,
+      "tn": 74837,
+      "fp": 213,
+      "fn": 12
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3922,
+      "tn": 74821,
+      "fp": 229,
+      "fn": 28
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3903,
+      "tn": 74800,
+      "fp": 250,
+      "fn": 47
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3782,
+      "tn": 74765,
+      "fp": 285,
+      "fn": 168
+    }
+  },
+  "[3]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3938,
+      "tn": 75011,
+      "fp": 39,
+      "fn": 12
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3934,
+      "tn": 75011,
+      "fp": 39,
+      "fn": 16
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3924,
+      "tn": 75005,
+      "fp": 45,
+      "fn": 26
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3813,
+      "tn": 74623,
+      "fp": 427,
+      "fn": 137
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3940,
+      "tn": 75011,
+      "fp": 39,
+      "fn": 10
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3935,
+      "tn": 75009,
+      "fp": 41,
+      "fn": 15
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3923,
+      "tn": 75007,
+      "fp": 43,
+      "fn": 27
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3811,
+      "tn": 74622,
+      "fp": 428,
+      "fn": 139
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3936,
+      "tn": 75011,
+      "fp": 39,
+      "fn": 14
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3934,
+      "tn": 75011,
+      "fp": 39,
+      "fn": 16
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3922,
+      "tn": 74999,
+      "fp": 51,
+      "fn": 28
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3807,
+      "tn": 74624,
+      "fp": 426,
+      "fn": 143
+    }
+  },
+  "[4]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3926,
+      "tn": 74903,
+      "fp": 147,
+      "fn": 24
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3922,
+      "tn": 74905,
+      "fp": 145,
+      "fn": 28
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3909,
+      "tn": 74902,
+      "fp": 148,
+      "fn": 41
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3770,
+      "tn": 74886,
+      "fp": 164,
+      "fn": 180
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3925,
+      "tn": 74907,
+      "fp": 143,
+      "fn": 25
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3919,
+      "tn": 74902,
+      "fp": 148,
+      "fn": 31
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3906,
+      "tn": 74902,
+      "fp": 148,
+      "fn": 44
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3765,
+      "tn": 74882,
+      "fp": 168,
+      "fn": 185
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3927,
+      "tn": 74901,
+      "fp": 149,
+      "fn": 23
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3918,
+      "tn": 74902,
+      "fp": 148,
+      "fn": 32
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3905,
+      "tn": 74902,
+      "fp": 148,
+      "fn": 45
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3755,
+      "tn": 74882,
+      "fp": 168,
+      "fn": 195
+    }
+  },
+  "[5]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3929,
+      "tn": 74962,
+      "fp": 88,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3926,
+      "tn": 74959,
+      "fp": 91,
+      "fn": 24
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3920,
+      "tn": 74954,
+      "fp": 96,
+      "fn": 30
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3791,
+      "tn": 74939,
+      "fp": 111,
+      "fn": 159
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3923,
+      "tn": 74962,
+      "fp": 88,
+      "fn": 27
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3928,
+      "tn": 74956,
+      "fp": 94,
+      "fn": 22
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3920,
+      "tn": 74952,
+      "fp": 98,
+      "fn": 30
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3792,
+      "tn": 74939,
+      "fp": 111,
+      "fn": 158
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3928,
+      "tn": 74961,
+      "fp": 89,
+      "fn": 22
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3924,
+      "tn": 74958,
+      "fp": 92,
+      "fn": 26
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3919,
+      "tn": 74951,
+      "fp": 99,
+      "fn": 31
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3785,
+      "tn": 74939,
+      "fp": 111,
+      "fn": 165
+    }
+  },
+  "[6]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3948,
+      "tn": 75010,
+      "fp": 40,
+      "fn": 2
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3942,
+      "tn": 75014,
+      "fp": 36,
+      "fn": 8
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3933,
+      "tn": 75009,
+      "fp": 41,
+      "fn": 17
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3914,
+      "tn": 74965,
+      "fp": 85,
+      "fn": 36
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3949,
+      "tn": 75013,
+      "fp": 37,
+      "fn": 1
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3943,
+      "tn": 75010,
+      "fp": 40,
+      "fn": 7
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3932,
+      "tn": 75009,
+      "fp": 41,
+      "fn": 18
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3914,
+      "tn": 74965,
+      "fp": 85,
+      "fn": 36
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3947,
+      "tn": 75015,
+      "fp": 35,
+      "fn": 3
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3940,
+      "tn": 75007,
+      "fp": 43,
+      "fn": 10
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3932,
+      "tn": 75007,
+      "fp": 43,
+      "fn": 18
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3914,
+      "tn": 74965,
+      "fp": 85,
+      "fn": 36
+    }
+  },
+  "[7]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3888,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 62
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3878,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 72
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3868,
+      "tn": 74884,
+      "fp": 166,
+      "fn": 82
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3757,
+      "tn": 74799,
+      "fp": 251,
+      "fn": 193
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3893,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 57
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3870,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 80
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3874,
+      "tn": 74911,
+      "fp": 139,
+      "fn": 76
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3755,
+      "tn": 74799,
+      "fp": 251,
+      "fn": 195
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3904,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 46
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3878,
+      "tn": 74955,
+      "fp": 95,
+      "fn": 72
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3872,
+      "tn": 74882,
+      "fp": 168,
+      "fn": 78
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3752,
+      "tn": 74799,
+      "fp": 251,
+      "fn": 198
+    }
+  },
+  "[8]": {
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3929,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 21
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]}": {
+      "tp": 3928,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 22
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115]}": {
+      "tp": 3921,
+      "tn": 74963,
+      "fp": 87,
+      "fn": 29
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': []}": {
+      "tp": 3821,
+      "tn": 74849,
+      "fp": 201,
+      "fn": 129
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3931,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 19
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]}": {
+      "tp": 3931,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 19
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]}": {
+      "tp": 3922,
+      "tn": 74968,
+      "fp": 82,
+      "fn": 28
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': []}": {
+      "tp": 3820,
+      "tn": 74849,
+      "fp": 201,
+      "fn": 130
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}": {
+      "tp": 3931,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 19
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}": {
+      "tp": 3931,
+      "tn": 74977,
+      "fp": 73,
+      "fn": 19
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115]}": {
+      "tp": 3920,
+      "tn": 74963,
+      "fp": 87,
+      "fn": 30
+    },
+    "{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': []}": {
+      "tp": 3812,
+      "tn": 74849,
+      "fp": 201,
+      "fn": 138
+    }
+  }
+}

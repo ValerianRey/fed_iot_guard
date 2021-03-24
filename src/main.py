@@ -10,7 +10,7 @@ from test_hparams import test_hyperparameters
 from unsupervised_data import get_client_unsupervised_initial_splitting
 
 
-def main(experiment: str, setup: str, federated: str, test: bool):
+def main(experiment: str, setup: str, federated: str, test: bool, collaborative: bool):
     Ctp.set_automatic_skip(True)
     Ctp.print('\n\t\t\t\t\t' + (federated.upper() + ' ' if federated is not None else '') + setup.upper() + ' ' + experiment.upper()
               + (' TESTING' if test else ' GRID SEARCH') + '\n', bold=True)
@@ -147,7 +147,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                               'optimizer_params': [{'lr': 1.0, 'weight_decay': 0.},
                                                    {'lr': 1.0, 'weight_decay': 1e-5},
                                                    {'lr': 1.0, 'weight_decay': 1e-4}]}
-            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
+            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations, collaborative)
 
     elif experiment == 'classifier':
         constant_params = {**common_params, **classifier_params, **poisoning_params}
@@ -174,7 +174,7 @@ def main(experiment: str, setup: str, federated: str, test: bool):
                                                    {'lr': 0.5, 'weight_decay': 1e-5},
                                                    {'lr': 0.5, 'weight_decay': 1e-4}],
                               'hidden_layers': [[115, 58, 29], [115, 58], [115], []]}
-            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations)
+            run_grid_search(all_data, setup, experiment, splitting_function, constant_params, varying_params, configurations, collaborative)
     else:
         raise ValueError
 
@@ -189,6 +189,13 @@ if __name__ == "__main__":
     test_parser.add_argument('--test', dest='test', action='store_true')
     test_parser.add_argument('--gs', dest='test', action='store_false')
     parser.set_defaults(test=False)
+
+    collaborative_parser = parser.add_mutually_exclusive_group(required=False)
+    collaborative_parser.add_argument('--collaborative', dest='collaborative', action='store_true',
+                                      help='Makes the clients collaborate during the grid search by sharing their validation results. The results will be per configuration.')
+    collaborative_parser.add_argument('--no-collaborative', dest='collaborative', action='store_false',
+                                      help='Makes the clients not collaborate during the grid search by sharing their validation results. The results will be per client.')
+    parser.set_defaults(collaborative=False)
 
     federated_parser = parser.add_mutually_exclusive_group(required=False)
     federated_parser.add_argument('--fedavg', dest='federated', action='store_const',
@@ -213,4 +220,4 @@ if __name__ == "__main__":
     if args.max_depth is not None:
         Ctp.set_max_depth(args.max_depth)  # Set the max depth at which we print in the console
 
-    main(args.experiment, args.setup, args.federated, args.test)
+    main(args.experiment, args.setup, args.federated, args.test, args.collaborative)
