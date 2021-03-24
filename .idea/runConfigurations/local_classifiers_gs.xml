@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="single_autoencoder_gs" type="PythonConfigurationType" factoryName="Python" folderName="GS">
+  <configuration default="false" name="local_classifiers_gs" type="PythonConfigurationType" factoryName="Python" folderName="GS">
     <module name="fed_iot_guard" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -13,7 +13,7 @@
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
-    <option name="PARAMETERS" value="centralized autoencoder --gs --verbose-depth=2" />
+    <option name="PARAMETERS" value="decentralized classifier --gs --no-collaborative --verbose-depth=2" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
