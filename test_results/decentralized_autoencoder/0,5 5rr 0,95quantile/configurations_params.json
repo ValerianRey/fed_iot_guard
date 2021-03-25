@@ -14,15 +14,6 @@
     ],
     "optimizer_params": {
       "lr": 1.0,
-      "weight_decay": 0.0
-    }
-  },
-  {
-    "hidden_layers": [
-      29
-    ],
-    "optimizer_params": {
-      "lr": 1.0,
       "weight_decay": 1e-05
     }
   },
@@ -50,7 +41,16 @@
     ],
     "optimizer_params": {
       "lr": 1.0,
-      "weight_decay": 0.0
+      "weight_decay": 1e-05
+    }
+  },
+  {
+    "hidden_layers": [
+      29
+    ],
+    "optimizer_params": {
+      "lr": 1.0,
+      "weight_decay": 1e-05
     }
   },
   {
@@ -68,7 +68,7 @@
     ],
     "optimizer_params": {
       "lr": 1.0,
-      "weight_decay": 0.0
+      "weight_decay": 1e-05
     }
   },
   {
@@ -77,7 +77,7 @@
     ],
     "optimizer_params": {
       "lr": 1.0,
-      "weight_decay": 0.0
+      "weight_decay": 1e-05
     }
   }
 ]
