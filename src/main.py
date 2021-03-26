@@ -107,6 +107,10 @@ def main(experiment: str, setup: str, federated: str, test: bool, collaborative:
     decentralized_configurations = [{'clients_devices': [[i] for i in range(n_devices) if i != test_device],
                                      'test_devices': [test_device]} for test_device in range(n_devices)]
 
+    local_configurations = [{'clients_devices': [[known_device]],
+                             'test_devices': [i for i in range(n_devices) if i != known_device]}
+                            for known_device in range(n_devices)]
+
     # 9 configurations in which we have 1 client (owning the data from 8 devices) and he data from the last device is left unseen.
     centralized_configurations = [{'clients_devices': [[i for i in range(n_devices) if i != test_device]],
                                    'test_devices': [test_device]} for test_device in range(n_devices)]
@@ -114,7 +118,10 @@ def main(experiment: str, setup: str, federated: str, test: bool, collaborative:
     if setup == 'centralized':
         configurations = centralized_configurations
     elif setup == 'decentralized':
-        configurations = decentralized_configurations
+        if collaborative:
+            configurations = decentralized_configurations
+        else:
+            configurations = local_configurations
     else:
         raise ValueError
 
@@ -158,15 +165,15 @@ def main(experiment: str, setup: str, federated: str, test: bool, collaborative:
                 constant_params.update(federation_params)
 
             # set the hyper-parameters specific to each configuration (overrides the parameters defined in constant_params)
-            configurations_params = [{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
+            configurations_params = [{'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58, 29]},
                                      {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58, 29]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 1e-05}, 'hidden_layers': [115, 58]},
-                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58, 29]}]
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0}, 'hidden_layers': [115, 58]},
+                                     {'optimizer_params': {'lr': 0.5, 'weight_decay': 0.0001}, 'hidden_layers': [115, 58]}]
 
             test_hyperparameters(all_data, setup, experiment, federated, splitting_function, constant_params, configurations_params, configurations)
         else:  # GRID-SEARCH
@@ -195,7 +202,7 @@ if __name__ == "__main__":
                                       help='Makes the clients collaborate during the grid search by sharing their validation results. The results will be per configuration.')
     collaborative_parser.add_argument('--no-collaborative', dest='collaborative', action='store_false',
                                       help='Makes the clients not collaborate during the grid search by sharing their validation results. The results will be per client.')
-    parser.set_defaults(collaborative=False)
+    parser.set_defaults(collaborative=True)
 
     federated_parser = parser.add_mutually_exclusive_group(required=False)
     federated_parser.add_argument('--fedavg', dest='federated', action='store_const',
