@@ -51,6 +51,23 @@ Note that if you're using PyCharm, you will directly have access to all the conf
 Coming soon
 
 ## Modification
-Coming soon
+To make my code easily extendable, here are a few explanations about its inner workings, file by file.
+* `main.py` handles the program arguments, defines the hyper-parameters, creates the appropriate configuration of clients, and calls the appropriate experiment functions.
+* `data.py` does everything related to data: reading, re-sampling and splitting for example.
+* `supervised_data.py` contains the manipulations necessary to obtain the supervised datasets.
+* `unsupervised_data.py` contains the manipulations necessary to obtain the unsupervised datasets.
+* `architectures.py` defines the PyTorch architectures used (neural network classifier and autoencoder).
+* `ml.py` defines a few machine learning function that are common between the supervised and the unsupervised approaches (normalization stuff).
+* `supervised_ml.py` contains the functions to train the PyTorch classifiers.
+* `unsupervised_ml.py` contains the functions to train the PyTorch autoencoders.
+* `supervised_experiments.py` contains all of the supervised setup experiments, local or federated. Note that local training handles both the centralized and the decentralized (without collaboration) cases.
+* `unsupervised_experiments.py` contains all of the unsupervised setup experiments, local or federated. Note that local training handles both the centralized and the decentralized (without collaboration) cases.
+* `federated_util.py` contains many useful functions for federated learning: aggregation functions, adversarial attacks.
+* `grid_search.py` contains all the code specific to grid searches.
+* `test_hparams.py` contains the code to perform the final training and evaluation of the model once a given set of hyper-parameters has been selected.
+* `metrics.py` defines a class to quickly compute binary classification metrics (like accuracy of F1-score) from the numbers of true positives, false positives, etc...
+* `print_util.py` defines all print functions in the program, such that they appear in well-organized columns. Note that we used context-printer to keep the prints organized (https://pypi.org/project/context-printer/).
+* `saving.py` contains all the code that saves the results.
+ 
 
 
