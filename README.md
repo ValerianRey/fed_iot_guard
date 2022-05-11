@@ -48,7 +48,7 @@ Examples (commands to run from a terminal in `fed_iot_guard/`, with the appropri
 Note that if you're using PyCharm, you will directly have access to all the configurations that I used for my experiments. These configurations are saved in the `.idea/runConfigurations/` folder, in .xml files. If you do not use PyCharm, you can inspect these files and look at the `PARAMETERS` value to get all of the parameters of the configurations that I used.
 
 ### Hyper-Parameters
-Coming soon
+Many different hyper-parameters are defined in the code of the main function, inside of dictionaries. Some of them are fixed (inside of `constant_params`) and some of them vary during the grid search (inside of `varying_params`). Once you have run the grid search and obtained the results, you can use the jupyter notebook `GS Results.ipynb` to check which hyper-parameters are the best for each configuration. You can then copy the hyper-parameters obtained for each of the configurations inside of the appropriate `configuration_params` list (there is one such list for autoencoders and one for classifiers).
 
 ## Modification
 To make my code easily extendable, here are a few explanations about its inner workings, file by file.
