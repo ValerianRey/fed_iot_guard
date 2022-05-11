@@ -16,8 +16,8 @@ Clone or download the repository to your machine.
 
 ### Step 2: get the data
 The .gitignore file contains the `data/` folder, so you have to manually create this folder, download and extract the dataset into it. 
-* Create a data/ folder in fed_iot_guard/
-* Create a N-BaIoT/ folder inside of data/
+* Create a `data/` folder in `fed_iot_guard/`
+* Create a `N-BaIoT/` folder inside of `data/`
 * From here, if you're on linux, open a terminal and run the following command: `wget -r -np -nH --cut-dirs=3 -R "index.html*" https://archive.ics.uci.edu/ml/machine-learning-databases/00442/`
 
   It will download the dataset. This command will take a few minutes to execute, depending on your internet connexion.
