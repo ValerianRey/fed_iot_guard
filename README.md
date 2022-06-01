@@ -28,7 +28,7 @@ The .gitignore file contains the `data/` folder, so you have to manually create 
 
 * Using PyCharm: create a new python interpreter for the project ("File > Settings > Project: fed_iot_guard > Python Interpreter > Gear icon > Add > Virtualenv Environment or whatever you prefer > Select a location in which you'll create your new environment and select Python 3.9 as your base interpreter). When this is done, PyCharm will see that the requirements listed in requirements.txt are not satistfied, and it will ask to install said requirements (which you should do). Once you have done that, you can run any configuration from PyCharm (for example `fedavg_autoencoders_test`).
 
-* Using virtualenv: Create a new virtual environment based on Python 3.9. Activate this environment. Install the requirements by moving to the `fed_iot_guard/` directory and running `pip install -r requirements.txt`. You can then run the main program from the terminal. For instance, you can run (from the `fed_iot_guard/ directory`): `python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=1`.
+* Using virtualenv: Create a new virtual environment based on Python 3.9. Activate this environment. Install the requirements by moving to the `fed_iot_guard/` directory and running `pip install -r requirements.txt`. You can then run the main program from the terminal. For instance, you can run (from the `fed_iot_guard/`directory): `python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=1`.
 
 ## Usage
 
