@@ -16,19 +16,32 @@ Clone or download the repository to your machine.
 The .gitignore file contains the `data/` folder, so you have to manually create this folder, download and extract the dataset into it. 
 * Create a `data/` folder in `fed_iot_guard/`
 * Create a `N-BaIoT/` folder inside of `data/`
-* From the `N-BaIoT/` folder, if you're on linux, open a terminal and run the following command: `wget -r -np -nH --cut-dirs=3 -R "index.html*" https://archive.ics.uci.edu/ml/machine-learning-databases/00442/`
+* From the `N-BaIoT/` folder, if you're on linux, open a terminal and run the following command: 
+  ```bash
+  wget -r -np -nH --cut-dirs=3 -R "index.html*" https://archive.ics.uci.edu/ml/machine-learning-databases/00442/
+  ```
 
   It will download the dataset. This command will take a few minutes to execute, depending on your internet connexion.
   If you're on another operating system than Linux, or if you cannot use wget for another reason, you need to find an alternative tool to recursively download files from https://archive.ics.uci.edu/ml/machine-learning-databases/00442/, or you need to manually download all of them.
 
-* Now the data is downloaded, but some files inside of the inner folders are still in archive format (.rar extension). To fix that, I used the `unar` command, which can easily be installed on linux using `sudo apt install unar`. To run the command recursively, run `find ./ -name '*.rar' -execdir unar {} \;` from the `N-BaIoT/` folder.
-  Again, if you can't use unar for some reason, you can also manually unrar each .rar file in the dataset.
+* Now the data is downloaded, but some files inside of the inner folders are still in archive format (.rar extension). To fix that, I used the `unar` command, which can easily be installed on linux using:
+  ```bash
+  sudo apt install unar
+  ```
+  To run the command recursively, run: 
+  ```bash
+  find ./ -name '*.rar' -execdir unar {} \;
+  ``` 
+  from the `N-BaIoT/` folder. Again, if you can't use unar for some reason, you can also manually unrar each .rar file in the dataset.
 
 ### Step 3: install the required python libraries.
 
 * Using PyCharm: create a new python interpreter for the project ("File > Settings > Project: fed_iot_guard > Python Interpreter > Gear icon > Add > Virtualenv Environment or whatever you prefer > Select a location in which you'll create your new environment and select Python 3.9 as your base interpreter). When this is done, PyCharm will see that the requirements listed in requirements.txt are not satistfied, and it will ask to install said requirements (which you should do). Once you have done that, you can run any configuration from PyCharm (for example `fedavg_autoencoders_test`).
 
-* Using virtualenv: Create a new virtual environment based on Python 3.9. Activate this environment. Install the requirements by moving to the `fed_iot_guard/` directory and running `pip install -r requirements.txt`. You can then run the main program from the terminal. For instance, you can run (from the `fed_iot_guard/`directory): `python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=1`.
+* Using virtualenv: Create a new virtual environment based on Python 3.9. Activate this environment. Install the requirements by moving to the `fed_iot_guard/` directory and running `pip install -r requirements.txt`. You can then run the main program from the terminal. For instance, you can run (from the `fed_iot_guard/`directory): 
+  ```bash
+  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=1
+  ```
 
 ## Usage
 
@@ -42,8 +55,14 @@ To run an experiment, you have to run main.py with the appropriate arguments. Si
 * The last two parameters are about the prints in the console. `--verbose` activates printing in the console of the state of the training process (recommended since the experiments can be very long to run). `--no-verbose` deactivates all prints. Additionally, you can define the maximum depths of inner loops in which printing is enabled by using `--verbose-depth n` with `n` being an integer. A value of 1, 2 or 3 is recommended.
 
 Examples (commands to run from a terminal in `fed_iot_guard/`, with the appropriate python environment activated):
-* Collaborative grid search among decentralized clients for classifiers: `python src/main.py decentralized classifier --gs --collaborative --verbose-depth=2`
-* Federated training and testing among decentralized clients for autoencoders, using `Multi-epoch aggregation`: `python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=2`
+* Collaborative grid search among decentralized clients for classifiers: 
+  ```bash
+  python src/main.py decentralized classifier --gs --collaborative --verbose-depth=2
+  ```
+* Federated training and testing among decentralized clients for autoencoders, using `Multi-epoch aggregation`: 
+  ```bash
+  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=2
+  ```
 
 Note that if you're using PyCharm, you will directly have access to all the configurations that I used for my experiments. These configurations are saved in the `.idea/runConfigurations/` folder, in .xml files. If you do not use PyCharm, you can inspect these files and look at the `PARAMETERS` value to get all of the parameters of the configurations that I used.
 
