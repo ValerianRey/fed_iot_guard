@@ -40,7 +40,7 @@ The .gitignore file contains the `data/` folder, so you have to manually create 
 
 * Using virtualenv: Create a new virtual environment based on Python 3.9. Activate this environment. Install the requirements by moving to the `fed_iot_guard/` directory and running `pip install -r requirements.txt`. You can then run the main program from the terminal. For instance, you can run (from the `fed_iot_guard/`directory): 
   ```bash
-  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=1
+  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=5
   ```
 
 ## Usage
@@ -57,11 +57,11 @@ To run an experiment, you have to run main.py with the appropriate arguments. Si
 Examples (commands to run from a terminal in `fed_iot_guard/`, with the appropriate python environment activated):
 * Collaborative grid search among decentralized clients for classifiers: 
   ```bash
-  python src/main.py decentralized classifier --gs --collaborative --verbose-depth=2
+  python src/main.py decentralized classifier --gs --collaborative --verbose-depth=6
   ```
 * Federated training and testing among decentralized clients for autoencoders, using `Multi-epoch aggregation`: 
   ```bash
-  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=2
+  python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=6
   ```
 
 Note that if you're using PyCharm, you will directly have access to all the configurations that I used for my experiments. These configurations are saved in the `.idea/runConfigurations/` folder, in .xml files. If you do not use PyCharm, you can inspect these files and look at the `PARAMETERS` value to get all of the parameters of the configurations that I used.
