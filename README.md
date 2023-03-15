@@ -42,6 +42,7 @@ The .gitignore file contains the `data/` folder, so you have to manually create 
   ```bash
   python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=5
   ```
+  This script take hours to run. You might want to change the number of federation rounds and re-runs in the code.
 
 ## Usage
 
@@ -63,6 +64,7 @@ Examples (commands to run from a terminal in `fed_iot_guard/`, with the appropri
   ```bash
   python src/main.py decentralized autoencoder --test --fedavg --collaborative --verbose-depth=6
   ```
+  These scripts take hours to run. You might want to change the number of federation rounds and re-runs in the code.
 
 Note that if you're using PyCharm, you will directly have access to all the configurations that I used for my experiments. These configurations are saved in the `.idea/runConfigurations/` folder, in .xml files. If you do not use PyCharm, you can inspect these files and look at the `PARAMETERS` value to get all of the parameters of the configurations that I used.
 
