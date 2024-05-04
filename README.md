@@ -16,14 +16,8 @@ Clone or download the repository to your machine.
 The .gitignore file contains the `data/` folder, so you have to manually create this folder, download and extract the dataset into it. 
 * Create a `data/` folder in `fed_iot_guard/`
 * Create a `N-BaIoT/` folder inside of `data/`
-* From the `N-BaIoT/` folder, if you're on linux, open a terminal and run the following command: 
-  ```bash
-  wget -r -np -nH --cut-dirs=3 -R "index.html*" https://archive.ics.uci.edu/ml/machine-learning-databases/00442/
-  ```
-
-  It will download the dataset. This command will take a few minutes to execute, depending on your internet connexion.
-  If you're on another operating system than Linux, or if you cannot use wget for another reason, you need to find an alternative tool to recursively download files from https://archive.ics.uci.edu/ml/machine-learning-databases/00442/, or you need to manually download all of them.
-
+* Download the dataset from https://archive.ics.uci.edu/static/public/442/detection+of+iot+botnet+attacks+n+baiot.zip into the `N-BaIoT/` folder
+* Unzip it
 * Now the data is downloaded, but some files inside of the inner folders are still in archive format (.rar extension). To fix that, I used the `unar` command, which can easily be installed on linux using:
   ```bash
   sudo apt install unar
